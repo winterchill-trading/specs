@@ -10,6 +10,15 @@ belong here.
 
 ## 2026-10-12
 
+- `market-recorder`: raw minute file names may carry a collector id
+  (`<HH>-<MM>.<collector>.ndjson[.zst]`, `run -collector`), read by `merge -collector-a/-b`
+  and `rebuild-norm -collector`; the `_merge/<date>.json` report gains `text_differs`,
+  `previous_day`, `seq_gaps`, `seq_gaps_a`/`_b`, `median_interval_ms`,
+  `suspected_gaps` and `clock_error_ms`; the recorder consumes the Hyperliquid, Binance
+  and Bybit `feed_with_gaps` and writes a disconnect line per reported gap; new metrics
+  `gaps_total`, `exchange_lag_seconds`, `clock_error_seconds`, `long_cycles_total`,
+  `longest_cycle_seconds`, `max_fds`. See [repos/market-recorder.md](repos/market-recorder.md)
+  and [design/cloud-sinks-and-replication.md](design/cloud-sinks-and-replication.md).
 - `hl-client`, `binance-client`, `bybit-client`: `feed_with_gaps` reports resyncs as
   `Market_data.Gap` values. See the repository pages.
 - `price-anchor`: `Anchor.create` gains `?half_life`, `?may_engage`, `?last_trade` and
