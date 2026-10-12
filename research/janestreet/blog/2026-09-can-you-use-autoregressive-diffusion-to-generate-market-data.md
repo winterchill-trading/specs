@@ -6,35 +6,62 @@
 
 ## Summary
 
-- An ML research intern built an event-level generative model of market data: given the
-  stream of trades and BBO updates for a symbol, sample the next event's kind, price,
-  sizes and arrival time, then append it and continue.
-- Data: four years of US equities events. Architecture follows autoregressive generation
-  without vector quantization: a causal transformer encoder yields a latent per event, a
-  small categorical head picks the event kind, and a diffusion head conditioned on the
-  latent generates the continuous fields.
-- A DDPM head on a 1,000-step cosine schedule blew up (88% to 95% of samples beyond 8
-  standard deviations); rectified flow matching worked without tuning.
-- The central difficulty: market data is continuous in value but discrete in evolution.
-  Inter-arrival times have point masses at zero, at the fastest reaction time and at whole
-  seconds; prices cluster at bid, ask and mid; only 8% of events are trades.
-- Splitting BBO changes into 20 categorical classes (size only, ask up, bid down, zero
-  elapsed time) fixed marginals but needs hand engineering per feature; "atom smoothing"
-  (smooth the spike, then re-sculpt its mass) in a well-chosen representation scaled better.
-- Evaluation: total variation distance per marginal after a 10,240-event real context,
-  and a classifier that tries to tell a generated next event from a real one. Rollouts
-  degrade with horizon (spreads widen); the model is not yet a realistic generator.
+- Most quant models map a stream of book events to a price forecast; a generative model
+  would instead synthesize the events themselves, including their arrival times, giving
+  rollouts with far more texture than a point forecast.
+- The core question is what kind of data market data is. The action space is discrete
+  (orders added, cancelled, executed), yet prices have such high cardinality that they look
+  continuous, and timing is truly continuous. Distributions are spiky: improving by one tick
+  ("pennying") is far more common than two, and orders arrive in bursts, for example at
+  whole-second times.
+- An ML research intern built an event-level autoregressive diffusion model, following
+  autoregressive image generation without vector quantization, on four years of US
+  equities events (timestamp, price, kind and other fields).
+- Architecture: a causally masked transformer encoder gives a latent per event; a small
+  categorical head predicts whether the next event is a trade or a BBO update; a diffusion
+  head conditioned on the latent and the true kind (AdaLN) generates the continuous fields.
+  At inference the sampled kind conditions the diffusion head.
+- A DDPM head (noise prediction, 1,000-step cosine schedule, DDIM sampling) diverged, with
+  88% to 95% of samples beyond 8 standard deviations on all seven continuous targets,
+  because small noise errors are amplified at high noise. More steps and stochastic sampling
+  helped, but rectified flow matching (predicting velocity along a straight noise-to-data
+  path) worked without tuning.
+- The central difficulty: market data has continuous snapshots but evolves discretely, by
+  microstructure. Inter-arrival times have point masses at zero (simultaneous events), at the
+  fastest reaction time and at whole seconds; prices cluster at the bid, ask and mid.
+- Class imbalance (only 8% of events are trades) made the head overpredict trades.
+  Splitting BBO changes into finer classes (size only, ask up, bid down and so on) let
+  point masses become their own classes, such as zero elapsed time, and left simpler
+  diffusion targets (the size of a nonzero gap, the magnitude of a price move). A 20-class
+  head gave much better marginals but does not scale to many features, for example venue
+  identity.
+- "Atom smoothing" instead smooths a spiky distribution and re-sculpts the spike's mass
+  without a discontinuity; it works only if variables are represented so the spikes are
+  exposed.
+- Evaluation: one-step generation after a real context of 10,240 events, scored by total
+  variation distance per marginal, plus a classifier trained to tell generated next events
+  from real ones (which captures joint and temporal structure). Atom-smoothed
+  representations produced much more realistic samples.
+- Autoregressive rollouts degrade with horizon (for example spreads widen); the model is
+  not yet a realistic generator, but the project clarified the key choices: what to predict
+  categorically versus continuously, and how to represent features for diffusion.
 
 ## Relevance to us
 
-- The noise traders in [exchange-core](../../../repos/exchange-core.md) are our synthetic
-  market; the post's checks (point masses in inter-arrival time, clustering at
-  tick-improvement prices, trade share of events) are cheap realism metrics we can compute
-  with [market-data](../../../repos/market-data.md) SQL on recorded versus simulated data.
-- Real-data anchoring is already planned as price-anchor ([roadmap](../../../roadmap.md)).
-- **Action:** in `specs`, add a DuckDB query over the `bbo` and `trades` tables that
-  reports the trade share of events and a histogram of BBO inter-arrival times (zero,
-  under 1 ms, 1 to 10 ms, and so on), then run it once on a live Hyperliquid recording and
-  once on an `hl-sim` recording and record both results.
+- **Testing and simulation:** the post's realism checks (trade share of events,
+  inter-arrival point masses, price clustering at touch and mid) are cheap metrics for our
+  synthetic market. **Action:** in `specs`, add a DuckDB query over the
+  [market-data](../../../repos/market-data.md) `bbo` and `trades` tables that reports the
+  trade share of events and a histogram of BBO inter-arrival times (zero, under 1 ms, 1 to
+  10 ms and up), then record its output for one live Hyperliquid hour and one
+  [hl-sim](../../../repos/hl-sim.md) hour.
+- **Testing and simulation:** the `Market_sim` noise traders in
+  [exchange-core](../../../repos/exchange-core.md) are driven by a seeded random walk,
+  while real flow is lumpy. **Action:** add a `Market_sim` option that places a configurable
+  share of noise orders exactly one tick inside the touch, and compare the resulting
+  histogram with the live one from the query above.
+- **Research tooling:** a discriminator that tries to tell synthetic events from real
+  ones is a single-number realism score. Context for the planned price-anchor work
+  ([roadmap](../../../roadmap.md)); no change yet.
 
 Tags: `simulation`, `market-data`, `ml`
