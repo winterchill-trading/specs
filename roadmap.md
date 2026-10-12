@@ -82,12 +82,225 @@ Real bugs found by the new tests:
   leaving two orders on one price level; found by the live-loop property, fixed in
   `c7697d9`.
 
+### Wave 2 from research
+
+The second batch of research actions. Commit links point at the change that introduced
+each feature; the repository pages hold the details and numbers.
+
+- All repositories: every CI workflow pins the `ox` opam repository to the base image
+  commit (for example [`a7fdae0`][market-data-a7fdae0], [`e91dc3e`][hl-client-e91dc3e]).
+- `market-data`: append-only compatible `Event_log` digests
+  [`73df673`][market-data-73df673] ([ADR
+  0006](adr/0006-compatible-event-log-digests.md)) with a pre-extension fixture
+  [`6c3fd6c`][market-data-6c3fd6c]; `Instrument_info` catalogue (kind, size unit,
+  funding interval, tick, lot) [`31c5547`][market-data-31c5547] and
+  `Funding.normalized_8h` [`f36a1a4`][market-data-f36a1a4]; per-minute L2
+  `Snapshot_index` [`059c226`][market-data-059c226] and `Replay_feed` starting from a
+  snapshot [`6bce54d`][market-data-6bce54d]; `day-close -jobs`
+  [`7a22217`][market-data-7a22217] and `-processes` [`841347c`][market-data-841347c];
+  `Raw_minute`, `Normalizer.S` and `rebuild-norm` [`41f0137`][market-data-41f0137]
+  [`0b1e244`][market-data-0b1e244]. [Page](repos/market-data.md).
+- `market-recorder`: `recv_ts` clamp with a clamped-frame count
+  [`1b6231b`][market-recorder-1b6231b]; raw writer failures on `/healthz`
+  [`d2c151e`][market-recorder-d2c151e]; rate-limited warnings
+  [`d77e995`][market-recorder-d77e995]; `build_info`
+  [`e5cabb5`][market-recorder-e5cabb5], open FD, RSS and GC gauges
+  [`e93afcc`][market-recorder-e93afcc]; norm pipe length
+  [`4cbfdf4`][market-recorder-4cbfdf4]; `healthz_flaps_total`
+  [`86719f2`][market-recorder-86719f2]; `GET /status`
+  [`5d0dd08`][market-recorder-5d0dd08] and `status -url`
+  [`4522dcc`][market-recorder-4522dcc]; `e2e-sims.sh` failing on problems
+  [`d426706`][market-recorder-d426706]; throughput bench
+  [`081cbc8`][market-recorder-081cbc8]; flat FD count over 100 rolls
+  [`8213d74`][market-recorder-8213d74]; every example config parsed
+  [`d70a6a3`][market-recorder-d70a6a3]; shellcheck in CI
+  [`0b0fcc2`][market-recorder-0b0fcc2]; per-minute L2 snapshots
+  [`c67c662`][market-recorder-c67c662]. [Page](repos/market-recorder.md).
+- `market-maker`: tick-to-order latency at exit and in `e2e-all.sh`
+  [`4b71c76`][market-maker-4b71c76]; fault phase restarting a simulator
+  [`405a79f`][market-maker-405a79f]; `-params FILE` reloaded on SIGHUP
+  [`4647bc4`][market-maker-4647bc4]; `-shadow-params` [`62e8d18`][market-maker-62e8d18];
+  strategy log and replay [`64e4bd8`][market-maker-64e4bd8]; `compare-venues.sh`
+  [`6966e8a`][market-maker-6966e8a]; sibling commits in `e2e-all.sh`
+  [`c4ab82d`][market-maker-c4ab82d]; shellcheck and resolved pins in CI
+  [`de992b4`][market-maker-de992b4]. [Page](repos/market-maker.md).
+- `hl-client`: pure OCaml Keccak-256 [`777e47c`][hl-client-777e47c] and MessagePack
+  [`4df4fe3`][hl-client-4df4fe3]; EIP-712 secp256k1 signing
+  [`89bd8a7`][hl-client-89bd8a7] matching the SDK vectors
+  [`09e5292`][hl-client-09e5292]; typed read-only and trading handles
+  [`31862fe`][hl-client-31862fe]; `Live_feed` stats [`189cc81`][hl-client-189cc81];
+  recorded mainnet minute [`3b829cf`][hl-client-3b829cf]; `Ws` time source and jitter
+  [`5e54d72`][hl-client-5e54d72]. [Page](repos/hl-client.md).
+- `binance-client`: key-less `Config.Read_only` [`29860ab`][binance-client-29860ab];
+  `Live_feed` stats [`7db5265`][binance-client-7db5265] and time source
+  [`9eee6db`][binance-client-9eee6db]; recorded fixtures
+  [`326c118`][binance-client-326c118]; normalizer bench
+  [`7aac2b7`][binance-client-7aac2b7]. [Page](repos/binance-client.md).
+- `bybit-client`: `Config.Read_only` [`3f443a6`][bybit-client-3f443a6]; `Live_feed`
+  stats [`8cd80b9`][bybit-client-8cd80b9]; one decode per frame
+  [`48ffe19`][bybit-client-48ffe19]; recorded fixtures
+  [`8e58e31`][bybit-client-8e58e31]; bench [`a846534`][bybit-client-a846534].
+  [Page](repos/bybit-client.md).
+- `specs`: compatible digests and the instrument catalogue in the data platform design
+  [`44de7da`][specs-44de7da]; research insights marked done [`b01499f`][specs-b01499f].
+
+### Wave 3 from research
+
+- `infra`: the `ox-setup` composite action caching the whole opam switch
+  [`55d842f`][infra-55d842f], keyed on the runner image [`b97643b`][infra-b97643b];
+  `check-pins.sh` reads its `pins:` block [`8840b3b`][infra-8840b3b] and checks the `ox`
+  commit [`1e297d6`][infra-1e297d6]; migration guide and timings
+  [`2023287`][infra-2023287]; `hl-sim` is the pilot [`e182ab9`][hl-sim-e182ab9]. See
+  [design/deployment.md](design/deployment.md#ci).
+- `hl-protocol`: `Asset_ctx` for `activeAssetCtx` [`4afc464`][hl-protocol-4afc464];
+  `liquidationPx` as an option [`4399f2f`][hl-protocol-4399f2f]; mainnet info and
+  websocket samples [`c64ea0d`][hl-protocol-c64ea0d]. [Page](repos/hl-protocol.md).
+- `hl-mm`: `Hl_venue.Trading` over a signing handle [`0a43f23`][hl-mm-0a43f23];
+  `-testnet` signing with `HL_PRIVATE_KEY`, mainnet refused [`c484c80`][hl-mm-c484c80];
+  `-params FILE` [`f6d86c3`][hl-mm-f6d86c3]; tick-to-order latency
+  [`d46d9c2`][hl-mm-d46d9c2]; live loop with 500 ms acks [`e2e8474`][hl-mm-e2e8474];
+  seeded `Bugged_venue` [`c21b5d7`][hl-mm-c21b5d7]; shellcheck in CI
+  [`f54cdef`][hl-mm-f54cdef]. [Page](repos/hl-mm.md).
+- Five feeds: `Live_feed` stats ([`5120a5f`][okx-feed-5120a5f],
+  [`d9be009`][coinbase-feed-d9be009], [`90caa21`][kraken-feed-90caa21],
+  [`4f2908f`][deribit-feed-4f2908f], [`2714232`][bitget-feed-2714232]), a
+  `Market_data.Normalizer.S` adapter ([`e8077e9`][okx-feed-e8077e9],
+  [`dd5c590`][coinbase-feed-dd5c590], [`27c4015`][kraken-feed-27c4015],
+  [`ecd2245`][deribit-feed-ecd2245], [`3e048e3`][bitget-feed-3e048e3]; `kraken-feed` and
+  `deribit-feed` add a `rebuild-norm` subcommand), `?time_source`
+  ([`13301d8`][okx-feed-13301d8], [`6221878`][coinbase-feed-6221878],
+  [`ab0003f`][kraken-feed-ab0003f], [`723cb9d`][deribit-feed-723cb9d],
+  [`f1b2620`][bitget-feed-f1b2620]), a recorded mainnet minute with allocation pins, and
+  a core_bench of the normalizer ([`923fd76`][okx-feed-923fd76],
+  [`a7a10d5`][coinbase-feed-a7a10d5], [`9871b5d`][kraken-feed-9871b5d],
+  [`7615a21`][deribit-feed-7615a21], [`1ef23bf`][bitget-feed-1ef23bf]). Pages:
+  [okx](repos/okx-feed.md), [coinbase](repos/coinbase-feed.md),
+  [kraken](repos/kraken-feed.md), [deribit](repos/deribit-feed.md),
+  [bitget](repos/bitget-feed.md).
+
+Bugs found in waves 2 and 3:
+
+- `hl-client`: `Live_feed` passed each `l2Book` frame to `on_raw` under both `Bbo` and
+  `L2`, so the recorder stored it twice; fixed in [`189cc81`][hl-client-189cc81].
+- `market-recorder`: buffered lines could be written before the minute file was open
+  (the `test_raw_writer` flake on Linux CI, `Bad file descriptor`); fixed in
+  [`5f97596`][market-recorder-5f97596].
+- `hl-protocol`: a `liquidationPx` beyond the fixed-point range failed the whole
+  clearinghouse decode [`4399f2f`][hl-protocol-4399f2f], and `subscriptionResponse`
+  echoes of unmodelled subscriptions failed to decode [`1964453`][hl-protocol-1964453].
+- `binance-client`: `with_timeout` around `Pipe.read` in tests left a read pending that
+  swallowed the next value [`e15212b`][binance-client-e15212b].
+- `infra`: the switch cache key missed the runner image, so an Ubuntu release change
+  could restore an incompatible switch [`b97643b`][infra-b97643b].
+
+[market-data-a7fdae0]: https://github.com/winterchill-trading/market-data/commit/a7fdae0
+[hl-client-e91dc3e]: https://github.com/winterchill-trading/hl-client/commit/e91dc3e
+[market-data-73df673]: https://github.com/winterchill-trading/market-data/commit/73df673
+[market-data-6c3fd6c]: https://github.com/winterchill-trading/market-data/commit/6c3fd6c
+[market-data-31c5547]: https://github.com/winterchill-trading/market-data/commit/31c5547
+[market-data-f36a1a4]: https://github.com/winterchill-trading/market-data/commit/f36a1a4
+[market-data-059c226]: https://github.com/winterchill-trading/market-data/commit/059c226
+[market-data-6bce54d]: https://github.com/winterchill-trading/market-data/commit/6bce54d
+[market-data-7a22217]: https://github.com/winterchill-trading/market-data/commit/7a22217
+[market-data-841347c]: https://github.com/winterchill-trading/market-data/commit/841347c
+[market-data-41f0137]: https://github.com/winterchill-trading/market-data/commit/41f0137
+[market-data-0b1e244]: https://github.com/winterchill-trading/market-data/commit/0b1e244
+[market-recorder-1b6231b]: https://github.com/winterchill-trading/market-recorder/commit/1b6231b
+[market-recorder-d2c151e]: https://github.com/winterchill-trading/market-recorder/commit/d2c151e
+[market-recorder-d77e995]: https://github.com/winterchill-trading/market-recorder/commit/d77e995
+[market-recorder-e5cabb5]: https://github.com/winterchill-trading/market-recorder/commit/e5cabb5
+[market-recorder-e93afcc]: https://github.com/winterchill-trading/market-recorder/commit/e93afcc
+[market-recorder-4cbfdf4]: https://github.com/winterchill-trading/market-recorder/commit/4cbfdf4
+[market-recorder-86719f2]: https://github.com/winterchill-trading/market-recorder/commit/86719f2
+[market-recorder-5d0dd08]: https://github.com/winterchill-trading/market-recorder/commit/5d0dd08
+[market-recorder-4522dcc]: https://github.com/winterchill-trading/market-recorder/commit/4522dcc
+[market-recorder-d426706]: https://github.com/winterchill-trading/market-recorder/commit/d426706
+[market-recorder-081cbc8]: https://github.com/winterchill-trading/market-recorder/commit/081cbc8
+[market-recorder-8213d74]: https://github.com/winterchill-trading/market-recorder/commit/8213d74
+[market-recorder-d70a6a3]: https://github.com/winterchill-trading/market-recorder/commit/d70a6a3
+[market-recorder-0b0fcc2]: https://github.com/winterchill-trading/market-recorder/commit/0b0fcc2
+[market-recorder-c67c662]: https://github.com/winterchill-trading/market-recorder/commit/c67c662
+[market-maker-4b71c76]: https://github.com/winterchill-trading/market-maker/commit/4b71c76
+[market-maker-405a79f]: https://github.com/winterchill-trading/market-maker/commit/405a79f
+[market-maker-4647bc4]: https://github.com/winterchill-trading/market-maker/commit/4647bc4
+[market-maker-62e8d18]: https://github.com/winterchill-trading/market-maker/commit/62e8d18
+[market-maker-64e4bd8]: https://github.com/winterchill-trading/market-maker/commit/64e4bd8
+[market-maker-6966e8a]: https://github.com/winterchill-trading/market-maker/commit/6966e8a
+[market-maker-c4ab82d]: https://github.com/winterchill-trading/market-maker/commit/c4ab82d
+[market-maker-de992b4]: https://github.com/winterchill-trading/market-maker/commit/de992b4
+[hl-client-777e47c]: https://github.com/winterchill-trading/hl-client/commit/777e47c
+[hl-client-4df4fe3]: https://github.com/winterchill-trading/hl-client/commit/4df4fe3
+[hl-client-89bd8a7]: https://github.com/winterchill-trading/hl-client/commit/89bd8a7
+[hl-client-09e5292]: https://github.com/winterchill-trading/hl-client/commit/09e5292
+[hl-client-31862fe]: https://github.com/winterchill-trading/hl-client/commit/31862fe
+[hl-client-189cc81]: https://github.com/winterchill-trading/hl-client/commit/189cc81
+[hl-client-3b829cf]: https://github.com/winterchill-trading/hl-client/commit/3b829cf
+[hl-client-5e54d72]: https://github.com/winterchill-trading/hl-client/commit/5e54d72
+[binance-client-29860ab]: https://github.com/winterchill-trading/binance-client/commit/29860ab
+[binance-client-7db5265]: https://github.com/winterchill-trading/binance-client/commit/7db5265
+[binance-client-9eee6db]: https://github.com/winterchill-trading/binance-client/commit/9eee6db
+[binance-client-326c118]: https://github.com/winterchill-trading/binance-client/commit/326c118
+[binance-client-7aac2b7]: https://github.com/winterchill-trading/binance-client/commit/7aac2b7
+[bybit-client-3f443a6]: https://github.com/winterchill-trading/bybit-client/commit/3f443a6
+[bybit-client-8cd80b9]: https://github.com/winterchill-trading/bybit-client/commit/8cd80b9
+[bybit-client-48ffe19]: https://github.com/winterchill-trading/bybit-client/commit/48ffe19
+[bybit-client-8e58e31]: https://github.com/winterchill-trading/bybit-client/commit/8e58e31
+[bybit-client-a846534]: https://github.com/winterchill-trading/bybit-client/commit/a846534
+[specs-44de7da]: https://github.com/winterchill-trading/specs/commit/44de7da
+[specs-b01499f]: https://github.com/winterchill-trading/specs/commit/b01499f
+[infra-55d842f]: https://github.com/winterchill-trading/infra/commit/55d842f
+[infra-b97643b]: https://github.com/winterchill-trading/infra/commit/b97643b
+[infra-8840b3b]: https://github.com/winterchill-trading/infra/commit/8840b3b
+[infra-1e297d6]: https://github.com/winterchill-trading/infra/commit/1e297d6
+[infra-2023287]: https://github.com/winterchill-trading/infra/commit/2023287
+[hl-sim-e182ab9]: https://github.com/winterchill-trading/hl-sim/commit/e182ab9
+[hl-protocol-4afc464]: https://github.com/winterchill-trading/hl-protocol/commit/4afc464
+[hl-protocol-4399f2f]: https://github.com/winterchill-trading/hl-protocol/commit/4399f2f
+[hl-protocol-c64ea0d]: https://github.com/winterchill-trading/hl-protocol/commit/c64ea0d
+[hl-mm-0a43f23]: https://github.com/winterchill-trading/hl-mm/commit/0a43f23
+[hl-mm-c484c80]: https://github.com/winterchill-trading/hl-mm/commit/c484c80
+[hl-mm-f6d86c3]: https://github.com/winterchill-trading/hl-mm/commit/f6d86c3
+[hl-mm-d46d9c2]: https://github.com/winterchill-trading/hl-mm/commit/d46d9c2
+[hl-mm-e2e8474]: https://github.com/winterchill-trading/hl-mm/commit/e2e8474
+[hl-mm-c21b5d7]: https://github.com/winterchill-trading/hl-mm/commit/c21b5d7
+[hl-mm-f54cdef]: https://github.com/winterchill-trading/hl-mm/commit/f54cdef
+[okx-feed-5120a5f]: https://github.com/winterchill-trading/okx-feed/commit/5120a5f
+[coinbase-feed-d9be009]: https://github.com/winterchill-trading/coinbase-feed/commit/d9be009
+[kraken-feed-90caa21]: https://github.com/winterchill-trading/kraken-feed/commit/90caa21
+[deribit-feed-4f2908f]: https://github.com/winterchill-trading/deribit-feed/commit/4f2908f
+[bitget-feed-2714232]: https://github.com/winterchill-trading/bitget-feed/commit/2714232
+[okx-feed-e8077e9]: https://github.com/winterchill-trading/okx-feed/commit/e8077e9
+[coinbase-feed-dd5c590]: https://github.com/winterchill-trading/coinbase-feed/commit/dd5c590
+[kraken-feed-27c4015]: https://github.com/winterchill-trading/kraken-feed/commit/27c4015
+[deribit-feed-ecd2245]: https://github.com/winterchill-trading/deribit-feed/commit/ecd2245
+[bitget-feed-3e048e3]: https://github.com/winterchill-trading/bitget-feed/commit/3e048e3
+[okx-feed-13301d8]: https://github.com/winterchill-trading/okx-feed/commit/13301d8
+[coinbase-feed-6221878]: https://github.com/winterchill-trading/coinbase-feed/commit/6221878
+[kraken-feed-ab0003f]: https://github.com/winterchill-trading/kraken-feed/commit/ab0003f
+[deribit-feed-723cb9d]: https://github.com/winterchill-trading/deribit-feed/commit/723cb9d
+[bitget-feed-f1b2620]: https://github.com/winterchill-trading/bitget-feed/commit/f1b2620
+[okx-feed-923fd76]: https://github.com/winterchill-trading/okx-feed/commit/923fd76
+[coinbase-feed-a7a10d5]: https://github.com/winterchill-trading/coinbase-feed/commit/a7a10d5
+[kraken-feed-9871b5d]: https://github.com/winterchill-trading/kraken-feed/commit/9871b5d
+[deribit-feed-7615a21]: https://github.com/winterchill-trading/deribit-feed/commit/7615a21
+[bitget-feed-1ef23bf]: https://github.com/winterchill-trading/bitget-feed/commit/1ef23bf
+[market-recorder-5f97596]: https://github.com/winterchill-trading/market-recorder/commit/5f97596
+[hl-protocol-1964453]: https://github.com/winterchill-trading/hl-protocol/commit/1964453
+[binance-client-e15212b]: https://github.com/winterchill-trading/binance-client/commit/e15212b
+
 ## In progress
 
 - `specs`: this repository.
-- Wave 2 from research: every CI workflow pins the `ox` opam repository to the base
-  image commit; `market-data` adds compatible `Event_log` digests and an
-  `Instrument_info` catalogue (see [design/data-platform.md](design/data-platform.md)).
+- Wave 4 from research:
+  - `mm-core`: a hot parameter update hook in `Strategy` and `Live`, with
+    `connect_and_run` returning the loop handle, so a `market-maker` reload no longer
+    restarts the loop and cancels quotes; `max_actions_per_sec` as a rolling window with
+    a grace period after a resync, so a requote burst after a venue restart does not halt
+    for good.
+  - `market-recorder`: per-stream parse errors and reconnects on `/metrics` from the
+    clients' and feeds' new `stats`.
+  - CI cache rollout: every repository's workflow moves to `infra`'s `ox-setup` action
+    (see [design/deployment.md](design/deployment.md#ci)).
 
 ## Next
 
@@ -97,8 +310,9 @@ Real bugs found by the new tests:
 - **Replay server**: a `tardis-machine` style server that replays recorded raw minute
   files over HTTP and websocket in each venue's native format, so clients and the market
   maker can run against history.
-- **Raw-to-norm tool**: drive the venue normalizers over stored raw files to rebuild
-  `norm/` (the missing half of [ADR 0002](adr/0002-raw-first-storage.md)).
+- **Raw-to-norm tool**: `Market_data.Rebuild_norm` and the feeds' `Normalizer.S`
+  adapters exist; one binary linking every venue's normalizer (the three trading clients
+  have no adapter yet) completes [ADR 0002](adr/0002-raw-first-storage.md).
 - **Native cloud sinks** when the conditions in
   [design/cloud-sinks-and-replication.md](design/cloud-sinks-and-replication.md#when-a-native-sink-is-justified)
   hold.
@@ -106,8 +320,9 @@ Real bugs found by the new tests:
   replication, merge by earliest `recv_ts` with gap fill.
 - **AWS deployment**: k3s on EC2 in ap-northeast-1 (Binance, Hyperliquid) and
   ap-southeast-1 (Bybit). See [design/deployment.md](design/deployment.md).
-- **Hyperliquid signing**: EIP-712 signing in `hl-client` so the market maker can trade
-  on Hyperliquid testnet and mainnet.
+- **Hyperliquid trading**: `hl-client` signs and `hl-mm` trades on testnet; the
+  `market-maker` binary still uses the unsigned `Hl_venue`, and no order has been placed
+  on testnet with a funded account.
 - **specs upkeep**: every new repository and architecture change updates these pages
   (see [CLAUDE.md](CLAUDE.md)); refresh the `oxcaml-claude-skills` ecosystem map from
   [overview.md](overview.md).
@@ -120,13 +335,8 @@ across themes. Each theme document orders its own list by value and links the so
 #### State machines and logs ([theme](research/themes/state-machines-and-logs.md))
 
 - `market-data`, clients: emit a gap event on `Live_feed` resync; document reconnect frame loss.
-- `market-recorder`, clients: count per-stream parse errors on `/metrics`; test a malformed frame.
-- `market-recorder`, `market-data`: log per-minute L2 snapshots; start `Replay_feed` from the last.
-- `market-maker`: add a debug log of each `Strategy` input and plan; test replaying it.
-- `market-recorder`: clamp `recv_ts` to non-decreasing per stream and count clamped frames.
+- `market-recorder`: count per-stream parse errors on `/metrics` (clients count them; wave 4).
 - `market-recorder`: test subscribe frame counts at connect and reconnect for three symbols.
-- `market-recorder`: report the last `Raw_writer` flush error and its age in `/healthz`.
-- `market-recorder`: log repeated warnings once a minute per stream with a suppressed count.
 
 #### Data platform ([theme](research/themes/data-platform.md))
 
@@ -145,63 +355,41 @@ across themes. Each theme document orders its own list by value and links the so
 
 - all repos: add the `check-obj-magic.sh` job from `oxcaml-claude-skills` to CI.
 - `mm-core`: use `Time_ns.Span.t` for the `_ms` fields of `Params.t`.
-- `binance-client`, `hl-client`: add a key-less read-only config; type handles by trading access.
 - `market-recorder`: tag `check-config` errors with the venue index; log `[%here]` in errors.
-- `market-recorder`: test that 100 minute rolls keep the FD count flat; list C-backed handles.
 
 #### Performance ([theme](research/themes/performance.md))
 
-- `market-maker`: print `mm-core`'s tick-to-order p50/p99/max in `e2e-all.sh`.
-- `market-recorder`, `mm-core`: export GC stats and RSS on `/metrics`; add GC counts to reports.
+- `mm-core`: add GC counts to reports (the recorder exports GC stats and RSS).
 - `market-recorder`, `infra`: wire memtrace (confirmed on the ox base image) into recorder and Helm.
 - `market-recorder`, `market-maker`: count Async cycles over 50 ms; warn on cycles over 20 ms.
 - clients, `mm-core`: audit `with_timeout` for abandoned work, as `venue-net` did.
-- `market-recorder`: bench one raw minute through normalizer and writer; record msgs/s and bytes.
-- `binance-client`: bench `Feed_normalizer` per frame; print minor words per `Live_feed` message.
-- `market-data`: prototype a day-close `-jobs` flag writing tables on domains.
 
 #### Testing and simulation ([theme](research/themes/testing-and-simulation.md))
 
 - protocol repos: check in a trimmed raw minute per venue; test decoding every frame.
-- clients: feed recorded fixtures through each `Live_feed` normalizer; print per-stream counts.
-- `market-recorder`: make `e2e-sims.sh` fail on missing files or alert conditions; run it in CI.
-- `market-maker`: add a fault phase to `e2e-all.sh` restarting a simulator mid-run.
-- `hl-mm`: run the live-loop test against `hl-sim -response-delay-ms` for double placement.
+- `market-recorder`: run `e2e-sims.sh` (which now fails on problems) in CI.
 - simulators: pin each row of the
   [TIF and market order table](design/simulators.md#time-in-force-and-market-orders) in a test.
-- `market-maker`: script one order sequence against `hl-sim` and `binance-sim`; diff fills.
-- `hl-client`: record `l2Book` fixtures with `venue-net`'s record mode and decode them.
 - `market-data`, `hl-sim`: compare trade share and BBO inter-arrival with live data.
 - `market-data`: add a day-close diff script across revisions and a day-close cram test.
-- `market-recorder`: test parsing every `examples/` config; add a replay load test.
-- `hl-client`: refine signing with a test against an official SDK signature vector.
+- `market-recorder`: add a replay load test (every `examples/` config is parsed).
 
 #### Research tooling ([theme](research/themes/research-tooling.md))
 
 - `mm-core`: drive `Strategy` from `Replay_feed` over a fixture event log and print the quotes.
 - `market-data`: test candles against DuckDB row for row on the event log fixture.
 - `market-data`: run a pyarrow type test of `examples/query.py` in CI.
-- `market-recorder`: add a `status -url` command printing `/metrics` as dense tables.
 - `market-data`, `market-maker`: prototype Bonsai_term viewers for event logs and status.
 
 #### Build and deploy ([theme](research/themes/build-and-deploy.md))
 
 - `market-maker`: add nightly builds against upstream `main` and a weekly `e2e-all.sh` run.
-- `market-maker`: print resolved pins in CI and every sibling's HEAD in `e2e-all.sh`.
-- `order-book`, all repos: enable `dune-cache` in setup-ocaml after comparing `hl-sim` job times.
-- `market-recorder`: add a `build_info` gauge (version, executable hash) to `/metrics`.
-- `market-recorder`: export the open FD count; log `RLIMIT_NOFILE` limits at startup.
-- `market-maker`, `hl-mm`, `market-recorder`: run shellcheck on `scripts/*.sh` in CI.
-- `market-recorder`: export each `Recorder` to `Norm_writer` pipe length as a gauge.
-- `market-recorder`: count `/healthz` flaps per stream as `healthz_flaps_total`.
-- `market-recorder`: add a `GET /status` sexp of open minute files and pending uploads.
+- all repos: move CI to the cached `ox-setup` action (wave 4; replaces `dune-cache`).
+- `market-recorder`: log `RLIMIT_NOFILE` limits at startup (the FD count is exported).
 - `specs`, `infra`: refine AWS deployment with host checks and a chrony check in node bootstrap.
 - `infra`: try proctopus for the local stack and note the result beside the compose stack.
 
 #### Market making and trading systems ([theme](research/themes/market-making-and-trading-systems.md))
 
-- `market-maker`, `mm-core`: add `-shadow-params` and a test printing differing plans.
-- `market-maker`, `mm-core`: add `-params FILE` reloaded on SIGHUP after `Params.validate`.
 - `market-maker`, `market-data`: log order lifecycle events; join fills to public trades.
-- `hl-protocol`, `hl-mm`: decode `liquidationPx` as an option, `None` when out of range.
 - `market-data`, `mm-core`: add a lead-lag query; record median lag per venue pair.
