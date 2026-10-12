@@ -1115,7 +1115,9 @@ the proposed action, the source note and the repositories it affects.
   Trading](janestreet/podcast/24-the-thermodynamics-of-trading.md). Affects:
   [market-recorder](../repos/market-recorder.md).
 - Per-agent build dirs could reuse artifacts through dune's shared cache. **Action:** Confirm and
-  document the shared dune cache setting for the local workspace. Source: [How we accidentally built
+  document the shared dune cache setting for the local workspace. Measured: it does not; a
+  different `DUNE_BUILD_DIR` recompiles everything, so reuse one build directory per
+  repository. Source: [How we accidentally built
   a better build system for
   OCaml](janestreet/blog/2025-01-how-we-accidentally-built-a-better-build-system-for-ocaml.md).
   Affects: [oxcaml-claude-skills](../repos/oxcaml-claude-skills.md).
