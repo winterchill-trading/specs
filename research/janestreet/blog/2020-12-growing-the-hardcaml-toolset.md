@@ -23,8 +23,11 @@
 ## Relevance to us
 
 - We do no FPGA work; Hardcaml itself is out of scope.
-- The MDX idea (docs that compile) could apply to code samples in `specs` or repo READMEs,
-  but no repo currently has drifting code snippets known to break.
-- **Action:** none.
+- **Testing and simulation:** MDX makes documentation code compile, so examples cannot drift
+  from the API. **Action:** none for now; our READMEs carry few OCaml snippets and none are
+  known to be stale, so revisit if `specs` or a repo README gains runnable examples.
+- **OCaml practice:** `hardcaml_fixed_point` offers explicit rounding and clamping modes,
+  as our [fixed-decimal](../../../repos/fixed-decimal.md) does with `round_down` and
+  `round_nearest`. **Action:** none.
 
 Tags: `fpga`, `hardware`, `testing`
