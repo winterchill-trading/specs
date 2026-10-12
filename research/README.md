@@ -23,6 +23,9 @@ into concrete proposals for our repositories.
   tags line. The [index](#index) lists them all.
 - The proposed actions also appear one line each in
   [roadmap.md](../roadmap.md#from-research).
+- A **Done:** line after an insight links the repository page (or spec page) and the
+  commit that implemented it. Partly done insights carry no marker; the roadmap line
+  says what is left.
 - Notes summarize; they do not reproduce. Quotes are short and attributed. Read the
   original for anything load-bearing. Claims about our repositories were checked against
   the code at the time of writing; the repository's own README and `.mli` files win when
