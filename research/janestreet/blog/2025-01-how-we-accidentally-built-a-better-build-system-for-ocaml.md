@@ -6,30 +6,35 @@
 
 ## Summary
 
-- History of dune: around 2012 Jane Street replaced OMake with its own build system, Jenga,
-  open-sourced it, saw little outside adoption (no Windows, too opinionated) and withdrew it.
+- Around 2012 Jane Street replaced OMake with its own build system, Jenga, open-sourced it,
+  saw little outside adoption (no Windows support, and adopting it meant adopting the whole
+  Jane Street way of building) and withdrew the release.
 - In 2016 it wrote Jbuilder, a shim that read Jenga's build files and simply ran every
-  command in topological order so outsiders could build Jane Street packages.
-- Jbuilder became popular because it was fast (roughly 5x faster than OCamlbuild) and easy
-  to hack on; with OCaml Labs (now Tarides) it grew into a real build system and was renamed
-  dune after a trademark conflict.
-- That left the firm maintaining two build systems; its codebase grew from 4M lines of
-  OCaml in 2016 to 65M plus 5M lines of Python.
-- A build-systems team of five spent over a year migrating to dune: porting Jenga's scaling
-  work and the Vim, Emacs and VSCode integrations.
+  command in topological order, so outsiders could build Jane Street packages without
+  Jenga and without the firm porting its builds to OCamlbuild.
+- Jbuilder became popular because it was fast (roughly 5x faster than OCamlbuild on their
+  projects), portable and easy to hack on; with OCaml Labs (now Tarides) it grew into a real
+  incremental build system and was renamed dune after a trademark conflict with an old IDE.
+- That left the firm maintaining two build systems while its codebase grew from 4M lines of
+  OCaml in 2016 to 65M plus 5M lines of Python; migration kept slipping to "next year".
+- A five-person build-systems team spent over a year migrating: porting a decade of Jenga's
+  scaling work to a 70M-line monorepo and the separate Vim, Emacs and VSCode integrations.
 - After the switch dune matched or beat Jenga everywhere, and builds that are mostly cache
-  hits got 2-3x faster; improvements are being upstreamed to avoid an internal fork.
+  hits (a common case) got 2-3x faster; improvements are being upstreamed to avoid an
+  internal fork.
 - Next steps: distributed builds, shallow builds ("builds without the bytes") and a cached
-  build graph, with a team of 12 across three offices.
+  build graph, with a team now of 12 across New York, London and Singapore.
 
 ## Relevance to us
 
-- Background for our build tool: every repository builds with dune 3.17, and locally a
-  shared untracked `dune-workspace` resolves siblings; the post's headline gain comes from
-  cache hits.
-- CI in each repository rebuilds everything from scratch after pinning siblings, which is
-  where a dune cache would pay off (see [infra](../../../repos/infra.md) for images).
-- **Action:** set `dune-cache: true` on the `ocaml/setup-ocaml@v3` step in one repository's
-  CI (start with `order-book`), compare the second run's build time, then roll it out.
+- **Build and deploy:** the post's headline gain comes from cache hits, while each of our CI
+  runs rebuilds everything after pinning siblings. **Action:** set `dune-cache: true` on the
+  `ocaml/setup-ocaml@v3` step in [order-book](../../../repos/order-book.md)'s CI, compare the
+  second run's build time, then roll it out to the other repositories.
+- **Build and deploy:** locally, parallel agents already share one dune workspace with
+  per-agent build directories; dune's shared cache would let those directories reuse each
+  other's artifacts. **Action:** confirm the shared cache is enabled in the local
+  `dune-workspace` setup and record the setting in
+  [oxcaml-claude-skills](../../../repos/oxcaml-claude-skills.md).
 
 Tags: `build`, `ocaml-practice`, `performance`
