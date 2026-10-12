@@ -32,7 +32,9 @@ any venue implementing it.
 New parameters, defaulting when absent from a sexp: `max_actions_per_sec` (100; more
 cancels and places in the last second trip the kill switch), `soft_max_position` and
 `bump_budget` (past the soft limit only the side that would grow the position is pulled).
-`Params.validate` names every field and rejects NaN and infinity in every float.
+`Params.validate` names every field and rejects NaN and infinity in every float. The five
+`_ms` duration fields are `Time_ns.Span.t`; their sexp accepts a span (`1s`) or an integer
+of milliseconds and prints a span.
 
 Hot parameter updates: `Strategy.update_params` returns a new strategy that keeps market
 state, inventory and resting orders (symbol changes and invalid parameters are rejected);
@@ -90,5 +92,3 @@ See [design/market-making.md](../design/market-making.md).
 - The position is not flattened on exit; `stop` only cancels resting orders.
 - One symbol per `Live.Make` run.
 - Venue calls have no timeout in mm-core; a venue that never answers blocks the loop and `stop`.
-- `Params` duration fields are still `int` milliseconds on `main`; the `params-spans` branch
-  makes them `Time_ns.Span.t` and waits for hl-mm and market-maker to adapt.
