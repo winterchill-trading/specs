@@ -1,15 +1,16 @@
 # hl-mm
 
 The Hyperliquid side of the market maker: `Hl_venue` implements `Mm_core.Venue.S` over
-`hl-client`, and the `hl-mm` executable runs `Mm_core.Live.Make (Hl_venue)` against
-`hl-sim` or any Hyperliquid-compatible API that accepts unsigned requests.
+`hl-client`, and the `hl-mm` executable runs `Mm_core.Live.Make (Hl_venue.Trading)`
+against `hl-sim` (unsigned requests) or Hyperliquid testnet (requests signed with
+`HL_PRIVATE_KEY`). It refuses mainnet.
 
 | | |
 | --- | --- |
 | Repository | `winterchill-trading/hl-mm` |
 | opam package | `hl-mm` |
 | Library | `hl-mm` (module `Hl_mm`) |
-| Binary | `hl-mm` (`-base-url`, `-address`, `-coin`, `-levels`, `-size`, `-half-spread-bps`, `-skew-bps`, `-max-position`, `-requote-ms`, `-run-for`, `-summary-secs`, `-log-level`) |
+| Binary | `hl-mm` (`-base-url`, `-testnet`, `-address`, `-coin`, `-levels`, `-size`, `-half-spread-bps`, `-skew-bps`, `-max-position`, `-max-actions-per-sec`, `-soft-max-position`, `-params FILE`, `-requote-ms`, `-run-for`, `-summary-secs`, `-log-level`) |
 | Status | done |
 
 ## Key modules
@@ -17,7 +18,19 @@ The Hyperliquid side of the market maker: `Hl_venue` implements `Mm_core.Venue.S
 - `Hl_mm.Hl_venue` (`lib/hl_venue.mli`): `Mm_core.Venue.S` with
   `config = Hl_client.Config.t`; `tick_of_mid` (5 significant figures, at most
   `6 - szDecimals` decimals); pure `Convert` functions (reject wording, order update
-  statuses, order requests).
+  statuses, order requests). `Hl_venue` takes a bare `Hl_client.Config.t` and sends
+  unsigned requests (the `market-maker` binary uses it); `Hl_venue.Trading` is the same
+  venue over an `hl-client` `trading` handle, signing every order and cancel when the
+  handle holds a key. A `read_only` handle does not type-check as its config (a
+  must-fail test pins this).
+- `Params_file`: a sexp of `Mm_core.Params.t` field overrides, applied after the flags
+  and checked by `Params.validate`.
+
+The exit report ends with the loop's tick-to-order latency (count, p50, p99, max).
+`scripts/e2e.sh` takes `RESPONSE_DELAY_MS` (hl-sim's `-response-delay-ms`) and reports
+the most resting quotes per side, which would exceed `-levels` on a double placement;
+a live-loop test runs against hl-sim with 500 ms acks, and a seeded `Bugged_venue`
+injects rejects and place timeouts. CI runs `shellcheck scripts/*.sh`.
 
 ## Dependencies
 
@@ -33,9 +46,9 @@ integration test. CI is green with these pins.
 
 ## Known gaps
 
-- Orders are unsigned (the simulator's `X-Address` convention), so only `hl-sim`
-  accepts them; market orders and non-128-bit client ids are rejected locally.
+- Testnet signing is checked only against an unfunded key (the exchange named the key's
+  address and placed nothing); market orders and non-128-bit client ids are rejected
+  locally.
 - Clearinghouse snapshots whose `liquidationPx` exceeds the `fixed-decimal` range are
   logged and skipped.
 - `scripts/e2e.sh` assumes the shared dune workspace.
-- The README's opam pin list omits `venue-net`, `parquet` and `market-data`.
