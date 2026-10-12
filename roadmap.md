@@ -292,13 +292,12 @@ Bugs found in waves 2 and 3:
 
 - `specs`: this repository.
 - Wave 4 from research:
-  - `mm-core`: a hot parameter update hook in `Strategy` and `Live`, with
-    `connect_and_run` returning the loop handle, so a `market-maker` reload no longer
-    restarts the loop and cancels quotes; `max_actions_per_sec` as a rolling window with
-    a grace period after a resync, so a requote burst after a venue restart does not halt
-    for good.
-  - `market-recorder`: per-stream parse errors and reconnects on `/metrics` from the
-    clients' and feeds' new `stats`.
+  - `mm-core` (done): `Strategy.update_params`, `Live.connect_and_start` returning the
+    loop handle with `update_params`; rolling action-rate window with
+    `action_rate_grace_ms` and `action_rate_cooldown_ms`. `market-maker`'s reload path
+    still restarts the loop; moving it to `Live.update_params` is next.
+  - `market-recorder` (done): per-venue parse errors and reconnects on `/metrics` from
+    the clients' `stats`, with Prometheus alert rules under `deploy/prometheus/`.
   - CI cache rollout: every repository's workflow moves to `infra`'s `ox-setup` action
     (see [design/deployment.md](design/deployment.md#ci)).
 
@@ -335,7 +334,6 @@ across themes. Each theme document orders its own list by value and links the so
 #### State machines and logs ([theme](research/themes/state-machines-and-logs.md))
 
 - `market-data`, clients: emit a gap event on `Live_feed` resync; document reconnect frame loss.
-- `market-recorder`: count per-stream parse errors on `/metrics` (clients count them; wave 4).
 - `market-recorder`: test subscribe frame counts at connect and reconnect for three symbols.
 
 #### Data platform ([theme](research/themes/data-platform.md))

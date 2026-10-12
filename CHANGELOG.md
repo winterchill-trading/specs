@@ -10,6 +10,11 @@ belong here.
 
 ## 2026-10-12
 
+- `mm-core`: hot parameter updates and the rolling action-rate window (`Live.connect_and_start`,
+  `Strategy.update_params`, `on_resync`). See [repos/mm-core.md](repos/mm-core.md).
+- `market-recorder`: per-venue client counters on `/metrics` and `/status`, Prometheus alert
+  rules in `deploy/prometheus/`. See [repos/market-recorder.md](repos/market-recorder.md).
+
 - `exchange-core` holds two packages, `exchange-core` (types) and `exchange-core-engine`
   (matching, margin, funding, liquidation, noise traders), with `order-book` between
   them. See [repos/exchange-core.md](repos/exchange-core.md).
