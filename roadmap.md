@@ -20,6 +20,10 @@ the same change that finishes or starts them.
   `bitget-feed`, each a `Market_data.Feed.t` verified against the live venue.
 - `equities-core`: US equities, options and futures semantics for the equities
   simulators.
+- `nyse-sim`, `cboe-sim`, `cme-sim`: equities and futures simulators speaking NYSE
+  Pillar and XDP, Cboe BOE and PITCH, and CME iLink 3 and MDP 3.0 over the engine, each
+  with a CLI and an end-to-end script. See
+  [design/simulators.md](design/simulators.md#tradfi-simulators).
 - `market-recorder`: raw minute files, event logs, uploader, `/healthz` and `/metrics`
   for eight venues. See [repos/market-recorder.md](repos/market-recorder.md).
 - `infra`: base and service images, compose stack, Helm chart, `check-pins.sh` in CI.
@@ -80,8 +84,6 @@ Real bugs found by the new tests:
 
 ## In progress
 
-- `nyse-sim`, `cboe-sim`, `cme-sim`: equities and futures simulators speaking NYSE
-  Pillar and XDP, Cboe BOE and PITCH, and CME iLink 3 and MDP 3.0 over the engine.
 - `specs`: this repository.
 - Wave 2 from research: every CI workflow pins the `ox` opam repository to the base
   image commit; `market-data` adds compatible `Event_log` digests and an
