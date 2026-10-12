@@ -15,8 +15,7 @@
 
 ## Relevance to us
 
-- An index pointer: the episodes themselves (clocks, multicast, exchange design) are the
-  useful sources and get their own notes.
-- **Action:** none.
+- An index pointer only: the episodes themselves (clocks, multicast, exchange design) are the
+  useful sources and get their own notes. **Action:** none.
 
 Tags: `education`, `culture`
