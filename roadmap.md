@@ -92,8 +92,8 @@ Real bugs found by the new tests:
 ## Next
 
 - **price-anchor**: anchor simulator markets to real venues: mark price via `set_mark`,
-  shadow top-N levels, trade-replay fills. See
-  [design/simulators.md](design/simulators.md#planned-price-anchor).
+  shadow top-N levels, trade-replay fills; TradFi simulators anchor noise to a reference.
+  See [design/price-anchor.md](design/price-anchor.md).
 - **Replay server**: a `tardis-machine` style server that replays recorded raw minute
   files over HTTP and websocket in each venue's native format, so clients and the market
   maker can run against history.
