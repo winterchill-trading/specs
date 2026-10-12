@@ -20,7 +20,7 @@ the XDP Integrated Feed over TCP, on the venue-neutral `exchange-core-engine`.
 | `Nyse_sim_wire.Xdp` | XDP Integrated Feed packets and messages, little endian |
 | `Listing` | Listed equities and their reference data |
 | `Venue` | Pillar order semantics over `Exchange_core_engine.Exchange`: validation with `Equities_core.Order_types`, session, LULD bands and pauses, short sale restriction, opening and closing auctions |
-| `Anchoring` | Price anchor for the noise traders: series, fixed (with drift) or scaled recorded crypto references; `Market_sim.set_reference ~half_life` while the symbol trades continuously in the core session, target held inside the LULD bands, free walk in auctions, pauses and extended hours |
+| `Anchoring` | Thin wrapper over `price-anchor`'s `Anchor`, one per anchored listing (created with the listing's `Market_sim` and its 4 noise traders): series, fixed (with drift) or scaled recorded references as a `Path` pulled on the venue clock (`step_clock:false`, `levels:0`, no mark interval, `Market_sim.set_reference ~half_life`); `may_engage` is continuous core trading (not in an imbalance period or a LULD pause), `last_trade` the venue's last trade (where the walk restarts after the open or a reopening), `clamp` `Clamp.within_bands` on the LULD bands (30 bps inside); `GET /` shows `pulls` (reference changes), `waits`, `releases`, `resumes`, `clamped` |
 | `Market_event` | What the venue publishes, in matching order |
 | `Feed` | XDP publisher: sequence reset, time references, symbol mappings, heartbeats, refresh for late joiners; JSON subscribers get the same messages |
 | `Gateway`, `Session_handler`, `Framing` | Per-user Pillar streams (TG, GT, REF), one TCP session's state machine, stream framing |
