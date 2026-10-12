@@ -25,11 +25,16 @@
 
 ## Relevance to us
 
-- We have no Python layer; the transferable idea is "a deployment is one revision": our
-  service images in [infra](../../../repos/infra.md) pin siblings from GitHub `main` at
-  build time, so the exact set of repository commits inside a running image is not recorded.
-- **Action:** make `infra/images/service/build.sh` write the commit of the built repository
-  and of every pinned sibling into an image label (and a file under `/usr/share`), and print
-  it from `make ps`, so any deployed container maps to one set of revisions.
+- Context: we have no Python layer, so the XAR and notebook machinery does not apply; the
+  transferable idea is that a deployment should be exactly one set of code revisions.
+- **Build and deploy:** our service images in [infra](../../../repos/infra.md) pin siblings
+  from GitHub `main` at build time, so the commits inside a running image are not recorded.
+  **Action:** make `infra/images/service/build.sh` write the commit of the built repository
+  and of every pinned sibling into an image label and a file in the image, and show it from
+  `make ps`.
+- **Build and deploy:** the post's immutable "stable" tags versus a rolling "nightly" map to
+  our `:latest` base image tag. **Action:** tag service images with the built repository's
+  commit and make the Helm chart's default values reference an explicit tag rather than
+  `latest`.
 
 Tags: `deployment`, `build`, `python-interop`, `research-tooling`
