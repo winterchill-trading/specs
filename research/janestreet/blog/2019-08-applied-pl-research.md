@@ -15,7 +15,7 @@
 
 ## Relevance to us
 
-- Historical context for OxCaml features our `5.2.0+ox` switch now ships; no direct action.
-- **Action:** none.
+- Hiring post; historical context for OxCaml features (unboxed types, ownership-like modes)
+  that our `5.2.0+ox` switch now ships. **Action:** none.
 
 Tags: `hiring`, `oxcaml`
