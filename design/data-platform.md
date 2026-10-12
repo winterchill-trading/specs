@@ -131,7 +131,8 @@ one-minute candles.
 `market-data views -dir D` prints one `CREATE VIEW` per table over
 `D/*/*/parquet/<table>/*.parquet`; `market-data query -dir D "SQL"` runs them with the
 `duckdb` CLI. DuckDB multiplies two `DECIMAL(18,8)` without widening, so cast to
-`DECIMAL(38,16)` or `DOUBLE` first.
+`DECIMAL(38,16)` or `DOUBLE` first. Worked examples, including a replay sizing query, are
+in [queries.md](queries.md).
 
 ## Client pitfalls checklist
 

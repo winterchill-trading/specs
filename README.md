@@ -15,7 +15,7 @@ CI workflow and README at the time of writing.
 | --- | --- |
 | [overview.md](overview.md) | The ecosystem on one page: layers, dependency graph, runtime data flow |
 | [repos/](repos/) | One page per repository: purpose, libraries and binaries, key modules, dependencies, CI pin order, status, known gaps |
-| [design/](design/) | Cross-repository designs: data platform, market making, simulators, cloud sinks and replication, deployment |
+| [design/](design/) | Cross-repository designs: data platform, example queries, market making, simulators, cloud sinks and replication, deployment |
 | [adr/](adr/) | Architecture decision records, numbered |
 | [roadmap.md](roadmap.md) | Done, in progress, next |
 | [CLAUDE.md](CLAUDE.md) | How an agent uses and maintains this repository |
