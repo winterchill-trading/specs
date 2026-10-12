@@ -22,6 +22,10 @@
   `once` versus the default `many`, plus `separate` for non-reentrant closures holding
   exclusive borrows (analogous to `FnOnce` and `FnMut`), all without lifetime variables, so
   type inference is unaffected.
+- Closures that borrow must themselves be local, as in Rust; declaring a closure `global`
+  moves the captured value into it instead, like Rust's `move` closures.
+- Compared with Rust, OCaml references carry no lifetime variables, so these modes add no
+  higher-order polymorphism and leave type inference intact.
 - At the time the uniqueness analysis was being implemented, with data-race freedom under
   OCaml 5 as the main motivation.
 
