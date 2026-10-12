@@ -14,7 +14,6 @@
 
 ## Relevance to us
 
-- Recruiting and ML outreach; our stack has no prediction models.
-- **Action:** none.
+- Recruiting and ML outreach; our stack has no prediction models. **Action:** none.
 
 Tags: `ml`, `hiring`
