@@ -1,5 +1,7 @@
 # Cloud sinks and replication
 
+Kind: explanation.
+
 How recorded files leave the recorder's disk, and how recording is planned to survive the
 loss of one collector or region.
 
