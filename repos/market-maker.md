@@ -24,7 +24,9 @@ Bybit, or on their local simulators, by wrapping each venue adapter in
   again on SIGHUP; new parameters go to the running loop through
   `Mm_core.Live.update_params`, so quotes stay on the book. Invalid parameters or a
   symbol change are logged and the old parameters stay. The strategy log records the
-  reload as an `Update_params` line and shadow strategies take it in place.
+  reload as an `Update_params` line and shadow strategies take it in place. The session
+  attaches observers through `?on_venue` and a `Live.on_resync` hook starts the grace
+  period on the shadow strategies and writes a `Resync` line the replay feeds back.
 - `Shadow`: `-shadow-params` runs a second strategy on the same inputs and logs the
   plans that differ; they are never sent.
 - `Strategy_input`, `Strategy_log`, `Replay`: `-strategy-log` writes every input and plan
@@ -74,6 +76,4 @@ venue differences found by `compare-venues.sh`.
 - Hyperliquid orders are unsigned (it uses `Hl_venue`, not `Hl_venue.Trading`), so only
   `hl-sim` accepts them on that venue.
 - The position is not flattened on stop.
-- Shadow and strategy-log mirrors do not yet use `Live.on_resync`, so they do not start
-  the grace period the live loop starts (in progress).
 - Runs are not bit-repeatable with a fixed seed: request timing changes matching order.
