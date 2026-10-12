@@ -1,5 +1,7 @@
 # Deployment
 
+Kind: explanation.
+
 How the OxCaml services run outside a developer's dune workspace: container images, a
 local compose stack, a Helm chart, and the planned AWS topology. Everything here lives in
 the [infra](../repos/infra.md) repository (status: in progress); the AWS part is design
