@@ -336,7 +336,7 @@ the proposed action, the source note and the repositories it affects.
   Noise](janestreet/podcast/22-finding-signal-in-the-noise.md). Affects:
   [market-data](../repos/market-data.md).
 - Rebuilt history must record what produced it so corrected outputs are distinguishable. **Action:**
-  day-close writes <date>.manifest.sexp per table with producer version, source norm/ files and
+  day-close writes `<date>.manifest.sexp` per table with producer version, source norm/ files and
   sizes, run time. Source: [Wrestling the world into
   rows](janestreet/podcast/29-wrestling-the-world-into-rows.md). Affects:
   [market-data](../repos/market-data.md).
