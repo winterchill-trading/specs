@@ -15,9 +15,8 @@
 ## Relevance to us
 
 - The exchange-building talk is directly relevant to the engine in
-  [exchange-core](../../../repos/exchange-core.md) and the simulators; the unboxed types talk
-  is background for OxCaml.
-- The post itself is only a list of links.
-- **Action:** none.
+  [exchange-core](../../../repos/exchange-core.md) and the simulators, and the unboxed types
+  talk is background for OxCaml, but the post itself is only a list of links. **Action:**
+  none.
 
 Tags: `education`, `architecture`
