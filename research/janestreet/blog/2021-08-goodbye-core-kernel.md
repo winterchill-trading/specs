@@ -22,11 +22,15 @@
 
 ## Relevance to us
 
-- Every OCaml repo opens `Core`; binaries such as [market-maker](../../../repos/market-maker.md),
-  [market-recorder](../../../repos/market-recorder.md) and the simulators need the `*_unix`
-  libraries (`Command_unix.run`, `Core_unix`) on top of it.
-- This is background for the split we already live with, not a new technique.
-- **Action:** add a short entry to the `oxcaml-claude-skills` gotchas log listing the
-  `Core.X` to `X_unix` renames, so agents stop reaching for `Core.Unix` or `Command.run`.
+- **OCaml practice:** the Unix-dependent parts of Core live in separate libraries
+  (`Command_unix`, `Core_unix`, `Time_ns_unix` and so on), and agents keep reaching for the
+  old `Core.Unix` or `Command.run` names. **Action:** add a gotchas-log entry in
+  [oxcaml-claude-skills](../../../repos/oxcaml-claude-skills.md) listing the `Core.X` to
+  `X_unix` renames and the matching dune library names.
+- **Build and deploy:** keeping portable code on plain `Core` and Unix code at the edge is
+  what lets libraries compile without Unix. **Action:** none; our pure libraries
+  ([fixed-decimal](../../../repos/fixed-decimal.md),
+  [exchange-core](../../../repos/exchange-core.md), [mm-core](../../../repos/mm-core.md))
+  already avoid `core_unix`, and nothing targets JavaScript.
 
 Tags: `ocaml-practice`, `build`
