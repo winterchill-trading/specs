@@ -6,33 +6,56 @@
 
 ## Summary
 
-- Intern project: Windows hosts were configured by a scheduled PowerShell task that parsed
-  JSON meta-config (applicability by hostname regex, AD group or department, schedules,
-  and dev/beta/staging phasing) and ran config scripts in-process on every machine.
-- Problems: management and execution mixed in one single-threaded process (a config that
-  spawned a thread hung the whole run), only JSON-schema level typing, and per-host
-  applicability checks loaded external systems.
-- The decision logic moved into an OCaml parser inside an existing rollout service
-  (Orchestrator) that polls the meta-config; hosts run a stateless F# agent that talks to
-  it over RPC and reports through the central observability stack.
-- Centralizing turned health checks into one server query ("which hosts have not checked
-  in recently?").
-- Cutover safety came from an "audit mode": the new client shadows the old system, feeds
-  the server the old run's outcomes, asks what the new logic would have done, and logs
-  drift as include/exclude decisions with a typed reason.
-- The decision diff found real bugs in the old system (wrong overnight schedule windows,
-  missed test-mode reruns after a failed apply), which were fixed in place; some old bugs
-  were deliberately kept in the rewrite to avoid behavior changes.
-- Migration is per config script: the old system skips scripts assigned to the new one.
+- Intern project in Windows engineering. The firm had moved off Group Policy (weak
+  alerting, hard to manage as code) to its own framework built on a scheduled PowerShell
+  task, which in turn became hard to reason about.
+- The unit of configuration is an artifact: a condition ("is this set?") plus an action
+  that makes it true, ideally a single registry-style change. Artifacts group into
+  parameterized config scripts.
+- A JSON meta-config decides applicability (hostname regex, AD group, the user's
+  department), scheduling (when a script may run) and phasing (dev, beta, staging groups
+  for staged rollouts).
+- Previously every host parsed the meta-config itself and ran scripts in the same
+  single-threaded PowerShell process. Mixing management and execution caused incidents: one
+  config spawned a thread that could never run, hanging the whole loop.
+- Other problems: JSON-schema "typing" only, PowerShell's weak type checking, and
+  per-host applicability checks that loaded external systems.
+- Decision-making moved into an existing internal rollout service (Orchestrator), which
+  already has applicability and phasing; an OCaml parser for the meta-config lets it poll
+  and store the configuration, including subtle cases such as test-mode runs outside the
+  schedule.
+- The rewrite found several bugs in the old PowerShell logic; some were deliberately
+  reproduced in the new code so the cutover would not change behavior.
+- Hosts now run a stateless F# agent that talks to Orchestrator over RPC and reports via
+  the central observability stack, so liveness becomes one server-side query for hosts that
+  have not checked in recently. Old monitoring stays on in parallel until trust is earned.
+- Cutover used an audit mode beside the normal apply mode: the agent tails the old system,
+  reports its outcomes to the server as if they were its own (since the next decision
+  depends on the previous run's result), asks what the new logic would do, and logs drift.
+- Both systems emit decision logs with an include or exclude verdict and a typed reason
+  per config. Diffs exposed old-system bugs: wrong handling of overnight schedule windows,
+  and failing to keep re-running a failed config in test mode outside its schedule.
+- Those bugs were fixed in the old system, so there was no need to rush the migration.
+  Migration happens per config script: the old system skips scripts assigned to the new
+  one.
 
 ## Relevance to us
 
-- The shadow-and-diff cutover pattern fits [market-maker](../../../repos/market-maker.md):
-  a new quoting or reconciliation rule can run beside the current one and log decision
-  drift before it is allowed to send orders.
-- Typed decision reasons (an enum per include/exclude) are a cheap way to make
-  [mm-core](../../../repos/mm-core.md) reconciler output diffable.
-- **Action:** in `mm-core`, add a ppx_expect test that runs two reconciler configurations
-  over the same recorded quote sequence and prints only the actions where they differ.
+- **Testing and simulation:** running a new decision engine in shadow beside the old one
+  and diffing typed decisions finds bugs in both before cutover. **Action:** add a
+  ppx_expect test in [mm-core](../../../repos/mm-core.md) that feeds one scripted
+  `Market_state` and fill sequence through `Strategy` under two `Params` values and prints
+  only the ticks where the `Action` plans differ.
+- **Logs and state machines:** each decision should carry a machine-readable reason so
+  logs from two implementations can be diffed line by line. **Action:** in
+  [mm-core](../../../repos/mm-core.md), have the `Quoter` return a typed reason (for
+  example inventory limit, kill switch, below minimum notional) for each side it leaves
+  unquoted, and log it as a sexp.
+- **Build and deploy:** a centralized "who has not checked in" view beats probing each
+  instance. **Action:** expose a per-stream `last_message_age_seconds` gauge in the
+  [market-recorder](../../../repos/market-recorder.md) `/metrics` output, so silent feeds
+  show up in one query rather than only as a `/healthz` 503.
+- Keeping known old bugs during a rewrite to separate "port" from "behavior change" is a
+  useful discipline when porting adapters between venues.
 
 Tags: `ops`, `testing`, `deployment`, `ocaml-practice`
