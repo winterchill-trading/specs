@@ -25,9 +25,39 @@ units, so arithmetic is exact and allocation-free.
   (`Price.t -> Size.t -> Usd.t`) without overflowing intermediates.
 - `mul_units`, `div_units`: the raw helpers.
 
+`S.t` is declared `[@@immediate]`, so values are unboxed `int`s and can cross modes.
+`of_float` rounds to the nearest unit, raises on NaN, infinities and out-of-range values,
+maps `-0.0` to zero and carries a `lossy` alert; wire values go through `of_string`.
+
+## Tests and performance
+
+Expect tests, a property test of `mul_units`, `div_units` and `Product` against exact
+zarith arithmetic, a must-fail compile check (`test/must_fail`) that a `Price.t` is not a
+`Size.t`, an expect test pinning zero minor words for `mul`, `div` and `Product`, and
+expect tests that keep the README's `ocaml` blocks identical to `test/test_readme.ml`
+(mdx is not available for the OxCaml compiler). `bench/bench.exe` (core_bench), Apple
+M-series laptop:
+
+| Operation | Time/run |
+| --- | ---: |
+| `mul` | 5-8 ns |
+| `div` | 26-31 ns |
+| `Product.mul` | 7 ns |
+| `Product.div` | 27 ns |
+| empty closure (baseline) | 2.4 ns |
+
+Every row shows the harness's own 3 minor words, the same as the empty closure.
+
+The property test found a real bug: `div_units` overflowed `r * 10` in its long division
+when the divisor was above `max_value / 10`, returning wrong quotients (`10^18 / (3 *
+10^18)` gave `-98999` units instead of `33333333`). Fixed in commit `016ab09` with a slow
+path that adds the remainder ten times modulo the divisor. `of_string` also rejected
+in-range values with 11 integer digits; it now accepts any integer part that fits.
+
 ## Dependencies
 
-- Depends on: no org package (core, ppx_jane, ppx_yojson_conv, yojson).
+- Depends on: no org package (core, ppx_jane, ppx_yojson_conv, yojson; zarith and
+  core_bench for tests and benchmarks).
 - Used by: `exchange-core`, `exchange-core-engine`, `order-book`, `hl-protocol`,
   `binance-protocol`, `bybit-protocol`, `hl-sim`, `binance-sim`, `bybit-sim`,
   `market-data`, `mm-core`, `hl-mm`, `binance-client`.
@@ -42,5 +72,5 @@ None; `opam install . --deps-only --with-test`.
   inherit this.
 - The range is that of a 63-bit `int` in 10^-8 units, about 4.6 * 10^10. Larger values
   fail to parse: hl-mm logs and skips Hyperliquid clearinghouse snapshots whose
-  `liquidationPx` has 11 integer digits.
+  `liquidationPx` is out of range.
 - `mul`, `div` and `div_int` truncate toward zero; division by zero raises.
