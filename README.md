@@ -17,6 +17,7 @@ CI workflow and README at the time of writing.
 | [repos/](repos/) | One page per repository: purpose, libraries and binaries, key modules, dependencies, CI pin order, status, known gaps |
 | [design/](design/) | Cross-repository designs: data platform, example queries, market making, simulators, cloud sinks and replication, deployment |
 | [adr/](adr/) | Architecture decision records, numbered |
+| [postmortems/](postmortems/) | Blameless incident write-ups, from [TEMPLATE.md](postmortems/TEMPLATE.md) |
 | [roadmap.md](roadmap.md) | Done, in progress, next |
 | [CLAUDE.md](CLAUDE.md) | How an agent uses and maintains this repository |
 
