@@ -42,7 +42,8 @@ switch is a rolling one-second window; `action_rate_grace_ms` (5000) suspends it
 every venue reconnect (`Strategy.on_resync`) and `action_rate_cooldown_ms` (none) clears
 an action-rate halt only. Position and drawdown halts stay permanent. `Live.on_resync live ~f` runs `f` on every
 venue reconnect after the loop's own grace period starts, and `?on_venue` on
-`connect_and_start`/`connect_and_run` attaches observers to the venue before the loop starts.
+`connect_and_start` and `connect_and_run` attaches observers to the venue before the
+loop starts.
 
 ## Tests and benchmarks
 
