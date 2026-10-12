@@ -20,6 +20,8 @@ the same change that finishes or starts them.
   `bitget-feed`, each a `Market_data.Feed.t` verified against the live venue.
 - `equities-core`: US equities, options and futures semantics for the equities
   simulators.
+- `market-recorder`: raw minute files, event logs, uploader, `/healthz` and `/metrics`
+  for eight venues. See [repos/market-recorder.md](repos/market-recorder.md).
 - `infra`: base and service images, compose stack, Helm chart, `check-pins.sh` in CI.
   See [repos/infra.md](repos/infra.md).
 - `specs` research actions: replication gap detection and failure table, client pitfalls
@@ -31,8 +33,6 @@ the same change that finishes or starts them.
 
 ## In progress
 
-- `market-recorder`: raw minute files, event logs, uploader, `/healthz` and `/metrics`,
-  `market-recorder run -config`. See [repos/market-recorder.md](repos/market-recorder.md).
 - `nyse-sim`, `cboe-sim`, `cme-sim`: equities and futures simulators speaking NYSE
   Pillar and XDP, Cboe BOE and PITCH, and CME iLink 3 and MDP 3.0 over the engine.
 - `specs`: this repository.

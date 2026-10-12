@@ -34,8 +34,8 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Market making | [market-maker](repos/market-maker.md) | One `market-maker` binary for all three venues | done |
 | Data platform | [parquet](repos/parquet.md) | Pure OCaml Parquet writer | done |
 | Data platform | [market-data](repos/market-data.md) | Normalized types, event logs, Parquet sink, day close, DuckDB views, replay | done |
-| Data platform | [market-recorder](repos/market-recorder.md) | Live recorder: raw minute files, event logs, uploader, metrics | in progress |
-| Tooling | [infra](repos/infra.md) | Container images, compose stack, Helm chart, deployment notes | in progress |
+| Data platform | [market-recorder](repos/market-recorder.md) | Live recorder: raw minute files, event logs, uploader, metrics | done |
+| Tooling | [infra](repos/infra.md) | Container images, compose stack, Helm chart, deployment notes | done |
 | Tooling | [oxcaml-claude-skills](repos/oxcaml-claude-skills.md) | Agent skills and the gotchas log | done |
 | Tooling | specs | This repository | in progress |
 
