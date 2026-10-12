@@ -49,6 +49,6 @@ integration test. CI is green with these pins.
 - Testnet signing is checked only against an unfunded key (the exchange named the key's
   address and placed nothing); market orders and non-128-bit client ids are rejected
   locally.
-- Clearinghouse snapshots whose `liquidationPx` exceeds the `fixed-decimal` range are
-  logged and skipped.
 - `scripts/e2e.sh` assumes the shared dune workspace.
+- The README still says clearinghouse snapshots with an 11-digit `liquidationPx` are
+  skipped; since `hl-protocol` decodes out-of-range values as `None` they decode.
