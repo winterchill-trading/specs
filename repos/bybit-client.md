@@ -63,4 +63,3 @@ funding 2.9 us; the normalizer alone is under 1 us.
 - `Fill.closed_pnl` is `None` (Bybit reports closed PnL per order and position);
   `realized_pnl` is after fees and funding; negative `Id_map` ids are stable only per
   `Venue.t`.
-- Private streams and order entry are checked against the simulator only.
