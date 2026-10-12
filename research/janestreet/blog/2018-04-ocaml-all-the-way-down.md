@@ -6,20 +6,20 @@
 
 ## Summary
 
-- Short announcement of a tech talk in the New York office about building FPGA
-  applications from OCaml.
-- The author reflects that Jane Street's software grew from narrow research and execution
-  systems into many domains (mail handling, market data, machine learning), nearly all in
-  OCaml.
-- A single language brings shared tools, libraries and idioms that the whole organization
-  refines together, despite OCaml not being ideal for every task.
-- FPGAs are the newest extension of that approach, reusing the existing OCaml codebase
-  (this line of work became the Hardcaml library).
+- Announces a tech talk in the New York office (April 18, 2018) on building FPGA
+  applications with OCaml.
+- The author recalls starting with narrow systems for statistical research on strategies and
+  then executing them, and how the firm's software since spread into many unexpected areas.
+- Nearly everything (mail handling, market data, machine learning) is written in OCaml;
+  that has costs since no language suits everything.
+- The payoff is a unified environment: shared tools, libraries and idioms refined for the
+  whole organization.
+- FPGAs, increasingly attractive reconfigurable hardware, are the newest domain, aiming to
+  reuse the existing OCaml codebase (this became the Hardcaml work).
 
 ## Relevance to us
 
-- Weak relevance: we have no hardware work. It does reinforce our choice to keep every
-  repo, including tooling such as [parquet](../../../repos/parquet.md), in one OCaml stack.
-- **Action:** none.
+- Reinforces our single-stack choice (even [parquet](../../../repos/parquet.md) is pure
+  OCaml), but we have no hardware work. **Action:** none.
 
 Tags: `fpga`, `culture`, `hardware`
