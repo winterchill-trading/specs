@@ -13,6 +13,9 @@ belong here.
 - `market-recorder`: `merge` subcommand and `scripts/replicate-day.sh`, two collectors'
   raw days into one canonical copy with a `_merge/<date>.json` report. See
   [design/cloud-sinks-and-replication.md](design/cloud-sinks-and-replication.md).
+- `market-maker`: signs Hyperliquid orders through `Hl_venue.Trading` when
+  `HL_PRIVATE_KEY` is set, `-i-understand-mainnet` guard, `hl-sim` as a test dependency.
+  See [repos/market-maker.md](repos/market-maker.md).
 - `price-anchor` (new): anchors a simulated market to a live or recorded reference (mark,
   funding, shadow top-N levels, trade-replay fills, staleness) over `exchange-core-engine`
   and `market-data`. See [repos/price-anchor.md](repos/price-anchor.md).

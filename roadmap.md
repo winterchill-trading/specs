@@ -199,6 +199,16 @@ Bugs found in waves 2 and 3:
 - `infra`: the switch cache key missed the runner image, so an Ubuntu release change
   could restore an incompatible switch [`b97643b`][infra-b97643b].
 
+### Wave 5
+
+- **Hyperliquid trading** in `market-maker`: `-venue hyperliquid` signs through
+  `Hl_venue.Trading` when `HL_PRIVATE_KEY` is set and stays unsigned otherwise; signing
+  for mainnet needs `-i-understand-mainnet` [`26ae36e`][market-maker-26ae36e]; a signed
+  run on an in-process `hl-sim` under a synthetic clock checks the recovered signer
+  [`6b767a8`][market-maker-6b767a8]; `SIGNED=1 scripts/e2e.sh hl` checks the simulator's
+  journal [`1ae81da`][market-maker-1ae81da]. No order has been placed on testnet with a
+  funded account yet. [Page](repos/market-maker.md).
+
 [market-data-a7fdae0]: https://github.com/winterchill-trading/market-data/commit/a7fdae0
 [hl-client-e91dc3e]: https://github.com/winterchill-trading/hl-client/commit/e91dc3e
 [market-data-73df673]: https://github.com/winterchill-trading/market-data/commit/73df673
@@ -296,6 +306,9 @@ Bugs found in waves 2 and 3:
 [market-recorder-5f97596]: https://github.com/winterchill-trading/market-recorder/commit/5f97596
 [hl-protocol-1964453]: https://github.com/winterchill-trading/hl-protocol/commit/1964453
 [binance-client-e15212b]: https://github.com/winterchill-trading/binance-client/commit/e15212b
+[market-maker-26ae36e]: https://github.com/winterchill-trading/market-maker/commit/26ae36e
+[market-maker-6b767a8]: https://github.com/winterchill-trading/market-maker/commit/6b767a8
+[market-maker-1ae81da]: https://github.com/winterchill-trading/market-maker/commit/1ae81da
 
 ## In progress
 
@@ -335,9 +348,6 @@ Bugs found in waves 2 and 3:
   exchange in a second region, cross-region replication and the daily merge job.
 - **AWS deployment**: k3s on EC2 in ap-northeast-1 (Binance, Hyperliquid) and
   ap-southeast-1 (Bybit). See [design/deployment.md](design/deployment.md).
-- **Hyperliquid trading**: `hl-client` signs and `hl-mm` trades on testnet; the
-  `market-maker` binary still uses the unsigned `Hl_venue`, and no order has been placed
-  on testnet with a funded account.
 - **specs upkeep**: every new repository and architecture change updates these pages
   (see [CLAUDE.md](CLAUDE.md)); refresh the `oxcaml-claude-skills` ecosystem map from
   [overview.md](overview.md).

@@ -168,6 +168,7 @@ graph LR
   market_replay --> bybit_protocol
 
   hl_mm -.-> hl_sim
+  market_maker -.-> hl_sim
   binance_client -.-> binance_sim
   bybit_client -.-> bybit_sim
   market_replay -.-> hl_client
