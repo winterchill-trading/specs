@@ -11,7 +11,7 @@ normalized events go to `Market_data.Event_log` daily files.
 | Repository | `winterchill-trading/market-recorder` |
 | opam package | `market-recorder` |
 | Library | `market-recorder` (module `Market_recorder`) |
-| Binary | `market-recorder run -config FILE`, `market-recorder check-config -config FILE`, `market-recorder status [-url URL]`, `market-recorder rebuild-norm -data-dir DIR -out DIR -date DATE [-venue V] [-skip VENUE:STREAM]` |
+| Binary | `market-recorder run -config FILE`, `market-recorder check-config -config FILE`, `market-recorder status [-url URL]`, `market-recorder rebuild-norm -data-dir DIR -out DIR -date DATE [-venue V] [-skip VENUE:STREAM]`, `market-recorder merge -a DIR -b DIR -out DIR -date DATE [-window SPAN]` |
 | Status | done (CI green; deployment through infra is on the roadmap) |
 
 ## Key modules
@@ -28,6 +28,7 @@ normalized events go to `Market_data.Event_log` daily files.
 | `Warnings` | Per-stream warnings at most once a minute with a suppressed count |
 | `Process_metrics` | `build_info` (`git describe` version, OCaml), open file descriptors, RSS (Linux), GC counters and heap words |
 | `Status_table` | Parses `/metrics` text and prints the per-stream tables of `status` |
+| `Raw_merge` | `merge`: two collectors' raw minute files of a day into one canonical copy in the same layout, with `_merge/<date>.json` per-series counts (`only_a`, `only_b`, `both`, `gaps_closed`, `gaps_kept`) |
 | `Rebuild` | `rebuild-norm`: `Market_data.Rebuild_norm` over every venue's `Normalizer.S` adapter (`Hl_client`, `Binance_client`, `Bybit_client` `Raw_normalizer`, the five feeds' adapters); `-venue` filter; `-skip venue:stream` reads a temporary directory of symlinks without those raw streams |
 
 `Config.Endpoint.problem` rejects a venue and endpoint pair that cannot work (a venue
@@ -44,6 +45,26 @@ buffered lines only once the minute file is open).
 day and compares every event log with its rebuilt copy (counts through `market-data
 dump`, then bytes); a 20 s run rebuilt all 22 logs byte for byte. This completes
 [ADR 0002](../adr/0002-raw-first-storage.md).
+
+## Replication
+
+`merge` implements the merge step of the
+[replication design](../design/cloud-sinks-and-replication.md#replication-design-planned):
+per venue, stream, symbol and minute, frames of the two copies with the same text and
+`recv_ts` at most `-window` (default 5 s) apart are one message, written once with the
+earlier `recv_ts`; unmatched frames in a minute's last window are matched against the
+next minute of the other copy. A disconnect line is written only when the other copy has
+an overlapping gap (its own disconnect span, or no file for that minute). Output goes
+through `Raw_writer`, so files are compressed exactly as the recorder writes them; the
+output directory must hold no raw files of the day. `scripts/replicate-day.sh REMOTE_A
+REMOTE_B [DATE]` fetches both days with `rclone copy --include`, merges, and copies the
+result to `$DEST`; `scripts/test-replicate-day.sh` runs it in CI with a stand-in rclone.
+The bench merges about 0.36 to 0.42 M input lines/s from compressed files to compressed
+files (1.0 to 1.5 M in memory) on one core.
+
+Planned: sequence-number identity and exact gap lists, silence-based suspected gaps, the
+clock bound, the L2 snapshot rule, matching across the day boundary, and the infra side
+(per-collector upload prefixes, a daily merge job before day close).
 
 ## Metrics added in wave 2
 
@@ -90,5 +111,5 @@ See [design/data-platform.md](../design/data-platform.md),
 - Event logs are not uploaded.
 - `hl-sim` serves no `activeAssetCtx`, so a Hyperliquid `Funding` stream against the
   simulator never delivers and keeps `/healthz` at 503.
-- One collector per venue; no replication yet.
+- One collector per venue is deployed; `merge` exists but no second collector or merge job runs yet.
 - Minute files are compressed whole in memory on roll.
