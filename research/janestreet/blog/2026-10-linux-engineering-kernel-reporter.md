@@ -6,30 +6,42 @@
 
 ## Summary
 
-- Intern project to collect kernel logs from Linux hosts even when the disk or the
-  network has failed, which is when the logs matter most; workstations lack lights-out
-  management, so this was the only way to see their crashes.
-- The shipper removes hidden disk dependencies: it `mlockall`s itself so code pages are
-  never paged in, reads `/dev/kmsg` directly instead of on-disk logs, and resolves the
-  collectors' DNS names in a background loop with cached IPs so a dead disk (no
-  `/etc/resolv.conf`) does not block shipping.
-- Transport is plain UDP, one copy per collection server: no TLS certificates on disk, no
-  backpressure, no connections to keep alive.
-- For panics, the kernel writes compressed, newest-first log fragments to pstore
-  (EFI-backed non-volatile memory) before kexec into the crash kernel; kernel arguments
-  enable the EFI backend and order pstore before kexec.
-- On next boot the shipper drains pstore with its own parser (an old systemd did not
-  recognize a renamed backend), reassembles fragments, ships them, and alerts if pstore
-  stays non-empty so firmware storage never fills.
-- Logs surface through a CLI and an existing why-reboot tool; they pinned a wave of
-  desktop freezes on a GPU driver update, which was rolled back.
+- Kernel logs from all Linux hosts are stored centrally, but the logs that matter most are
+  produced when disks, storage or networking fail. Workstations (and servers with flaky
+  lights-out management) give no other way to see them. A 2025 intern project made log
+  collection survive both disk and network failure.
+- Hidden disk dependencies were removed one by one. The shipper `mlockall`s itself so code
+  pages never need to be paged in from disk.
+- It reads `/dev/kmsg`, the kernel ring buffer as a character device that returns whole
+  structured lines, instead of on-disk logs.
+- Service discovery normally needs DNS, which reads `/etc/resolv.conf` and `/etc/hosts`.
+  The shipper resolves collector addresses in a background loop and caches the IPs, so the
+  send loop never blocks and keeps working on old IPs if the disk dies.
+- Transport is plain UDP, one copy of each line to every collection server: no TLS
+  certificates read from disk, no backpressure, no connections to maintain. A simple server
+  persists what arrives.
+- For panics, the crash kernel (kexec) needs a working disk, enough reserved memory, and
+  its own correctness. As a fallback, pstore writes compressed log fragments, newest first,
+  to firmware-backed non-volatile memory using direct firmware calls.
+- Kernel arguments enable the EFI pstore backend and make the kernel write pstore before
+  jumping into the crash kernel.
+- On next boot the shipper drains pstore and ships it. The team wrote its own pstore parser
+  because the installed systemd did not recognize the renamed EFI backend. It reassembles
+  fragments and alerts if pstore is not empty, so firmware storage never fills up.
+- Logs are exposed via a CLI and an existing why-reboot tool. A wave of desktop freezes
+  traced to a GPU driver null dereference reached through a browser's crash reporter; the
+  driver update was rolled back and the vendor contacted.
 
 ## Relevance to us
 
-- Weak: we do not run our own hosts yet. The idea of "ship diagnostics without the
-  dependencies that just failed" applies loosely to
-  [market-recorder](../../../repos/market-recorder.md), whose health endpoint and uploader
-  share the host with the disk they report on.
-- **Action:** none.
+- **Logs and state machines:** diagnostics must not share a dependency with the failure
+  they report. **Action:** make the [market-recorder](../../../repos/market-recorder.md)
+  `/healthz` report a failing disk write (for example the last `Raw_writer` flush error
+  and its age) instead of only silent streams.
+- **Build and deploy:** cached service discovery keeps a process working when DNS or
+  config files are unavailable. **Action:** document in the [infra](../../../repos/infra.md)
+  deployment notes whether the recorder's upload command depends on DNS and what happens
+  to `upload-pending.sexp` during a DNS outage.
+- Pstore and crash kernels apply only when we run our own hosts; nothing to do yet.
 
 Tags: `ops`, `observability`, `deployment`
