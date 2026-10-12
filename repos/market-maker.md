@@ -21,8 +21,10 @@ Bybit, or on their local simulators, by wrapping each venue adapter in
 - `Session.Make (V)`: one run over `Mm_core.Live.Make`; its outcome is the live report,
   tick-to-order stats (printed at exit), reload count and shadow counts.
 - `Params_file`: sexp overrides of `Mm_core.Params.t` fields. `-params FILE` is read
-  again on SIGHUP; valid new parameters restart the live loop on the same connection
-  (`Restartable_venue`), so quotes are off the book for one cancel-all and one snapshot.
+  again on SIGHUP; new parameters go to the running loop through
+  `Mm_core.Live.update_params`, so quotes stay on the book. Invalid parameters or a
+  symbol change are logged and the old parameters stay. The strategy log records the
+  reload as an `Update_params` line and shadow strategies take it in place.
 - `Shadow`: `-shadow-params` runs a second strategy on the same inputs and logs the
   plans that differ; they are never sent.
 - `Strategy_input`, `Strategy_log`, `Replay`: `-strategy-log` writes every input and plan
@@ -61,9 +63,9 @@ runs the binary and prints the report; `FAULT_AT=SECONDS` restarts the simulator
 and fails unless the run reconnects, resyncs, places orders again and ends `Running`.
 `scripts/e2e-all.sh` prints every sibling checkout's commit, runs all three venues, then
 a fault run on Binance, and ends with a tick-to-order table (30 s per venue on an
-M-series Mac: p50 43 to 62 us, p99 118 us to 1.8 ms). The fault run needs
-`-max-actions-per-sec 1000`: the requote burst after a simulator restart trips the
-default cap of 100, and the halt is permanent (wave 4 makes it a rolling window).
+M-series Mac: p50 43 to 62 us, p99 118 us to 1.8 ms). The fault run uses the
+default action cap of 100: the requote burst after a simulator restart falls inside
+`-action-rate-grace-ms` (5000), and `-action-rate-cooldown-ms` can clear a later halt.
 CI runs `shellcheck` on the scripts and prints the resolved pins. The README lists
 venue differences found by `compare-venues.sh`.
 
@@ -72,6 +74,6 @@ venue differences found by `compare-venues.sh`.
 - Hyperliquid orders are unsigned (it uses `Hl_venue`, not `Hl_venue.Trading`), so only
   `hl-sim` accepts them on that venue.
 - The position is not flattened on stop.
-- A parameter reload restarts the loop and cancels quotes; `mm-core` has no hot update
-  hook yet (wave 4).
+- Shadow and strategy-log mirrors never see reconnects, so they do not start the grace
+  period the live loop starts.
 - Runs are not bit-repeatable with a fixed seed: request timing changes matching order.

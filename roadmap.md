@@ -301,8 +301,8 @@ Bugs found in waves 2 and 3:
   - CI cache rollout (done): every repository's workflow uses `infra`'s `ox-setup`
     action; warm runs take 1.5 to 2.5 minutes, cold 9 to 21
     (see [design/deployment.md](design/deployment.md#ci)).
-  - `market-maker`: reload through `Live.update_params` instead of restarting the loop;
-    expose `action_rate_grace_ms` and `action_rate_cooldown_ms`.
+  - `market-maker` (done): reload through `Live.update_params`; `-action-rate-grace-ms`
+    and `-action-rate-cooldown-ms` flags; fault run at the default action cap.
 
 ## Next
 
