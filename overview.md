@@ -116,6 +116,9 @@ graph LR
   binance_sim --> binance_protocol
   bybit_sim --> engine_pkg
   bybit_sim --> bybit_protocol
+  bybit_sim --> price_anchor
+  bybit_sim --> bybit_client
+  bybit_sim --> binance_client
   price_anchor --> engine_pkg
   price_anchor --> market_data
   market_data --> exchange_core
