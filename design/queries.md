@@ -1,5 +1,7 @@
 # Example queries
 
+Kind: how-to.
+
 Worked DuckDB queries over the Parquet tables of the [data platform](data-platform.md),
 with notes on the columns they rely on. Each query was run with DuckDB 1.5 against tables
 of the same column names and types as the day-close output.
