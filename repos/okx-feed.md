@@ -18,7 +18,8 @@ Read-only public market data from OKX (trades, best bid and offer, L2 book, fund
 | `Config` | Public websocket endpoint (`wss://ws.okx.com:8443/ws/v5/public` by default) |
 | `Wire` | JSON shapes of the public channels |
 | `Normalizer` | Pure frame to `Market_data.Event.t` conversion, per-book sequencing, funding merge |
-| `Live_feed` | `create ?on_raw config ~symbols ~streams`: one reconnecting `Venue_net.Ws_client` per stream |
+| `Live_feed` | `create ?on_raw ?time_source config ~symbols ~streams`: one reconnecting `Venue_net.Ws_client` per stream; `start` keeps a handle whose `stats` count frames, parse errors (and OKX `error` events) and reconnects; `time_source` (default the wall clock) stamps `recv_ts` and drives keepalive and backoff |
+| `Md_normalizer` | `Normalizer` as a `Market_data.Normalizer.S`, for `Market_data.Rebuild_norm` over recorded raw minutes |
 
 | Stream | OKX channels |
 | --- | --- |
@@ -39,6 +40,18 @@ maintenance is accepted. Every reconnect resubscribes and resets the books. Test
 `test/test_normalizer.ml` ("books: snapshot, deltas, heartbeat, sequence reset", "books:
 a gap resubscribes and waits for a new snapshot", "bad frames are errors, not
 exceptions").
+
+## Tests and benchmark
+
+`test/fixtures/raw/okx/<stream>/BTC-USDT-SWAP/2026/10/12/16-53.ndjson` is the start of a
+recorded mainnet minute per stream in the `market-recorder` raw layout (257 KB). Tests
+normalize every frame (149 trades, 249 BBOs, 1 snapshot and 58 deltas, 82 funding
+records, no errors), run `Rebuild_norm` over the minute and read the event logs back,
+pin minor words per message within 2%, and drive `Live_feed` against a scripted local
+websocket server (a malformed frame shows in `stats`; a dropped connection reconnects on a
+synthetic clock). `bench/main.exe` (core_bench of `Normalizer.frame`, M-series laptop):
+trades 2.4 us and 431 words per frame, bbo 2.5 us, funding 2.1 us, a 60-frame book replay
+from a 400-level snapshot 2.7 ms.
 
 ## Dependencies
 
