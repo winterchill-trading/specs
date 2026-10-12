@@ -37,6 +37,15 @@ the same change that finishes or starts them.
 - `specs` research actions: replication gap detection and failure table, client pitfalls
   checklist, example queries, `Kind:` headers, postmortem template, simulator TIF table,
   [CHANGELOG.md](CHANGELOG.md).
+- `price-anchor`: simulator markets tied to a reference venue, live or recorded (mark
+  and funding, shadow top-N levels, trade-replay fills, staleness), and the TradFi path
+  (half-life pull, venue phases, venue clock, `clamp`, `path`). Wired into
+  [hl-sim](repos/hl-sim.md), [binance-sim](repos/binance-sim.md),
+  [bybit-sim](repos/bybit-sim.md), [nyse-sim](repos/nyse-sim.md),
+  [cboe-sim](repos/cboe-sim.md) and [cme-sim](repos/cme-sim.md); the TradFi three can
+  replace their `Anchoring` modules with `Anchor` (mapping in the price-anchor README).
+  See [repos/price-anchor.md](repos/price-anchor.md) and
+  [design/price-anchor.md](design/price-anchor.md).
 - CI pins: every repository pins its sibling dependencies in dependency order
   (`infra/scripts/check-pins.sh -a` passes; `hl-mm` and `market-maker` now pin
   `parquet` and `market-data`).
@@ -314,8 +323,7 @@ Bugs found in waves 2 and 3:
 
 - Wave 5: `market-replay` (done): HTTP raw replay and native websocket replay for
   Hyperliquid, Binance and Bybit, paced by `-speed`; see
-  [repos/market-replay.md](repos/market-replay.md). `price-anchor` library in progress;
-  simulator `-anchor*` flags next. `market-data` rebuild gains the L2 snapshot index.
+  [repos/market-replay.md](repos/market-replay.md). `market-data` rebuild gains the L2 snapshot index.
 
 - `specs`: this repository.
 - Wave 4 from research:
@@ -333,9 +341,6 @@ Bugs found in waves 2 and 3:
 
 ## Next
 
-- **price-anchor**: anchor simulator markets to real venues: mark price via `set_mark`,
-  shadow top-N levels, trade-replay fills; TradFi simulators anchor noise to a reference.
-  See [design/price-anchor.md](design/price-anchor.md).
 - **Native cloud sinks** when the conditions in
   [design/cloud-sinks-and-replication.md](design/cloud-sinks-and-replication.md#when-a-native-sink-is-justified)
   hold.
