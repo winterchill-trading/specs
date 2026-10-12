@@ -328,6 +328,18 @@ Bugs found in waves 2 and 3:
   and Bitget, tested with each feed's own `Live_feed`; speed 0 Binance replays hold at a
   recorded depth snapshot's join point so binance-client reports deltas. See
   [repos/market-replay.md](repos/market-replay.md).
+- Wave 6: `market-data` (done): `Funding.Stable.V2` with an optional `exch_ts`, written
+  to event logs as an appended `Funding_v2` constructor when `exch_ts = recv_ts`
+  (digest `cdf98830...`, fixture from before) [`64381d1`][market-data-64381d1]
+  [`a61ead7`][market-data-a61ead7]; a daily `instruments` table, the point-in-time
+  universe [`3c978c7`][market-data-3c978c7]; 64k-row row groups (`-row-group`), a
+  five-minute range query 12 ms to 2 ms [`cc0fd95`][market-data-cc0fd95]; candles
+  checked against DuckDB row for row [`1431404`][market-data-1431404]; a pyarrow type
+  test in CI [`194c72b`][market-data-194c72b]; `scripts/daycheck-diff.sh` and a cram
+  test [`5c654e9`][market-data-5c654e9] [`cda1a10`][market-data-cda1a10];
+  `queries/lead_lag.sql` [`3f4cef2`][market-data-3f4cef2]: on 85 s of mainnet BTC
+  perpetuals Binance leads Bybit, OKX and Bitget by 17 to 33 ms. See
+  [repos/market-data.md](repos/market-data.md).
 
 - `specs`: this repository.
 - Wave 4 from research:
@@ -375,11 +387,8 @@ across themes. Each theme document orders its own list by value and links the so
 
 - `infra`: run `market-data check` after the day-close job (the command exists).
 - `market-recorder`: add a clock-error gauge sampled from `chronyc` to `/metrics`.
-- `market-data`, `hl-client`: add `Funding.Stable.V2` with an optional `exch_ts` and a converter.
-- `market-data`: have day close write a daily `instruments` table for point-in-time universes.
 - `market-recorder`: add a latest `recv_ts - exch_ts` gauge (the `lag` view exists).
 - `market-recorder`: test a stalled `Norm_writer` and print buffered events to check backpressure.
-- `market-data`: write day-close Parquet in smaller row groups; confirm with `EXPLAIN ANALYZE`.
 - `market-recorder`: add a `Venue_source.S` module type and register the clients as modules.
 - `market-recorder`: export the `Parquet_sink` dropped count on `/metrics` if it adopts the sink.
 
@@ -403,14 +412,11 @@ across themes. Each theme document orders its own list by value and links the so
 - simulators: pin each row of the
   [TIF and market order table](design/simulators.md#time-in-force-and-market-orders) in a test.
 - `market-data`, `hl-sim`: compare trade share and BBO inter-arrival with live data.
-- `market-data`: add a day-close diff script across revisions and a day-close cram test.
 - `market-recorder`: add a replay load test (every `examples/` config is parsed).
 
 #### Research tooling ([theme](research/themes/research-tooling.md))
 
 - `mm-core`: drive `Strategy` from `Replay_feed` over a fixture event log and print the quotes.
-- `market-data`: test candles against DuckDB row for row on the event log fixture.
-- `market-data`: run a pyarrow type test of `examples/query.py` in CI.
 - `market-data`, `market-maker`: prototype Bonsai_term viewers for event logs and status.
 
 #### Build and deploy ([theme](research/themes/build-and-deploy.md))
@@ -423,4 +429,14 @@ across themes. Each theme document orders its own list by value and links the so
 #### Market making and trading systems ([theme](research/themes/market-making-and-trading-systems.md))
 
 - `market-maker`, `market-data`: log order lifecycle events; join fills to public trades.
-- `market-data`, `mm-core`: add a lead-lag query; record median lag per venue pair.
+- `mm-core`: pick reference venues from `market-data`'s `queries/lead_lag.sql` on a full day.
+
+[market-data-64381d1]: https://github.com/winterchill-trading/market-data/commit/64381d1
+[market-data-a61ead7]: https://github.com/winterchill-trading/market-data/commit/a61ead7
+[market-data-3c978c7]: https://github.com/winterchill-trading/market-data/commit/3c978c7
+[market-data-cc0fd95]: https://github.com/winterchill-trading/market-data/commit/cc0fd95
+[market-data-1431404]: https://github.com/winterchill-trading/market-data/commit/1431404
+[market-data-194c72b]: https://github.com/winterchill-trading/market-data/commit/194c72b
+[market-data-5c654e9]: https://github.com/winterchill-trading/market-data/commit/5c654e9
+[market-data-cda1a10]: https://github.com/winterchill-trading/market-data/commit/cda1a10
+[market-data-3f4cef2]: https://github.com/winterchill-trading/market-data/commit/3f4cef2
