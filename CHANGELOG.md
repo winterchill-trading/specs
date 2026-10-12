@@ -178,3 +178,8 @@ belong here.
   `sequence_num` renumbered per connection; speed 0 Binance replays wait at the diff a
   recorded depth snapshot joins at until it is served; tests depend on the five feed
   clients. See [repos/market-replay.md](repos/market-replay.md).
+- `market-data`: event logs gain an appended `Funding_v2` constructor (new digest
+  `cdf98830...` in `compatible_digests`) for funding without an exchange timestamp, and
+  `Funding.Stable.V2`; day close writes `<root>/instruments/<date>.parquet`, the day's
+  universe, and 64k-row row groups. See
+  [design/data-platform.md](design/data-platform.md#funding-without-an-exchange-timestamp).
