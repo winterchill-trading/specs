@@ -73,3 +73,33 @@ belong here.
 - `nyse-sim`, `cboe-sim` and `cme-sim` are done: each ships a server and a `*-sim-cli`
   binary, with gateway, feed and HTTP ports. See
   [design/simulators.md](design/simulators.md#tradfi-simulators).
+- `market-data`: `Event_log` readers accept an append-only list of compatible digests
+  ([ADR 0006](adr/0006-compatible-event-log-digests.md)); new `Instrument_info`
+  catalogue, `norm/l2/_snapshots/<date>.bin` snapshot files (`Snapshot_index`),
+  `Raw_minute`, `Normalizer.S` and a `rebuild-norm` subcommand; `day-close` takes `-jobs`
+  and `-processes`. See [design/data-platform.md](design/data-platform.md).
+- `market-recorder`: `recv_ts` clamped per stream, `GET /status`, a `status` subcommand,
+  new per-stream and process gauges on `/metrics`, raw writer failures on `/healthz`, and
+  a `snapshot_interval` config writing L2 snapshots. See
+  [repos/market-recorder.md](repos/market-recorder.md).
+- `hl-client`: `Signing` (EIP-712 over a MessagePack action hash, secp256k1; new opam
+  dependency `secp256k1`) and typed `Client` handles; `hl-cli` gains `address` and
+  `cancel`. See [repos/hl-client.md](repos/hl-client.md).
+- `binance-client` and `bybit-client`: key-less `Config.Read_only` configs; every
+  client's and feed's `Live_feed` exposes `stats` and takes `?time_source`. See
+  [repos/binance-client.md](repos/binance-client.md) and
+  [repos/bybit-client.md](repos/bybit-client.md).
+- `market-maker`: `-params FILE` reloaded on SIGHUP, `-shadow-params`, `-strategy-log`
+  and `-max-actions-per-sec`; CI no longer pins the simulators. See
+  [repos/market-maker.md](repos/market-maker.md).
+- `hl-protocol`: `Asset_ctx` for `activeAssetCtx`; `Clearinghouse_state` decodes
+  `liquidationPx` as an option. See [repos/hl-protocol.md](repos/hl-protocol.md).
+- `hl-mm`: `Hl_venue.Trading` over a signing `hl-client` handle; the binary gains
+  `-testnet`, `-params`, `-max-actions-per-sec` and `-soft-max-position`. See
+  [repos/hl-mm.md](repos/hl-mm.md).
+- `okx-feed`, `coinbase-feed`, `kraken-feed`, `deribit-feed`, `bitget-feed`: a
+  `Market_data.Normalizer.S` adapter each; `kraken-feed` and `deribit-feed` add a
+  `rebuild-norm` subcommand. See [repos/okx-feed.md](repos/okx-feed.md).
+- `infra`: the `ox-setup` composite action builds and caches the OxCaml switch for every
+  repository's CI; `hl-sim` uses it, and `check-pins.sh` reads its `pins:` block. See
+  [design/deployment.md](design/deployment.md#ci).
