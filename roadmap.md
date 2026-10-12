@@ -195,7 +195,8 @@ across themes. Each theme document orders its own list by value and links the so
 - `specs`, `infra`: refine AWS deployment with host checks and a chrony check in node bootstrap.
 - `infra`: add troubleshooting notes for `ss -tipn` and uploads during DNS outages.
 - `infra`: add node-exporter or another socket and FD collector to compose and Helm.
-- `oxcaml-claude-skills`: document that dune's shared cache serves per-agent build directories.
+- `oxcaml-claude-skills`: document that dune's cache does not share artifacts across
+  different `DUNE_BUILD_DIR`s (measured); reuse one build directory per repository.
 - `infra`: try proctopus for the local stack and note the result beside the compose stack.
 
 #### Market making and trading systems ([theme](research/themes/market-making-and-trading-systems.md))
