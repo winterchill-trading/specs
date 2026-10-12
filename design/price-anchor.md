@@ -209,6 +209,16 @@ liquidity and anchor the noise to a chosen reference price:
 - Shadow levels and trade replay are off; if a real data source for these venues becomes
   available, the crypto path applies unchanged.
 
+Each TradFi simulator first wrote its own `Anchoring` module because `Anchor` lacked the
+TradFi controls. `Anchor.create` now has them, so the simulators can share the library:
+`?half_life` (set the reference through `Market_sim.set_reference ~half_life` instead of
+pinning), `?may_engage` (asked before each mark or reference update; on the first refusal
+the anchor calls `clear_reference` once and then counts waits) with `?last_trade` (where
+the walk restarts when the venue allows the anchor again), `?step_clock:false` (the venue
+owns its clock), and a series alone is never stale between its points unless
+`max_staleness` is given. `Source.of_series` returns an error for a missing or malformed
+file.
+
 ## Changes to existing repositories
 
 - `exchange-core`: `Market_sim.set_reference` (replace a symbol's walk with an external
@@ -228,3 +238,11 @@ liquidity and anchor the noise to a chosen reference price:
   time, as real liquidity refills, rather than only on the next reference change.
 - How to account for the anchor accounts' positions when a simulated strategy's PnL is
   compared with the real venue's.
+- When the TradFi simulators move from their own `Anchoring` modules to `Anchor`. Two
+  pieces stay in the simulators either way: the reference series as a function of venue
+  time (fixed prices with a drift, and series that restart with the session), which a
+  pipe of points paced by `Source.run` only approximates, and keeping the target inside
+  the LULD bands (`nyse-sim`), for which `Anchor` has no hook yet.
+- Resolved: the TradFi controls (half-life, pause on venue phases, venue-owned clock,
+  series without silence staleness) live in `Anchor`, so the TradFi path needs no
+  second library.

@@ -10,6 +10,11 @@ belong here.
 
 ## 2026-10-12
 
+- `price-anchor`: `Anchor.create` gains `?half_life`, `?may_engage`, `?last_trade` and
+  `?step_clock`; a series alone is no longer stale between points by default;
+  `Source.of_series` returns an error for a missing file. These are the TradFi controls
+  the `nyse-sim`, `cboe-sim` and `cme-sim` `Anchoring` modules implement locally. See
+  [design/price-anchor.md](design/price-anchor.md#tradfi-simulators).
 - `cboe-sim`: depends on `price-anchor` and `market-data`; `-anchor-series`,
   `-anchor-fixed` and `-anchor-scaled` pull a listing's noise traders towards a reference
   price in continuous core trading; the LULD reference is the mean of the venue's own
