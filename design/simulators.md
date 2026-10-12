@@ -157,21 +157,9 @@ starts a new day.
 ## Planned: price-anchor
 
 The simulators' prices come from a random walk, so strategies tested on them see no real
-market structure. `price-anchor` is planned to tie a simulator's market to a real venue
-(live through a client's `Live_feed`, or recorded through `market-data`'s
-`Replay_feed`). It would use only the engine's public interface:
-
-- **Mark price**: `Exchange.set_mark` from the real venue's mark (funding stream) or
-  mid, replacing the random walk's reference; liquidation and funding follow it.
-- **Shadow top-N levels**: an anchor account keeps the real top N bid and ask levels
-  resting in the simulator's book, cancelling and replacing on each real L2 update, so
-  simulated takers see real depth and simulated makers queue behind real size.
-- **Trade-replay fills**: each real trade at or through a simulated resting order's
-  price fills that order against the anchor account, so passive orders fill when the real
-  market trades through them, not only when another simulated client takes them.
-
-Open questions: whether the anchor account is exempt from margin, how simulated orders
-that cross the shadowed levels are filled (against shadow size, then removed until the
-next real update), queue position against shadow size at the same price, and whether it
-is a library used by each `*-sim` binary or a separate process talking to the simulators
-over their APIs. No repository exists yet.
+market structure. `price-anchor` is planned to tie a simulator's market to a reference
+market through the engine's public interface: mark price via `set_mark`, shadow top-N
+levels from an anchor account, and trade-replay fills, fed live from a `Live_feed` or
+from the recorder's raw minute files, with every action journaled. The TradFi simulators
+anchor their noise traders to a chosen reference price instead. The design is in
+[price-anchor.md](price-anchor.md).
