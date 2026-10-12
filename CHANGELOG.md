@@ -173,3 +173,8 @@ belong here.
   `may_engage`, `last_trade`, `clamp` on the LULD bands); `Venue.last_trade` is public and
   `GET /` adds `resumes` and `clamped` to each anchor. See
   [repos/nyse-sim.md](repos/nyse-sim.md).
+- `market-replay`: websocket replay for `okx`, `coinbase`, `kraken` (spot and futures on
+  one path), `deribit` and `bitget` in each venue's subscribe protocol, with Coinbase
+  `sequence_num` renumbered per connection; speed 0 Binance replays wait at the diff a
+  recorded depth snapshot joins at until it is served; tests depend on the five feed
+  clients. See [repos/market-replay.md](repos/market-replay.md).
