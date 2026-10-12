@@ -27,12 +27,9 @@ The Hyperliquid side of the market maker: `Hl_venue` implements `Mm_core.Venue.S
 
 ## CI pin order
 
-`fixed-decimal`, `exchange-core`, `hl-protocol`, `venue-net`, `hl-client`, `mm-core`,
-`order-book`, `exchange-core-engine`, `hl-sim`.
-
-`hl-client` now depends on `market-data`, which depends on `parquet`; neither is pinned
-here, so the next CI run is expected to fail until `parquet` and `market-data` are pinned
-before `hl-client`. The last green run predates that dependency.
+`fixed-decimal`, `exchange-core`, `parquet`, `market-data`, `hl-protocol`, `venue-net`,
+`hl-client`, `mm-core`, then `order-book`, `exchange-core-engine`, `hl-sim` for the
+integration test. CI is green with these pins.
 
 ## Known gaps
 
