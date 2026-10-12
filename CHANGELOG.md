@@ -10,6 +10,9 @@ belong here.
 
 ## 2026-10-12
 
+- `market-recorder`: `rebuild-norm` subcommand linking every venue's `Normalizer.S`
+  adapter, with `-venue` and `-skip venue:stream`; completes ADR 0002. See
+  [repos/market-recorder.md](repos/market-recorder.md).
 - `market-replay` (new): replay server for recorded raw minute files, `GET /replay` and
   venue-native websockets for Hyperliquid, Binance and Bybit. See
   [repos/market-replay.md](repos/market-replay.md).

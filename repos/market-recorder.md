@@ -11,7 +11,7 @@ normalized events go to `Market_data.Event_log` daily files.
 | Repository | `winterchill-trading/market-recorder` |
 | opam package | `market-recorder` |
 | Library | `market-recorder` (module `Market_recorder`) |
-| Binary | `market-recorder run -config FILE`, `market-recorder check-config -config FILE`, `market-recorder status [-url URL]` |
+| Binary | `market-recorder run -config FILE`, `market-recorder check-config -config FILE`, `market-recorder status [-url URL]`, `market-recorder rebuild-norm -data-dir DIR -out DIR -date DATE [-venue V] [-skip VENUE:STREAM]` |
 | Status | done (CI green; deployment through infra is on the roadmap) |
 
 ## Key modules
@@ -28,6 +28,7 @@ normalized events go to `Market_data.Event_log` daily files.
 | `Warnings` | Per-stream warnings at most once a minute with a suppressed count |
 | `Process_metrics` | `build_info` (`git describe` version, OCaml), open file descriptors, RSS (Linux), GC counters and heap words |
 | `Status_table` | Parses `/metrics` text and prints the per-stream tables of `status` |
+| `Rebuild` | `rebuild-norm`: `Market_data.Rebuild_norm` over every venue's `Normalizer.S` adapter (`Hl_client`, `Binance_client`, `Bybit_client` `Raw_normalizer`, the five feeds' adapters); `-venue` filter; `-skip venue:stream` reads a temporary directory of symlinks without those raw streams |
 
 `Config.Endpoint.problem` rejects a venue and endpoint pair that cannot work (a venue
 without a simulator on `Local`, funding on a spot-only venue) at `check-config` time.
@@ -37,6 +38,12 @@ failure or a failed or pending upload. CI runs `shellcheck` on the scripts. Test
 every example config, 100 minute rolls keeping the descriptor count flat, and a close
 right after the first write (the Linux flake of `test_raw_writer`, fixed by writing
 buffered lines only once the minute file is open).
+
+`scripts/rebuild-day.sh DATA_DIR [DATE]` wraps `rebuild-norm` (default: yesterday into
+`DATA_DIR/rebuilt/DATE`). `scripts/e2e-rebuild.sh` records the simulators, rebuilds the
+day and compares every event log with its rebuilt copy (counts through `market-data
+dump`, then bytes); a 20 s run rebuilt all 22 logs byte for byte. This completes
+[ADR 0002](../adr/0002-raw-first-storage.md).
 
 ## Metrics added in wave 2
 
@@ -85,3 +92,5 @@ See [design/data-platform.md](../design/data-platform.md),
   simulator never delivers and keeps `/healthz` at 503.
 - One collector per venue; no replication yet.
 - Minute files are compressed whole in memory on roll.
+- `rebuild-norm` writes no L2 snapshot index (`norm/l2/_snapshots/`):
+  `Market_data.Rebuild_norm.run` takes no snapshot interval.

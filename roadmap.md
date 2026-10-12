@@ -26,6 +26,12 @@ the same change that finishes or starts them.
   [design/simulators.md](design/simulators.md#tradfi-simulators).
 - `market-recorder`: raw minute files, event logs, uploader, `/healthz` and `/metrics`
   for eight venues. See [repos/market-recorder.md](repos/market-recorder.md).
+- Raw-to-norm tool: `market-recorder rebuild-norm` links every venue's
+  `Market_data.Normalizer.S` adapter, with `-venue` and a `-skip venue:stream` list
+  [`5c13f5c`][market-recorder-5c13f5c] [`3d433dd`][market-recorder-3d433dd]; a 20 s
+  recording of the three simulators rebuilds into 22 byte-identical event logs
+  (`scripts/e2e-rebuild.sh`, [`119042c`][market-recorder-119042c]). Completes
+  [ADR 0002](adr/0002-raw-first-storage.md); the L2 snapshot index is not rebuilt.
 - `infra`: base and service images, compose stack, Helm chart, `check-pins.sh` in CI.
   See [repos/infra.md](repos/infra.md).
 - `specs` research actions: replication gap detection and failure table, client pitfalls
@@ -213,6 +219,9 @@ Bugs found in waves 2 and 3:
 [market-recorder-4cbfdf4]: https://github.com/winterchill-trading/market-recorder/commit/4cbfdf4
 [market-recorder-86719f2]: https://github.com/winterchill-trading/market-recorder/commit/86719f2
 [market-recorder-5d0dd08]: https://github.com/winterchill-trading/market-recorder/commit/5d0dd08
+[market-recorder-5c13f5c]: https://github.com/winterchill-trading/market-recorder/commit/5c13f5c
+[market-recorder-3d433dd]: https://github.com/winterchill-trading/market-recorder/commit/3d433dd
+[market-recorder-119042c]: https://github.com/winterchill-trading/market-recorder/commit/119042c
 [market-recorder-4522dcc]: https://github.com/winterchill-trading/market-recorder/commit/4522dcc
 [market-recorder-d426706]: https://github.com/winterchill-trading/market-recorder/commit/d426706
 [market-recorder-081cbc8]: https://github.com/winterchill-trading/market-recorder/commit/081cbc8
@@ -312,9 +321,6 @@ Bugs found in waves 2 and 3:
 - **Replay server**: a `tardis-machine` style server that replays recorded raw minute
   files over HTTP and websocket in each venue's native format, so clients and the market
   maker can run against history.
-- **Raw-to-norm tool**: `Market_data.Rebuild_norm` and the feeds' `Normalizer.S`
-  adapters exist; one binary linking every venue's normalizer (the three trading clients
-  have no adapter yet) completes [ADR 0002](adr/0002-raw-first-storage.md).
 - **Native cloud sinks** when the conditions in
   [design/cloud-sinks-and-replication.md](design/cloud-sinks-and-replication.md#when-a-native-sink-is-justified)
   hold.
@@ -342,7 +348,6 @@ across themes. Each theme document orders its own list by value and links the so
 #### Data platform ([theme](research/themes/data-platform.md))
 
 - `infra`: run `market-data check` after the day-close job (the command exists).
-- `market-data`: refine raw-to-norm with a one-day rebuild diffed against `norm/` and a skip-list.
 - `market-recorder`: add a clock-error gauge sampled from `chronyc` to `/metrics`.
 - `market-data`, `hl-client`: add `Funding.Stable.V2` with an optional `exch_ts` and a converter.
 - `market-data`: have day close write a daily `instruments` table for point-in-time universes.
