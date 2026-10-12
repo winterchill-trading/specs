@@ -10,6 +10,9 @@ belong here.
 
 ## 2026-10-12
 
+- `market-replay` (new): replay server for recorded raw minute files, `GET /replay` and
+  venue-native websockets for Hyperliquid, Binance and Bybit. See
+  [repos/market-replay.md](repos/market-replay.md).
 - `market-data`: `Raw_reader`, `Feed.With_gaps` and `Replay_feed.of_raw`, the shared raw-file
   reader for the replay server and the price anchor. See [repos/market-data.md](repos/market-data.md).
 - `hl-client`, `binance-client`, `bybit-client`: `Raw_normalizer` adapters and `rebuild-norm`,

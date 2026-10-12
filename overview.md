@@ -35,6 +35,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Data platform | [parquet](repos/parquet.md) | Pure OCaml Parquet writer | done |
 | Data platform | [market-data](repos/market-data.md) | Normalized types, event logs, Parquet sink, day close, DuckDB views, replay | done |
 | Data platform | [market-recorder](repos/market-recorder.md) | Live recorder: raw minute files, event logs, uploader, metrics | done |
+| Data platform | [market-replay](repos/market-replay.md) | Replay server: raw lines over HTTP, venue-native websockets for the three trading venues | done |
 | Tooling | [infra](repos/infra.md) | Container images, compose stack, Helm chart, deployment notes | done |
 | Tooling | [oxcaml-claude-skills](repos/oxcaml-claude-skills.md) | Agent skills and the gotchas log | done |
 | Tooling | specs | This repository | in progress |
@@ -93,6 +94,7 @@ graph LR
     parquet["parquet"]
     market_data["market-data"]
     market_recorder["market-recorder"]
+    market_replay["market-replay"]
   end
   subgraph tooling["Tooling"]
     infra["infra"]
@@ -156,10 +158,17 @@ graph LR
   market_recorder --> kraken_feed
   market_recorder --> deribit_feed
   market_recorder --> bitget_feed
+  market_replay --> market_data
+  market_replay --> hl_protocol
+  market_replay --> binance_protocol
+  market_replay --> bybit_protocol
 
   hl_mm -.-> hl_sim
   binance_client -.-> binance_sim
   bybit_client -.-> bybit_sim
+  market_replay -.-> hl_client
+  market_replay -.-> binance_client
+  market_replay -.-> bybit_client
   infra -.-> hl_sim
   infra -.-> binance_sim
   infra -.-> bybit_sim
