@@ -19,7 +19,10 @@ runs on `Anchor` itself (one per anchored listing, `path`, `may_engage`, `last_t
 from its last print, `clamp` with `Clamp.within_bands` on its LULD bands); its own
 `Anchoring` module is a thin wrapper. `cme-sim` does the same (one `Anchor` per
 anchored product, `may_engage` while the product is open, `last_trade` from the venue's
-last price, `clamp` with `Clamp.within_bands` on its daily price limits). The
+last price, `clamp` with `Clamp.within_bands` on its daily price limits), and so does
+`nyse-sim` (one `Anchor` per anchored listing, `may_engage` in continuous core trading
+outside imbalance periods and LULD pauses, `last_trade` from the venue's last trade,
+`clamp` with `Clamp.within_bands` on its LULD bands). The
 design is built over interfaces that exist (`Exchange_core_engine.Exchange`, `Journal`,
 `Stepped`, `Market_sim`, `Market_data.Feed`, `Market_data.Raw_reader`) plus the additions
 listed under
