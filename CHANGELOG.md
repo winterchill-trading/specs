@@ -10,6 +10,9 @@ belong here.
 
 ## 2026-10-12
 
+- `market-recorder`: `merge` subcommand and `scripts/replicate-day.sh`, two collectors'
+  raw days into one canonical copy with a `_merge/<date>.json` report. See
+  [design/cloud-sinks-and-replication.md](design/cloud-sinks-and-replication.md).
 - `price-anchor` (new): anchors a simulated market to a live or recorded reference (mark,
   funding, shadow top-N levels, trade-replay fills, staleness) over `exchange-core-engine`
   and `market-data`. See [repos/price-anchor.md](repos/price-anchor.md).
