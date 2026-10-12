@@ -169,3 +169,7 @@ belong here.
 - `cme-sim`: `Anchoring` is a thin wrapper over `price-anchor`'s `Anchor` (`path`,
   `may_engage` while open, `last_trade`, `clamp` on the daily price limits); targets now
   stay 30 bps inside the limits. See [repos/cme-sim.md](repos/cme-sim.md).
+- `nyse-sim`: `Anchoring` is a thin wrapper over `price-anchor`'s `Anchor` (`path`,
+  `may_engage`, `last_trade`, `clamp` on the LULD bands); `Venue.last_trade` is public and
+  `GET /` adds `resumes` and `clamped` to each anchor. See
+  [repos/nyse-sim.md](repos/nyse-sim.md).
