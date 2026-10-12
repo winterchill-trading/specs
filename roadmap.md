@@ -444,6 +444,41 @@ across themes. Each theme document orders its own list by value and links the so
 - `market-maker`, `market-data`: log order lifecycle events; join fills to public trades.
 - `mm-core`: pick reference venues from `market-data`'s `queries/lead_lag.sql` on a full day.
 
+### Performance (from OxCaml research)
+
+Concrete actions from the [OxCaml performance notes](research/oxcaml-performance/README.md)
+and their [hot-path audit](research/oxcaml-performance/audit.md), ordered by expected win per
+effort. Each starts by adding or rerunning the repository's bench and pinning words per call.
+
+1. `binance-client` `lib/feed_normalizer.ml`: `[@zero_alloc]` hand scanner for aggTrade,
+   bookTicker and depth-diff frames, Yojson as fallback, fixture test comparing both paths
+   (measured on a trade frame: 2417 ns and 298 words to 261 ns and 0 words).
+2. `fixed-decimal` `lib/fixed_decimal.ml`: single-pass `[@zero_alloc]`
+   `of_substring_exn s ~pos ~len` and `to_string` into a caller's `Bytes`; `[@zero_alloc]`
+   on `mul`, `div` and comparisons in the `.mli`.
+3. `market-recorder` `lib/recorder.ml`, `lib/metrics.ml`, `lib/raw_writer.ml`: resolve the
+   counters and output file once per subscription, `last_frame` without an option, reused
+   timestamp buffer, blit instead of `String.concat`.
+4. `order-book` `lib/order_book.ml`: `best_bid_or_null`, `best_ask_or_null`, `mid_or_null`
+   returning `Price.t or_null`; O(1) cancel with per-level linked nodes.
+5. `bybit-client` `lib/live_feed.ml`, `hl-client` `lib/normalizer.ml`, `okx-feed`
+   `lib/normalizer.ml`: the scanner from item 1 per venue; cache the Bybit topic string and
+   one `Instrument.t` per subscription; drop the per-message sort in OKX `index_ticker`.
+6. `infra` release images: build the hot binaries with `OCAMLPARAM='_,O3=1'` once the
+   order-book and normalizer benches confirm it, and record the comparison.
+7. `mm-core` `lib/market_state.ml`, `lib/quoter.ml`: mutable state with `Float_u.t` fields
+   and `Price.t or_null`, rungs built into arrays; keep the pure strategy as the reference
+   in a bisimulation test.
+8. `market-data` `lib/merge.ml`, `lib/raw_minute.ml`: batch merge with `Pipe.read'`,
+   record heap entries keyed by an immediate timestamp, split lines by index.
+9. `exchange-core` `engine/exchange.ml`, `engine/clearinghouse.ml`: add a step and submit
+   bench, then replace the per-step account sort and pass the fill context `local_`.
+10. `price-anchor` `lib/anchor.ml`: `or_null` marks and mid, incremental queue-ahead after
+    items 4 and 9.
+11. `parquet` `lib/writer.ml`: typed column builders without a per-cell closure, compress
+    without the `Buffer.contents` copy.
+12. `venue-net` `src/ws_client.ml`: deliver frames from the first pipe to the consumer.
+
 [market-recorder-fd4b1c2]: https://github.com/winterchill-trading/market-recorder/commit/fd4b1c2
 [market-recorder-e01f00e]: https://github.com/winterchill-trading/market-recorder/commit/e01f00e
 [market-recorder-d5b6f56]: https://github.com/winterchill-trading/market-recorder/commit/d5b6f56
