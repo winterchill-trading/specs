@@ -148,9 +148,14 @@ per-stream age gauge already provides.
 - No repository workflow pins the `ox` opam repository to a commit, while the
   [infra](../../repos/infra.md) base image does (`OX_REPO_COMMIT`); no workflow sets
   `dune-cache`, and none runs on a schedule.
-- Locally, dune 3.22 uses the shared cache under `~/.cache/dune` by default, so the
-  per-agent `DUNE_BUILD_DIR` directories already share artifacts; this is not written
-  down in [oxcaml-claude-skills](../../repos/oxcaml-claude-skills.md).
+- Locally, dune's shared cache under `~/.cache/dune` does not share artifacts between
+  per-agent `DUNE_BUILD_DIR` directories. Measured with dune 3.22: the default
+  (`enabled-except-user-rules`) restored nothing after `rm -rf _build`, and with
+  `DUNE_CACHE=enabled` a rebuild into the same build directory path is restored but a
+  different `DUNE_BUILD_DIR` recompiles everything. The gotcha is recorded in
+  [oxcaml-claude-skills](../../repos/oxcaml-claude-skills.md) `GOTCHAS.md` (commit
+  `d95a47d`): budget one cold build per agent directory and reuse one `DUNE_BUILD_DIR`
+  per repository across sessions.
 - [infra](../../repos/infra.md) CI runs hadolint, shellcheck on `build.sh`, `helm lint`
   and a rendered-example check; [market-maker](../../repos/market-maker.md),
   [hl-mm](../../repos/hl-mm.md) and [market-recorder](../../repos/market-recorder.md) run
@@ -258,9 +263,12 @@ per-stream age gauge already provides.
     ([writing technically](../janestreet/podcast/10-writing-technically.md)).
 23. Add a postmortem template (timeline, impact, causes, actions) under `postmortems/` in
     `specs` ([production engineering](../janestreet/podcast/20-solving-puzzles-in-production.md)).
-24. Document that dune's shared cache (on by default in dune 3) lets per-agent build
-    directories reuse artifacts, in [oxcaml-claude-skills](../../repos/oxcaml-claude-skills.md)
+24. Document that dune's shared cache does not let per-agent build directories reuse
+    artifacts (a different `DUNE_BUILD_DIR` recompiles everything, measured), and to reuse
+    one build directory per repository, in
+    [oxcaml-claude-skills](../../repos/oxcaml-claude-skills.md)
     ([dune history](../janestreet/blog/2025-01-how-we-accidentally-built-a-better-build-system-for-ocaml.md)).
+    Done in `GOTCHAS.md`.
 25. Once Memtrace is confirmed to work under OxCaml, add a commented `MEMTRACE` env entry
     and a writable trace path to the recorder Helm values, in [infra](../../repos/infra.md)
     ([memtrace](../janestreet/blog/2020-10-finding-memory-leaks-with-memtrace.md)).
