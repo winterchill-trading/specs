@@ -10,6 +10,9 @@ belong here.
 
 ## 2026-10-13
 
+- `market-recorder`: consumes `feed_with_gaps` of the OKX, Coinbase, Kraken, Deribit and
+  Bitget feeds, so every venue's reconnects and book resyncs write disconnect lines. See
+  [repos/market-recorder.md](repos/market-recorder.md).
 - `market-maker`: order lifecycle log, Async cycle monitor, nightly workflow and the
   `market-maker-status` viewer. See [repos/market-maker.md](repos/market-maker.md).
 

@@ -131,12 +131,22 @@ See [design/data-platform.md](../design/data-platform.md),
 [ADR 0004](../adr/0004-tardis-compatible-raw-format.md) and
 [ADR 0005](../adr/0005-command-based-uploader.md).
 
+## Gaps
+
+All eight crypto venues' clients (Hyperliquid, Binance, Bybit, OKX, Coinbase, Kraken,
+Deribit, Bitget) report reconnects and book resyncs as `Market_data.Gap.t` on
+`feed_with_gaps`. `Recorder.record_gaps` counts each gap per covered stream in
+`market_recorder_gaps_total` and writes a disconnect line (an empty line) into the open
+raw minute file of every stream it covers: a gap without an instrument (a reconnect)
+covers every symbol of the connection, a gap with one (a sequence, checksum or
+`change_id` break) only that symbol. Per-venue loss is listed in the market-recorder
+README and in each feed's README.
+
 ## Known gaps
 
-- Hyperliquid, Binance and Bybit reconnects write a disconnect line (from the clients'
-  `feed_with_gaps`); OKX, Coinbase, Kraken, Deribit and Bitget report no gaps, so their
-  reconnects write none. Parse errors and reconnects
-  are read from each client's `stats` and exported per venue as
+- No venue replays what it sent during a reconnect, so the window between the drop and
+  the resubscription is lost; the disconnect line marks it (see Gaps above).
+- Parse errors and reconnects are read from each client's `stats` and exported per venue as
   `market_recorder_client_frames_total`, `market_recorder_parse_errors_total` and
   `market_recorder_reconnects_total`; `deploy/prometheus/alerts.yml` alerts on them.
 - Hyperliquid `bbo` gets no raw frames when `l2` is also subscribed (the client writes
