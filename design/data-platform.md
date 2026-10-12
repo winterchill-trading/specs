@@ -132,7 +132,7 @@ one-minute candles.
 | | Tardis (tardis.dev) | This platform |
 | --- | --- | --- |
 | System of record | Exchange-native messages with local timestamps | Same: `<recv_ts> <frame>` lines |
-| Raw granularity | One-minute slices per exchange (`data-feeds` API) | One file per venue, stream, symbol and minute |
+| Raw granularity | Per exchange, all channels mixed; one-minute slices from the `data-feeds` API | One file per venue, stream, symbol and minute |
 | Disconnects | Empty line | Empty line |
 | Compression | gzip over HTTP | zstd files |
 | Normalized data | Daily CSV datasets (trades, incremental L2, snapshots, quotes, derivative ticker, liquidations) | Daily `bin_prot` event logs and Parquet (trades, bbo, l2, funding, candles) |
