@@ -324,6 +324,10 @@ Bugs found in waves 2 and 3:
 - Wave 5: `market-replay` (done): HTTP raw replay and native websocket replay for
   Hyperliquid, Binance and Bybit, paced by `-speed`; see
   [repos/market-replay.md](repos/market-replay.md). `market-data` rebuild gains the L2 snapshot index.
+- Wave 6: `market-replay` (done): websocket replay for OKX, Coinbase, Kraken, Deribit
+  and Bitget, tested with each feed's own `Live_feed`; speed 0 Binance replays hold at a
+  recorded depth snapshot's join point so binance-client reports deltas. See
+  [repos/market-replay.md](repos/market-replay.md).
 
 - `specs`: this repository.
 - Wave 4 from research:
