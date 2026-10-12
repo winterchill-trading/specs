@@ -74,6 +74,6 @@ venue differences found by `compare-venues.sh`.
 - Hyperliquid orders are unsigned (it uses `Hl_venue`, not `Hl_venue.Trading`), so only
   `hl-sim` accepts them on that venue.
 - The position is not flattened on stop.
-- Shadow and strategy-log mirrors never see reconnects, so they do not start the grace
-  period the live loop starts.
+- Shadow and strategy-log mirrors do not yet use `Live.on_resync`, so they do not start
+  the grace period the live loop starts (in progress).
 - Runs are not bit-repeatable with a fixed seed: request timing changes matching order.
