@@ -118,7 +118,8 @@ writers take such a list.
 
 | Digest | Event type |
 | --- | --- |
-| `2f7f1bcba79db3ddd1b04d266342a8af` | `Event.Stable.V1` with eleven venues, Hyperliquid to Cme (written today) |
+| `cdf98830f211bb2d1384927d19dab635` | `Event.Stable.V1` with `Funding_v2` appended (written today) |
+| `2f7f1bcba79db3ddd1b04d266342a8af` | `Event.Stable.V1` with eleven venues, Hyperliquid to Cme |
 | `4cf56dfbcb69fbab68b38db7a2944d7b` | `Event.Stable.V1` with Hyperliquid, Binance and Bybit only |
 
 Adding an entry follows the Stable discipline:
@@ -157,6 +158,19 @@ and `Funding.normalized_8h` scales a funding rate to 8 hours by the catalogued i
 (Hyperliquid and Kraken Futures fund hourly, the others every 8 hours), so venues compare
 directly.
 
+### Funding without an exchange timestamp
+
+`Funding.Stable.V2` has `exch_ts : Time_ns.t option`, with `of_v1` and `to_v1`
+converters (a missing `exch_ts` becomes `recv_ts`). The in-memory `Funding.t` and
+`Event.t` keep their shape, so feeds and the `Feed.S` pipes are unchanged. On disk,
+`Event.Stable.V1` gained `Funding_v2` as its fifth constructor: the writer encodes a
+funding event whose `exch_ts` equals its `recv_ts` (the convention of feeds without an
+exchange time, Hyperliquid's `activeAssetCtx`) as `Funding_v2` with no `exch_ts`, and
+every other event byte for byte as before. Readers map `Funding_v2` back to `Funding`
+with `exch_ts = recv_ts`. `test/fixtures/event-log-pre-funding-v2` holds files written
+before the change. The Parquet `funding` table keeps a required `exch_ts`, since the
+Parquet writer has no optional columns.
+
 ## Parquet tables
 
 Every table starts with `venue`, `symbol`, `exch_ts`, `recv_ts` (`TIMESTAMP_NS`);
@@ -169,6 +183,16 @@ prices and sizes are `DECIMAL(18,8)`.
 | `l2` | `seq`, `is_snapshot`, `side`, `level`, `price`, `size` (one row per level) |
 | `funding` | `rate`, `next_funding_time`, `mark_price`, `index_price` |
 | `candles` | `interval_ns`, `open_time`, OHLC, `volume`, `trade_count` (no timestamps) |
+
+Day close also writes `<data_dir>/instruments/<date>.parquet`, the point-in-time
+universe of the day: one row per instrument with a `norm/` file that day, with
+`streams`, `in_catalogue` and the `Instrument_info` facts at the time of the run
+(`kind`, `base`, `quote`, `size_unit`, `units_per_contract`, `units_per_price`,
+`funding_interval_s`, `tick`, `lot`). `query` defines an `instruments` view over it.
+
+Row groups hold 65,536 rows (`-row-group N`; 1,048,576 before). On a day of 2M trades a
+five-minute `recv_ts` range query went from 12 ms to 2 ms in DuckDB, which skips row
+groups by their min and max statistics; the file grew 2.5%.
 
 ## Day close
 
@@ -185,6 +209,10 @@ one-minute candles.
   and replaced parts. Dataset readers (pyarrow, Spark) skip `_manifest`.
 - **Atomic**: files are written as `<name>.tmp` and renamed, so `*.parquet` globs never
   see a partial file.
+- **Checked across revisions**: `scripts/daycheck-diff.sh A B` day-closes the same
+  `norm/` data with two binaries or git revisions and compares every table by schema
+  and rows in DuckDB (`EXCEPT ALL` both ways), exiting 1 on a difference; a cram test
+  runs it and `day-close` on the research fixture.
 - Re-running after late data, a fix in a normalizer or a schema change regenerates the
   day. In the Helm chart it runs as a CronJob at 00:20 UTC next to each recorder.
 
@@ -193,8 +221,9 @@ one-minute candles.
 `market-data views -dir D` prints one `CREATE VIEW` per table over
 `D/*/*/parquet/<table>/*.parquet`; `market-data query -dir D "SQL"` runs them with the
 `duckdb` CLI. DuckDB multiplies two `DECIMAL(18,8)` without widening, so cast to
-`DECIMAL(38,16)` or `DOUBLE` first. Worked examples, including a replay sizing query, are
-in [queries.md](queries.md).
+`DECIMAL(38,16)` or `DOUBLE` first. `query -file PATH` reads SQL from a file;
+`queries/lead_lag.sql` gives the median bbo mid-change lag per venue pair. Worked
+examples, including a replay sizing query, are in [queries.md](queries.md).
 
 ## Client pitfalls checklist
 
@@ -217,7 +246,7 @@ with the proposed test from the [roadmap](../roadmap.md#from-research).
 | Undecodable frames are reported, not raised | `test_live_feed.ml` "other channels, unrequested streams and bad frames" | `test_feed_normalizer.ml` "acknowledgements, errors and other events" | `test_live_feed.ml` "acks, pongs and junk" |
 | Parse errors are counted per stream | missing: proposed counter on the recorder's `/metrics` with a malformed-frame test | missing: same | missing: same |
 | Subscriptions are complete after connect and reconnect | `test_live_feed.ml` "subscribe requests" (connect only) | missing: proposed recorder test of subscribe frame counts for three symbols | missing: same |
-| Timestamps are not invented | missing: `activeAssetCtx` copies `recv_ts` into `exch_ts`; proposed `Funding.Stable.V2` with an optional `exch_ts` | `test_feed_normalizer.ml` "aggTrade, bookTicker and markPriceUpdate" | `test_live_feed.ml` "tickers become funding when it changes" |
+| Timestamps are not invented | `activeAssetCtx` copies `recv_ts` into `exch_ts`, which event logs store as `Funding_v2` with no `exch_ts` (`market-data` `test_fixtures.ml` "event log from before funding v2 still reads, and rewrites as v2") | `test_feed_normalizer.ml` "aggTrade, bookTicker and markPriceUpdate" | `test_live_feed.ml` "tickers become funding when it changes" |
 | Recorded frames decode end to end | missing: proposed trimmed raw minute fixture per venue, decoded frame by frame | missing: same | missing: same |
 
 Test files are under each repository's `test/`. The `*-feed` repositories carry their own
