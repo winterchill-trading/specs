@@ -6,9 +6,9 @@ Binance USD-M Futures simulator: REST under `/fapi`, market streams on `/ws` and
 | | |
 | --- | --- |
 | Repository | `winterchill-trading/binance-sim` |
-| opam package | `binance-sim` |
-| Library | `binance-sim` (module `Binance_sim`) |
-| Binary | `binance-sim` (`-port` 3300, `-seed`, `-vol-bps`, `-symbols`, `-noise-traders`, `-initial-balance`, `-log-level`) |
+| opam packages | `binance-sim` (library), `binance-sim-anchor` (anchor library and binary) |
+| Libraries | `binance-sim` (module `Binance_sim`), `binance-sim-anchor` (module `Binance_sim_anchor`) |
+| Binary | `binance-sim` (`-port` 3300, `-seed`, `-vol-bps`, `-symbols`, `-noise-traders`, `-initial-balance`, `-log-level`; `-anchor VENUE:SYMBOL=SIM` (repeatable), `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from T -anchor-to T`, `-anchor-speed X`) |
 | Status | done |
 
 ## Key modules
@@ -20,23 +20,33 @@ Binance USD-M Futures simulator: REST under `/fapi`, market streams on `/ws` and
 - `Params`: query-string and form parameters to typed requests, with Binance's
   parameter errors.
 - `Server`: cohttp-async server, depth sequencing (`U`/`u`/`pu`), listen keys, market
-  simulation timer.
+  simulation timer; clock step hooks, extra `GET` routes and websocket `pushback`.
+- `Binance_sim_anchor.Spec`, `Reference`, `Anchored`: the `-anchor` flags, live
+  (`binance-client` `Live_feed`), raw (`Raw_normalizer`) and norm sources, one
+  `Price_anchor.Anchor.t` per flag stepped by the server clock, `GET /sim/anchor`.
 
 ## Dependencies
 
 - Depends on: `fixed-decimal`, `exchange-core`, `exchange-core-engine`,
-  `binance-protocol`, `order-book`.
+  `binance-protocol`, `order-book`; `binance-sim-anchor` also on `market-data`,
+  `price-anchor` and `binance-client`. The split keeps `binance-sim` free of
+  `binance-client`, whose tests depend on it.
 - Used by: `binance-client` (tests); built as an image by `infra`; target of
   `market-maker -venue binance -network local`.
 
 ## CI pin order
 
-`fixed-decimal`, `exchange-core`, `binance-protocol`, `order-book`,
-`exchange-core-engine`.
+`fixed-decimal`, `exchange-core`, `parquet`, `market-data`, `order-book`,
+`exchange-core-engine`, `venue-net`, `binance-protocol`, `mm-core`, `price-anchor`,
+`binance-client`.
 
 ## Behaviour
 
-Described in [design/simulators.md](../design/simulators.md). The `X-MBX-APIKEY` header
+Described in [design/simulators.md](../design/simulators.md); anchoring in
+[design/price-anchor.md](../design/price-anchor.md). A recorded source steps the server
+clock at `-anchor-speed` times the wall clock (frozen at 0), so funding and staleness
+stay in recorded time; at speed 0 each item waits for websocket clients to read the
+previous one. The `X-MBX-APIKEY` header
 is the account; signed endpoints need the header and a `timestamp`; `signature` and
 `recvWindow` are accepted and ignored. Fees are taker 5 bps, maker 2 bps; funding every
 8 hours at 0.01%.
@@ -53,3 +63,5 @@ is the account; signed endpoints need the header and a `timestamp`; `signature` 
 - Index price equals mark price; funding uses the configured rate.
 - `ACCOUNT_UPDATE` reflects the end of the request, not each fill; one trade per
   `aggTrade`.
+- Anchor references are Binance only (no other venue's client is linked); a slowed replay
+  stamps data in recorded time, behind the wall clock.

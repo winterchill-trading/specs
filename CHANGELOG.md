@@ -10,6 +10,11 @@ belong here.
 
 ## 2026-10-12
 
+- `binance-sim`: new `binance-sim-anchor` package (library `Binance_sim_anchor` and the
+  `binance-sim` binary) depending on `price-anchor`, `market-data` and `binance-client`;
+  `-anchor VENUE:SYMBOL=SIM` (live), `-anchor-raw` / `-anchor-norm` with `-anchor-speed`,
+  `GET /sim/anchor`. The `binance-sim` library package keeps its dependencies. See
+  [repos/binance-sim.md](repos/binance-sim.md).
 - `hl-sim`: depends on `price-anchor`, `market-data`, `hl-client` and `binance-client`;
   `-anchor VENUE:SYMBOL=COIN` (live), `-anchor-raw` / `-anchor-norm` (recorded) with
   `-anchor-speed`, `GET /status`, `-input-journal` (engine `Journal`). See
