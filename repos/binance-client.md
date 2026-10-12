@@ -62,4 +62,3 @@ bbo or funding frame.
   testnet routing and hosts.
 - Not implemented: RSA/Ed25519 keys, server time synchronisation, rate-limit tracking,
   leverage brackets and commission endpoints.
-- The README's opam pin list omits `parquet` and `market-data`, which CI pins.
