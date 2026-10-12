@@ -10,6 +10,9 @@ belong here.
 
 ## 2026-10-12
 
+- `price-anchor` (new): anchors a simulated market to a live or recorded reference (mark,
+  funding, shadow top-N levels, trade-replay fills, staleness) over `exchange-core-engine`
+  and `market-data`. See [repos/price-anchor.md](repos/price-anchor.md).
 - `market-recorder`: `rebuild-norm` subcommand linking every venue's `Normalizer.S`
   adapter, with `-venue` and `-skip venue:stream`; completes ADR 0002. See
   [repos/market-recorder.md](repos/market-recorder.md).

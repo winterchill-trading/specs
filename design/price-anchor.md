@@ -2,9 +2,11 @@
 
 Kind: explanation.
 
-Status: planned. No repository exists yet; everything below is a design over interfaces
-that exist today (`Exchange_core_engine.Exchange`, `Journal`, `Stepped`, `Market_sim`,
-`Market_data.Feed`, the recorder's raw minute files) plus the small additions listed under
+Status: library done in [price-anchor](../repos/price-anchor.md) (mark, funding, shadow
+levels, trade replay, staleness, live / raw / norm / series sources); the simulators'
+`-anchor*` flags are not wired yet. The design is built over interfaces that exist
+(`Exchange_core_engine.Exchange`, `Journal`, `Stepped`, `Market_sim`, `Market_data.Feed`,
+`Market_data.Raw_reader`) plus the additions listed under
 [Changes to existing repositories](#changes-to-existing-repositories).
 
 The simulators' prices come from `Market_sim`, a seeded random walk with noise traders
