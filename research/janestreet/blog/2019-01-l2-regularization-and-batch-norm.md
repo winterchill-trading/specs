@@ -6,25 +6,33 @@
 
 ## Summary
 
-- A Jane Street researcher explains that in convolutional nets trained with SGD, an L2
-  penalty on layers followed by batch norm stops acting as a regularizer.
-- Batch norm makes the output invariant to the scale of the preceding weights, so shrinking
-  them changes nothing and gives no gradient pressure favoring important weights.
-- Instead, weight scale controls step size: gradients scale inversely with weight magnitude,
-  so relative step size falls with the square of the scale.
-- Without a penalty, weights random-walk outward and the effective learning rate decays too
-  fast; L2 keeps the scale at an equilibrium and so acts as adaptive learning-rate control.
-- Experiment: ResNet-20 on CIFAR-10 in TensorFlow. Dropping L2 from the conv layers cut
-  accuracy from about 91% to 89.5%; rescaling conv gradients by the squared weight norm
-  (plus a piecewise-linear correction) restored baseline accuracy without the penalty.
-- A side effect: batch norm moving averages lag exponentially growing weights at inference,
-  fixed by shortening the averaging window (decay 0.997 to 0.98).
-- The analysis does not cover layers after the last batch norm or optimizers like Adam.
+- A Jane Street researcher explains a widely overlooked interaction: in convolutional nets
+  trained with SGD, an L2 penalty on layers followed by batch norm stops regularizing.
+- Recap: L2 adds the scaled sum of squared weights to the loss, so each step also decays
+  weights toward zero; the usual story is that useful weights recover while noise-fitting
+  weights stay small, or in Bayesian terms a prior favoring smoother models.
+- Batch norm normalizes per-channel activations to zero mean and unit variance, making the
+  output nearly invariant to the scale of preceding weights; why it helps is still debated.
+- Consequence: shrinking those weights changes nothing, the gradient direction is
+  scale-invariant, and there is no pressure favoring important weights, so the
+  regularizing mechanism disappears.
+- New role: gradients scale inversely with weight magnitude, so relative step size falls
+  with the square of the scale; without a penalty, weights random-walk outward and the
+  effective learning rate decays. L2 holds the scale at an equilibrium.
+- Experiment on ResNet-20 and CIFAR-10 (TensorFlow 1.11, 150 epochs in three learning-rate
+  stages): removing L2 from conv layers dropped accuracy from about 91% to 89.5%, with
+  faster weight growth and shrinking relative steps; the gap showed both more underfitting
+  and more overfitting.
+- Rescaling conv-layer gradients by the squared weight norm, plus a piecewise-linear
+  correction matching the baseline's own drift, recovered baseline accuracy with no L2.
+- Side effect: batch norm moving averages could not track exponentially growing weights at
+  inference; shortening the window (decay 0.997 to 0.98) fixed early-epoch accuracy.
+- Caveats: the analysis excludes layers after the last batch norm and optimizers like Adam,
+  where weight decay and L2 differ.
 
 ## Relevance to us
 
-- Weak relevance: deep learning optimization detail. We train no models in
-  [mm-core](../../../repos/mm-core.md) or [market-data](../../../repos/market-data.md).
-- **Action:** none.
+- No relevant insight: deep learning optimization; we train no models.
+  **Action:** none.
 
 Tags: `ml`
