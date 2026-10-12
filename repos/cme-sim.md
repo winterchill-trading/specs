@@ -8,7 +8,7 @@ A simulator of CME Globex futures speaking iLink 3 order entry and MDP 3.0 marke
 | Repository | `winterchill-trading/cme-sim` |
 | opam package | `cme-sim` |
 | Libraries | `cme-sim` (module `Cme_sim`), `cme-sim.wire` (module `Cme_sim_wire`) |
-| Binaries | `cme-sim` (`-gateway-port` 4300, `-feed-port` 4301, `-http-port` 4302, `-noise`, `-symbols`, `-clock`, `-seed`, `-no-cancel-on-disconnect`, `-log-level`), `cme-sim-cli` |
+| Binaries | `cme-sim` (`-gateway-port` 4300, `-feed-port` 4301, `-http-port` 4302, `-noise`, `-symbols`, `-clock`, `-seed`, `-no-cancel-on-disconnect`, `-log-level`, `-anchor-series`, `-anchor-fixed`, `-anchor-scaled`, `-anchor-norm`, `-anchor-from`, `-anchor-to`, `-anchor-half-life-ms`), `cme-sim-cli` |
 | Status | done |
 
 ## Key modules
@@ -24,7 +24,8 @@ A simulator of CME Globex futures speaking iLink 3 order entry and MDP 3.0 marke
 | `Session_handler` | Pure FIXP state machine per connection; sequencing kept per firm and session across reconnects |
 | `Feed`, `Json_feed` | MDP 3.0 publisher (MBP 10 levels, trade summaries, snapshots on connect, settlement) and the same feed as JSON |
 | `Session_clock` | `always-open`, `real` (the Globex week) or `accelerated` phases |
-| `Server`, `Frame_io`, `Ilink_client` | Gateway, feed and HTTP listeners (`/`, `/ws`, `/admin/halt`); SOFH framing; a minimal iLink 3 client |
+| `Anchoring` | The price anchor's TradFi path: a series, fixed (with drift) or scaled recorded reference per product; while open, `Market_sim.set_reference ~half_life` before each noise tick; outside the open phase the anchor waits, and the walk restarts from the venue's last price at the open |
+| `Server`, `Frame_io`, `Ilink_client` | Gateway, feed and HTTP listeners (`/`, `/ws`, `/anchors`, `/admin/halt`); SOFH framing; a minimal iLink 3 client |
 
 MDP templates are checked against CME's public schema version 13; decoders skip appended
 fields by `BlockLength`. Prices are synthetic. Fidelity against the iLink 3 and MDP 3.0
@@ -32,14 +33,14 @@ summary is summarised in [design/simulators.md](../design/simulators.md#tradfi-s
 
 ## Dependencies
 
-- Depends on: `equities-core`, `exchange-core-engine`, `order-book`, `exchange-core`,
-  `fixed-decimal`.
+- Depends on: `price-anchor`, `market-data`, `equities-core`, `exchange-core-engine`,
+  `order-book`, `exchange-core`, `fixed-decimal`.
 - Used by: none yet.
 
 ## CI pin order
 
 `fixed-decimal`, `exchange-core`, `order-book`, `exchange-core-engine`,
-`equities-core`.
+`equities-core`, `parquet`, `market-data`, `price-anchor`.
 
 ## Known gaps
 
@@ -47,5 +48,7 @@ summary is summarised in [design/simulators.md](../design/simulators.md#tradfi-s
 - No MBOFD/MBOLD books, recovery or instrument channels, or primary/backup.
 - HMAC credentials are not checked; no credit controls or self-match prevention IDs.
 - Replaces always lose queue priority.
+- The anchor's scaled reference reads normalized event logs, not raw minute files (a
+  venue normalizer would link a venue client into the simulator).
 - Auction trades are not cleared by the engine; holidays, trade date rolls and expiry are
   not modelled.

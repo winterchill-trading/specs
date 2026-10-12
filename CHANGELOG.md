@@ -10,6 +10,9 @@ belong here.
 
 ## 2026-10-12
 
+- `cme-sim`: depends on `price-anchor` and `market-data`; `-anchor-series`, `-anchor-fixed`
+  and `-anchor-scaled` pull a product's noise traders towards a reference price while it
+  is open, `/anchors` endpoint. See [repos/cme-sim.md](repos/cme-sim.md).
 - `market-recorder`: `merge` subcommand and `scripts/replicate-day.sh`, two collectors'
   raw days into one canonical copy with a `_merge/<date>.json` report. See
   [design/cloud-sinks-and-replication.md](design/cloud-sinks-and-replication.md).
