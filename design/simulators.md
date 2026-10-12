@@ -1,5 +1,7 @@
 # Simulators
 
+Kind: reference.
+
 Three venue simulators share one engine. `exchange-core-engine` does matching, margin,
 funding, liquidation and synthetic order flow; each `*-sim` is an adapter that speaks one
 venue's HTTP and websocket API over it. Clients and the market maker run unchanged
