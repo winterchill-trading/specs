@@ -12,6 +12,9 @@ into concrete proposals for our repositories.
   where our repositories stand, and end with a merged, ordered list of proposed actions.
   Read these first.
 - **Top 20** below is the short list we would start with.
+- **[OxCaml performance](oxcaml-performance/README.md)** has one verified note per language
+  or compiler technique (stack allocation, unboxed types, `[@zero_alloc]`, Flambda 2 and
+  more) and an audit of our hot paths against them.
 - **Insights for us** lists every actionable insight found in the notes, one line each,
   grouped by theme and ordered by value, with a link to the source note and the
   repositories it affects. Several insights from different sources often point at the
