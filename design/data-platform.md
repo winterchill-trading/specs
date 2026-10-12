@@ -1,5 +1,7 @@
 # Data platform
 
+Kind: explanation.
+
 The data platform records live market data from the three venues and makes it queryable
 with SQL. It is raw-first: the frames exactly as each venue sent them, with the local
 receive time, are the system of record. Everything else (normalized event logs, Parquet
