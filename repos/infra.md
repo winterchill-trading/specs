@@ -8,7 +8,7 @@ Not an OCaml repository.
 | --- | --- |
 | Repository | `winterchill-trading/infra` |
 | opam package | none |
-| Status | in progress (base image workflow running; AWS is design notes) |
+| Status | done (CI and base image green; AWS is design notes, see the roadmap) |
 
 ## Contents
 
@@ -21,6 +21,7 @@ Not an OCaml repository.
 | `charts/rendered-example.yaml` | `helm template` of the dev profile, checked in CI |
 | `docs/local.md`, `docs/aws.md` | Rancher Desktop setup; AWS topology, S3 layout, lifecycle, IAM, querying |
 | `Tiltfile` | Live rebuild of service images on Rancher Desktop |
+| `scripts/check-pins.sh` | Derives each repository's CI pin order from the sibling `dune-project` files and fails on a missing, misordered or wrong-URL pin (`-a` checks every sibling) |
 | `Makefile` | `base`, `build`, `up`, `down`, `logs`, `ps`, `lint`, `chart` |
 | `.github/workflows/base-image.yml` | Builds and pushes `ghcr.io/winterchill-trading/oxcaml-base` on changes and weekly |
 
@@ -31,7 +32,8 @@ Builds images of `hl-sim`, `binance-sim`, `bybit-sim`, `market-maker`,
 
 ## CI
 
-`ci.yml`: hadolint on both Dockerfiles, shellcheck on `build.sh`, `helm lint` (default
+`ci.yml`: hadolint on both Dockerfiles, shellcheck on `build.sh` and `scripts/*.sh`,
+`scripts/test-check-pins.sh` on a fixture workspace, `helm lint` (default
 and dev values), rendered example up to date, `docker compose config`.
 `base-image.yml`: multi-arch build and push to GHCR.
 
@@ -42,7 +44,5 @@ See [design/deployment.md](../design/deployment.md).
 ## Known gaps
 
 - No infrastructure-as-code for AWS; `docs/aws.md` describes the target.
-- The service image replays the repository's CI pin lines, so `market-maker` images fail
-  to build until its CI pins `parquet` and `market-data`.
 - Compose uses a community MinIO build (`pgsty/minio`) because upstream stopped
   publishing images.
