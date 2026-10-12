@@ -44,6 +44,9 @@ plus a normalized `Live_feed` for the data platform.
   exposed as a `Market_data.Normalizer.S` adapter so recorded raw files decode offline;
   `hl-cli rebuild-norm` rebuilds event logs from raw minute files. `Live_feed` resets
   the normalizer on every connection, so a reconnect re-emits the top of book.
+- `Live_feed.start` returns a handle with `feed`, `feed_with_gaps` and `stats`; every
+  reconnect emits one `Resync` gap (no instrument) before the fresh snapshot. The README
+  documents what a reconnect loses: the 0.4 to 0.6 s wait, up to 50 s for a silent stall.
 
 ## Tests
 

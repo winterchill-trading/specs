@@ -36,6 +36,9 @@ market maker on Binance or `binance-sim`.
   mode (`create_replay`): books are created on demand and a recorded `GET /depth` reply,
   which carries no symbol, applies to the symbol of the latest depth update.
   `binance-cli rebuild-norm` rebuilds event logs from raw minute files.
+- `Live_feed.feed_with_gaps`: a `Resync` gap per stream reconnect (no instrument) and per
+  broken L2 sequence (with the symbol), always before the new snapshot. A 0.5 s outage at
+  mainnet BTCUSDT rates loses about 17 trades and 80 BBOs.
 
 ## Tests and benchmark
 

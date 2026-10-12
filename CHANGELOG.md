@@ -10,6 +10,8 @@ belong here.
 
 ## 2026-10-12
 
+- `hl-client`, `binance-client`, `bybit-client`: `feed_with_gaps` reports resyncs as
+  `Market_data.Gap` values. See the repository pages.
 - `price-anchor`: `Anchor.create` gains `?half_life`, `?may_engage`, `?last_trade` and
   `?step_clock`; a series alone is no longer stale between points by default;
   `Source.of_series` returns an error for a missing file. These are the TradFi controls

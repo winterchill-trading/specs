@@ -36,6 +36,9 @@ Async client for the Bybit v5 HTTP and websocket API (category `linear`), a norm
 - `Raw_normalizer`: `Market_data.Normalizer.S` adapter over the `Live_feed` normalizer;
   a recorded disconnect resets books and tickers, and deltas are skipped until the next
   snapshot. `bybit-cli rebuild-norm` rebuilds event logs from raw minute files.
+- `Live_feed.feed_with_gaps`: a `Resync` gap per socket reconnect (no instrument) and per
+  order-book sequence break (with the symbol), sent before the first frame of the new
+  socket. Trades in the gap are lost; book and funding state return with the next snapshot.
 
 ## Tests and benchmark
 
