@@ -14,7 +14,10 @@ through the Bybit and Binance clients, `GET /sim/anchor`, `-input-journal`; bina
 `bybit-sim-anchor` package), and the TradFi path in `cme-sim`, `nyse-sim` and `cboe-sim`
 (series, fixed and scaled references, mean reversion while open, waiting through
 auctions, pauses and halts; `nyse-sim` keeps the target inside the LULD bands, `cboe-sim`
-takes its LULD reference from the mean of its own prints over five minutes). The
+takes its LULD reference from the mean of its own prints over five minutes). `cboe-sim`
+runs on `Anchor` itself (one per anchored listing, `path`, `may_engage`, `last_trade`
+from its last print, `clamp` with `Clamp.within_bands` on its LULD bands); its own
+`Anchoring` module is a thin wrapper. The
 design is built over interfaces that exist (`Exchange_core_engine.Exchange`, `Journal`,
 `Stepped`, `Market_sim`, `Market_data.Feed`, `Market_data.Raw_reader`) plus the additions
 listed under
