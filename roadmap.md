@@ -156,7 +156,8 @@ across themes. Each theme document orders its own list by value and links the so
 - `order-book`: pin property counterexamples via `~examples`; add a byte-string fuzz property.
 - `market-data`: property-test that random `Framed` buffer and flush sizes read back the same.
 - `hl-sim`, `hl-mm`: add `-response-delay-ms`; run the live-loop test for double placement.
-- simulators: pin each row of the `Tif` and market order table in [design/simulators.md](design/simulators.md#time-in-force-and-market-orders) in a test.
+- simulators: pin each row of the
+  [TIF and market order table](design/simulators.md#time-in-force-and-market-orders) in a test.
 - `market-maker`: script one order sequence against `hl-sim` and `binance-sim`; diff fills.
 - `venue-net`, `hl-client`: add HTTP record mode; check in and decode `l2Book` fixtures.
 - `exchange-core`, `mm-core`: add text-trace expect tests of book, margin and quotes per step.
