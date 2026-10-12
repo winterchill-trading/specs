@@ -23,12 +23,15 @@
 
 ## Relevance to us
 
-- The allocator choice itself is a 4.x runtime knob; the OCaml 5 runtime that OxCaml builds
-  on has a different major heap, so the specific switch does not apply to us.
-- The method does apply: when we tune GC for
-  [market-recorder](../../../repos/market-recorder.md) or the simulators, compare RSS across
-  several `space_overhead` settings rather than one run's wall time.
-- **Action:** none for now; revisit when we first tune `OCAMLRUNPARAM` for a deployed
-  service.
+- The allocator switch itself is a 4.x runtime knob; the OCaml 5 runtime under OxCaml has a
+  different major heap, so the specific choice does not apply to us.
+- **Performance:** in a GC language one run gives a single point on a space/time curve, so
+  comparisons need several `space_overhead` settings and RSS, not `top_heap_size`.
+  **Action:** add a section to the [infra](../../../repos/infra.md) deployment notes
+  describing how to compare GC settings for the recorder: run the `market-recorder`
+  sims e2e script under `OCAMLRUNPARAM=o=40,80,160` and record peak RSS and CPU time.
+- **Build and deploy:** container memory limits are enforced on RSS, which can differ from
+  what `Gc.stat` reports. **Action:** export process RSS (from `/proc/self/statm`) next to
+  the heap counters on `/metrics` in [market-recorder](../../../repos/market-recorder.md).
 
 Tags: `gc`, `allocation`, `performance`
