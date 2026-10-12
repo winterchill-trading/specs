@@ -101,6 +101,62 @@ a test pins every bin shape, so event logs written today stay readable. A change
 is a new `V2` with a converter, never an edit of `V1`. Event log files are append-only: a
 crash leaves at most a partial last frame, which readers report and writers cut off.
 
+Each new `norm/` file starts with a 40-byte header: the magic `MDFRAME1` and the
+32-character hex `bin_shape` digest of `Event.Stable.V1.t` (`Event_log.digest`). Files
+from before headers existed have none and are read unchecked; a reader raises on a file
+whose digest it does not accept, and a writer refuses to append to one.
+`test/fixtures/event-log-v1` holds files written by the code of that time, never
+regenerated, and a test reads them with today's code.
+
+### Compatible digests (in progress)
+
+In progress in `market-data` until its CI is green. Appending a constructor to a stable
+variant keeps old bytes decoding the same but changes the digest: growing `Venue` from
+three to eleven venues did. `Event_log.compatible_digests` lists the digests today's
+reader decodes, newest first, its head being `Event_log.digest`; `Framed` readers and
+writers take such a list.
+
+| Digest | Event type |
+| --- | --- |
+| `2f7f1bcba79db3ddd1b04d266342a8af` | `Event.Stable.V1` with eleven venues, Hyperliquid to Cme (written today) |
+| `4cf56dfbcb69fbab68b38db7a2944d7b` | `Event.Stable.V1` with Hyperliquid, Binance and Bybit only |
+
+Adding an entry follows the Stable discipline:
+
+1. Only a change that keeps old bytes decoding the same (appending a variant constructor
+   at the end) gets a list entry; anything else needs `Event.Stable.V2` and a reader for
+   the old files.
+2. The new digest goes at the head of the list with a comment naming the change. The
+   list is append-only: never remove or reorder an entry.
+3. A fixture written by the previous code (a scratch `git worktree` at the commit before
+   the change, running `Event_log.Writer`) is checked in under `test/fixtures/` with a
+   test that reads it; `test/fixtures/event-log-pre-venues` is the one for the venue
+   extension.
+4. The pinned digests in the tests are updated.
+
+## Instrument catalogue (in progress)
+
+In progress in `market-data` until its CI is green. Events carry prices and sizes but not
+what they mean. `Market_data.Instrument_info` holds the static facts per instrument:
+
+| Field | Meaning |
+| --- | --- |
+| `instrument` | venue and symbol (`binance:BTCUSDT`) |
+| `kind` | `Spot`, `Perp`, `Future` or `Option` |
+| `base`, `quote` | underlying asset and price currency (`BTC`, `USDT`) |
+| `size_unit` | `Base` tokens, `Quote` currency (Deribit inverse contracts) or `Contracts m` of `m` base tokens |
+| `units_per_price` | base tokens the quoted price is for, usually 1 (1000 for `1000PEPEUSDT`) |
+| `funding_interval` | what one funding rate covers; absent for instruments that do not fund |
+| `tick`, `lot` | price and size steps |
+
+The built-in catalogue is `data/instruments.sexp`, embedded at build time: 17 entries
+across the eight recorded crypto venues (BTC and ETH on most, plus `kPEPE` and
+`1000PEPEUSDT`). It is not exhaustive; `Instrument_info.load` reads a file in the same
+format to extend or replace it. The `units_per_contract` view's rows are derived from it,
+and `Funding.normalized_8h` scales a funding rate to 8 hours by the catalogued interval
+(Hyperliquid and Kraken Futures fund hourly, the others every 8 hours), so venues compare
+directly.
+
 ## Parquet tables
 
 Every table starts with `venue`, `symbol`, `exch_ts`, `recv_ts` (`TIMESTAMP_NS`);
@@ -120,9 +176,13 @@ prices and sizes are `DECIMAL(18,8)`.
 converts every instrument's `norm/` files of the day into `parquet/` tables and
 one-minute candles.
 
-- **Idempotent**: a table whose `<date>.parquet` is newer than its source is skipped
-  (`-force` rewrites); a rewrite removes the numbered parts left by a restarted live
-  sink.
+- **Idempotent**: every table written gets a manifest,
+  `parquet/<kind>/_manifest/<date>.sexp`, with its input files (size, mtime), output
+  bytes, rows and a code version that includes the event digest. A table whose manifest
+  matches the current inputs and code version is skipped (`-force` rewrites); one
+  without a manifest is rebuilt. A rewrite removes the numbered parts left by a
+  restarted live sink. Per table it prints input frames and bytes, output bytes, time
+  and replaced parts. Dataset readers (pyarrow, Spark) skip `_manifest`.
 - **Atomic**: files are written as `<name>.tmp` and renamed, so `*.parquet` globs never
   see a partial file.
 - Re-running after late data, a fix in a normalizer or a schema change regenerates the
