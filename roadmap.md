@@ -22,6 +22,9 @@ the same change that finishes or starts them.
   simulators.
 - `infra`: base and service images, compose stack, Helm chart, `check-pins.sh` in CI.
   See [repos/infra.md](repos/infra.md).
+- `specs` research actions: replication gap detection and failure table, client pitfalls
+  checklist, example queries, `Kind:` headers, postmortem template, simulator TIF table,
+  [CHANGELOG.md](CHANGELOG.md).
 - CI pins: every repository pins its sibling dependencies in dependency order
   (`infra/scripts/check-pins.sh -a` passes; `hl-mm` and `market-maker` now pin
   `parquet` and `market-data`).
@@ -68,7 +71,6 @@ across themes. Each theme document orders its own list by value and links the so
 - `market-data`, clients: emit a gap event on `Live_feed` resync; document reconnect frame loss.
 - `market-recorder`, clients: count per-stream parse errors on `/metrics`; test a malformed frame.
 - `market-recorder`, `market-data`: log per-minute L2 snapshots; start `Replay_feed` from the last.
-- `specs`: refine replication with sequence-gap detection, peer fill, clock bound and failure table.
 - `market-data`: write a `bin_shape` digest header per `Event_log` file; fail readers on mismatch.
 - `market-data`: check in an event log from today's code; test that later versions still read it.
 - `exchange-core`: number engine events; replay drained events into a fresh book and compare L2.
@@ -97,10 +99,8 @@ across themes. Each theme document orders its own list by value and links the so
 - `market-recorder`: test a stalled `Norm_writer` and print buffered events to check backpressure.
 - `market-data`: write day-close Parquet in smaller row groups; confirm with `EXPLAIN ANALYZE`.
 - `market-recorder`: add a `Venue_source.S` module type and register the clients as modules.
-- `specs`: add a client-pitfalls checklist to the data-platform design, each item tied to a test.
 - `market-data`: log per-table input frames, replaced parts and output bytes in day close.
 - `market-recorder`: export the `Parquet_sink` dropped count on `/metrics` if it adopts the sink.
-- `specs`: state that raw zstd files serve sequential replay only; point queries use Parquet.
 
 #### OCaml and OxCaml practices ([theme](research/themes/ocaml-practices.md))
 
@@ -156,7 +156,7 @@ across themes. Each theme document orders its own list by value and links the so
 - `order-book`: pin property counterexamples via `~examples`; add a byte-string fuzz property.
 - `market-data`: property-test that random `Framed` buffer and flush sizes read back the same.
 - `hl-sim`, `hl-mm`: add `-response-delay-ms`; run the live-loop test for double placement.
-- simulators, `specs`: table each venue's `Tif` and slippage semantics; pin each in a test.
+- simulators: pin each row of the `Tif` and market order table in [design/simulators.md](design/simulators.md#time-in-force-and-market-orders) in a test.
 - `market-maker`: script one order sequence against `hl-sim` and `binance-sim`; diff fills.
 - `venue-net`, `hl-client`: add HTTP record mode; check in and decode `l2Book` fixtures.
 - `exchange-core`, `mm-core`: add text-trace expect tests of book, margin and quotes per step.
@@ -172,11 +172,9 @@ across themes. Each theme document orders its own list by value and links the so
 - `market-data`: check in a real event log fixture; test candles against DuckDB row for row.
 - `market-data`: add a `trades_with_bbo` view joining each trade to the prevailing BBO.
 - `market-data`: ship `examples/query.py`, a pyarrow type test and pandas timestamp docs.
-- `specs`: add a page of example DuckDB queries with column notes and a replay sizing query.
 - `market-data`: log each `query` call's time, user and SQL to `query-log.ndjson`.
 - `market-recorder`: add a `status -url` command printing `/metrics` as dense tables.
 - `market-data`, `market-maker`: prototype Bonsai_term viewers for event logs and status.
-- `specs`: add a "Kind:" header convention to CLAUDE.md and apply it to `design/`.
 
 #### Build and deploy ([theme](research/themes/build-and-deploy.md))
 
@@ -196,7 +194,6 @@ across themes. Each theme document orders its own list by value and links the so
 - `specs`, `infra`: refine AWS deployment with host checks and a chrony check in node bootstrap.
 - `infra`: add troubleshooting notes for `ss -tipn` and uploads during DNS outages.
 - `infra`: add node-exporter or another socket and FD collector to compose and Helm.
-- `specs`: add a postmortem template under `postmortems/`.
 - `oxcaml-claude-skills`: document that dune's shared cache serves per-agent build directories.
 - `infra`: try proctopus for the local stack and note the result beside the compose stack.
 
