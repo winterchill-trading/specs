@@ -11,7 +11,7 @@ normalized events go to `Market_data.Event_log` daily files.
 | opam package | `market-recorder` |
 | Library | `market-recorder` (module `Market_recorder`) |
 | Binary | `market-recorder run -config FILE`, `market-recorder check-config -config FILE` |
-| Status | in progress (feature-complete; first CI runs pending) |
+| Status | in progress (feature-complete, CI green; awaiting deployment through infra) |
 
 ## Key modules
 
