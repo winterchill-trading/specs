@@ -50,13 +50,18 @@ Until then the command interface is the sink API: a native sink would implement 
 
 ## Replication design (planned)
 
-Status: the merge step is done as `market-recorder merge` (frame-text identity within a
-window, earliest `recv_ts`, disconnect lines kept only where both copies have a gap, a
-`_merge/<date>.json` report) with `scripts/replicate-day.sh` fetching two collectors'
-days through rclone; see [market-recorder](../repos/market-recorder.md#replication).
-Sequence-based identity and gap lists, suspected gaps from silence, the clock bound, the
-L2 snapshot rule, collector ids in keys, and the deployment (second collector,
-cross-region replication, merge job) are planned.
+Status: the merge step is done as `market-recorder merge` with
+`scripts/replicate-day.sh` fetching two collectors' days through rclone; see
+[market-recorder](../repos/market-recorder.md#replication). Done in the merge: identity
+by venue sequence where the stream has one (Binance `u` and `a`, Bybit book type and
+`u`; frame text otherwise), exact sequence gaps listed per series, suspected gaps from
+silence on streams that normally tick, the clock bound (`-clock-error`), matching
+across the day boundary, and collector ids in file names (`run -collector`, read by
+`merge` and `rebuild-norm`). The recorder samples its clock error bound from chrony
+(`market_recorder_clock_error_seconds`) and writes a disconnect line on every gap the
+Hyperliquid, Binance and Bybit clients report. Planned: ordering frames inside the
+clock bound by sequence, the L2 snapshot rule, and the deployment (second collector,
+cross-region replication, merge job).
 
 Goal: no gap in the system of record when one collector, node or region fails, and no
 manual merge.
@@ -82,8 +87,9 @@ graph LR
 ```
 
 - **Immutable minute files.** A closed minute file is never rewritten, so replication is
-  copy-only and conflict-free. Each collector adds its id to the key (for example
-  `<HH>-<MM>.<collector>.ndjson.zst`), so two collectors never write the same object.
+  copy-only and conflict-free. Each collector adds its id to the key
+  (`<HH>-<MM>.<collector>.ndjson.zst` with `market-recorder run -collector ID`), so two
+  collectors never write the same object.
 - **Two collectors per exchange in two regions**, each a full recorder with its own
   volume and uploader, both connected to the venue for the same symbols and streams.
 - **S3 cross-region replication** copies each regional bucket's `raw/` prefix into the
@@ -108,10 +114,10 @@ come from the venues' documentation and need a fixture before the merge relies o
 
 | Venue | Stream | Sequence | Contiguous | Checked by |
 | --- | --- | --- | --- | --- |
-| Binance | `l2` (`@depth@100ms`) | `U`, `u`, `pu`: each event's `pu` equals the previous `u` | yes | `Binance_client.Local_book` |
-| Binance | `trades` (`@aggTrade`) | aggregate trade id `a` | yes, per symbol | not checked |
+| Binance | `l2` (`@depth@100ms`) | `U`, `u`, `pu`: each event's `pu` equals the previous `u` | yes | `Binance_client.Local_book`, `market-recorder merge` |
+| Binance | `trades` (`@aggTrade`) | aggregate trade id `a` | yes, per symbol | `market-recorder merge` |
 | Binance | `bbo`, `funding` | none decoded (`E`, `T` times only) | no | not checked |
-| Bybit | `l2` (`orderbook.<depth>`) | `u` +1 per delta; a snapshot (or `u = 1`) restarts it | yes, per topic | `Bybit_client.Local_book` |
+| Bybit | `l2` (`orderbook.<depth>`) | `u` +1 per delta; a snapshot (or `u = 1`) restarts it | yes, per topic | `Bybit_client.Local_book`, `market-recorder merge` |
 | Bybit | `l2`, `trades`, `funding` | `seq` / cross sequence | no (increasing only) | not checked |
 | Hyperliquid | `l2`, `bbo` | `l2Book` `time`; every message is a full book | no | not checked |
 | Hyperliquid | `trades`, `funding` | trade `tid`; none for `activeAssetCtx` | no | not checked |
@@ -124,8 +130,9 @@ come from the venues' documentation and need a fixture before the merge relies o
   recorded days) where the peer has frames. These are filled by time range,
   bounded by the clock bound below.
 - **Disconnect lines** (empty lines) and missing minute files mark the gap boundaries
-  directly; reconnects inside the venue clients write nothing today, which is why the
-  sequence checks above matter.
+  directly. The recorder writes one on shutdown and on every gap the Hyperliquid,
+  Binance and Bybit clients report (reconnects, Bybit book resyncs); the other venues'
+  reconnects still write nothing, which is why the sequence checks above matter.
 - **Snapshots.** After a fill, an L2 stream must still replay into a consistent book: a
   Binance or Bybit fill is accepted only if its first delta continues the last applied
   `u` of the other copy, otherwise the merge keeps both copies' frames up to the next
@@ -135,13 +142,15 @@ come from the venues' documentation and need a fixture before the merge relies o
 
 `recv_ts` of two collectors comes from two hosts' clocks, so "earliest `recv_ts`" is only
 meaningful when the two stamps differ by more than both clocks' error. Each collector
-reports its bound `e` (planned: a clock-error gauge sampled from `chronyc -c tracking`,
-see [market-recorder](../repos/market-recorder.md)); for a pair of frames the bound is
-`e_A + e_B`.
+reports its bound `e` as `market_recorder_clock_error_seconds`, sampled every 30 s from
+`chronyc -c tracking` (`|offset| + root delay / 2 + root dispersion`, see
+[market-recorder](../repos/market-recorder.md)); for a pair of frames the bound is
+`e_A + e_B`, passed to the merge as `-clock-error`.
 
-- Frames whose `recv_ts` differ by less than the bound are **unordered**: the merge orders
-  them by venue sequence when there is one, else by `exch_ts`, else by collector id, so
-  the output is deterministic and never claims an ordering the clocks cannot support.
+- Frames whose `recv_ts` differ by less than the bound are **unordered**. Implemented:
+  the bound widens the match window, and of two copies closer than the bound the
+  collector A copy is kept (collector order), so the output is deterministic. Planned:
+  ordering such frames by venue sequence, else by `exch_ts`, else by collector id.
 - A collector whose bound is unknown or above a limit (planned: 10 ms) for a minute is
   used only to fill gaps in that minute, never to choose the earliest copy.
 - Latency measurements (`recv_ts - exch_ts`) from merged files mix two hosts; per
