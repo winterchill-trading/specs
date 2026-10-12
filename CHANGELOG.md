@@ -47,3 +47,26 @@ belong here.
 - Replication design: gap detection from venue sequences, peer fill, a clock bound and a
   failure table (planned). See
   [design/cloud-sinks-and-replication.md](design/cloud-sinks-and-replication.md).
+- `exchange-core-engine` adds `Input`, `Journal` (on-disk format: magic `EXJRNL01`,
+  then one `bin_prot` input per record), numbered events with `Book_replay`, and the
+  `Stepped` harness. See [repos/exchange-core.md](repos/exchange-core.md).
+- `fixed-decimal` declares `S.t` `[@@immediate]` and puts a `lossy` alert on
+  `of_float`. See [repos/fixed-decimal.md](repos/fixed-decimal.md).
+- `market-data`: `norm/` files start with an `MDFRAME1` header carrying the
+  `Event.Stable.V1.t` digest; day close writes `parquet/<kind>/_manifest/<date>.sexp`;
+  `query` appends to `query-log.ndjson`; new `dump`, `check` and `catalog` subcommands.
+  See [design/data-platform.md](design/data-platform.md).
+- `mm-core`: `Params.t` gains `max_actions_per_sec`, `soft_max_position` and
+  `bump_budget` (defaulted when absent from a sexp); `Live.Make` takes an optional
+  `?time_source` and reports tick-to-order latency. See [repos/mm-core.md](repos/mm-core.md).
+- `venue-net`: `Ws_client.connect` takes `?backoff_jitter`, `?handshake_timeout` and
+  `?time_source`; `Http.Record` writes JSON request and response fixtures. See
+  [repos/venue-net.md](repos/venue-net.md).
+- `hl-sim` serves the `activeAssetCtx` websocket channel, writes a JSON-lines request
+  journal (`-journal`) and disconnects subscribers past 10,000 queued messages. See
+  [repos/hl-sim.md](repos/hl-sim.md).
+- `infra` tags service images by commit, labels them with sibling pins, rejects `latest`
+  in the Helm defaults and adds an optional node-exporter DaemonSet and a compose
+  `monitoring` profile. See [repos/infra.md](repos/infra.md).
+- `oxcaml-claude-skills` provides `check-obj-magic.sh` for other repositories' CI. See
+  [repos/oxcaml-claude-skills.md](repos/oxcaml-claude-skills.md).
