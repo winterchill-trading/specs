@@ -20,7 +20,8 @@ records as a `Market_data.Feed.t`. No API keys, no order entry.
 | `Local_book` | Per-subscription `seq`/`pseq` continuity |
 | `Checksum` | CRC32 over interleaved top levels, verified when the venue sends one |
 | `Normalizer` | Pure frame to event conversion |
-| `Live_feed` | One socket per stream, text `ping` every 30 s, reconnect and resubscribe |
+| `Live_feed` | One socket per stream, text `ping` every 30 s, reconnect and resubscribe; `?time_source` (default the wall clock) stamps `recv_ts` and drives keepalive and backoff; `create_with_stats` also returns a reader of `Stats.t` (frames, parse errors, `error` events, reconnects) |
+| `Raw_normalizer` | `Normalizer` as a `Market_data.Normalizer.S`, for `Market_data.Rebuild_norm` over recorded raw minutes |
 
 | Stream | Bitget channel |
 | --- | --- |
@@ -38,6 +39,23 @@ Deltas before a snapshot are dropped; a break in `seq`/`pseq` drops the book and
 unsubscribes and resubscribes it. Tests: `test/test_normalizer.ml` ("books: update before
 snapshot, snapshot, deltas, gap, resync", "books: checksum verified when present", "bad
 frames and events"), `test/test_checksum.ml`.
+
+## Tests and benchmark
+
+`test/fixtures/bitget-BTCUSDT-2026-10-12T16-54` is a trimmed mainnet minute in the
+`market-recorder` raw format (230 KB). Tests normalize every frame, run `Rebuild_norm`
+over it and read the event logs back, pin minor words per message, and run `Live_feed`
+against a loopback Bitget-like server, one test on a synthetic clock. `bench/main.exe`
+on an M-series Mac:
+
+| Stream | Frames | Bytes per frame | Time per frame | Minor words per frame |
+| --- | --- | --- | --- | --- |
+| trades | 150 | 383 | 4.2 us | 751 |
+| bbo | 200 | 230 | 2.8 us | 565 |
+| l2 | 40 | 2022 | 60.6 us | 15447 |
+| funding | 60 | 581 | 5.4 us | 776 |
+
+The l2 average is dominated by the 20 KB full-depth snapshot sent on subscribe.
 
 ## Dependencies
 
