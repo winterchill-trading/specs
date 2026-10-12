@@ -36,13 +36,10 @@ connecting and passed to `Params.for_instrument ~min_notional`.
 
 ## CI pin order
 
-`fixed-decimal`, `exchange-core`, `hl-protocol`, `order-book`, `exchange-core-engine`,
-`venue-net`, `hl-client`, `hl-sim`, `mm-core`, `hl-mm`, `binance-protocol`,
-`binance-sim`, `binance-client`, `bybit-protocol`, `bybit-sim`, `bybit-client`.
-
-As in `hl-mm`, `parquet` and `market-data` are not pinned although all three clients
-now depend on `market-data`; the last green run predates that dependency. The README's
-pin loop has the same omission.
+`fixed-decimal`, `exchange-core`, `parquet`, `market-data`, `hl-protocol`, `order-book`,
+`exchange-core-engine`, `venue-net`, `hl-client`, `hl-sim`, `mm-core`, `hl-mm`,
+`binance-protocol`, `binance-sim`, `binance-client`, `bybit-protocol`, `bybit-sim`,
+`bybit-client`. CI is green with these pins.
 
 ## End to end
 
@@ -53,4 +50,6 @@ runs the binary and prints the report; `scripts/e2e-all.sh` runs all three venue
 
 - Hyperliquid orders are unsigned, so only `hl-sim` accepts them on that venue.
 - The position is not flattened on stop.
+- The README's build loop does not pin `parquet` and `market-data`, which the CI
+  workflow does.
 - Runs are not bit-repeatable with a fixed seed: request timing changes matching order.
