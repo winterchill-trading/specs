@@ -3,8 +3,11 @@
 The organization builds a crypto perpetuals trading stack in OxCaml on the Jane Street
 libraries (Core, Async, ppx_jane): exchange simulators for Hyperliquid, Binance USD-M
 Futures and Bybit v5 linear, typed clients for the same three venues, one venue-neutral
-market-making strategy that runs on all of them, and a raw-first market data platform
-that records live feeds and turns them into Parquet for SQL. Every repository is an opam
+market-making strategy that runs on all of them, read-only market data feeds for five
+more venues (OKX, Coinbase, Kraken, Deribit, Bitget), and a raw-first market data
+platform that records live feeds and turns them into Parquet for SQL. Simulators of NYSE,
+Cboe and CME, speaking their binary protocols over shared US equities and futures
+semantics, are in progress. Every repository is an opam
 package (or two), built with dune 3.17, tested with ppx_expect and Base_quickcheck, and
 pinned from GitHub in CI. Locally all repositories sit side by side under one directory
 with an untracked `dune-workspace`, so dune resolves siblings by public name.
@@ -21,8 +24,11 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Engine and simulators | [order-book](repos/order-book.md) | Price-time priority book and matching | done |
 | Engine and simulators | `exchange-core-engine` | Matching, clearinghouse, margin, funding, liquidation, noise traders (in [exchange-core](repos/exchange-core.md)) | done |
 | Engine and simulators | [hl-sim](repos/hl-sim.md), [binance-sim](repos/binance-sim.md), [bybit-sim](repos/bybit-sim.md) | HTTP and websocket servers speaking each venue's API over the engine | done |
+| Engine and simulators | [equities-core](repos/equities-core.md) | US equities, options and futures semantics: sessions, ticks, lots, symbology, auctions, order types, halts, fees | done |
+| Engine and simulators | [nyse-sim](repos/nyse-sim.md), [cboe-sim](repos/cboe-sim.md), [cme-sim](repos/cme-sim.md) | NYSE Pillar and XDP, Cboe BOE and PITCH, CME iLink 3 and MDP 3.0 over the engine | in progress |
 | Clients | [venue-net](repos/venue-net.md) | Async HTTP and reconnecting websocket transport | done |
 | Clients | [hl-client](repos/hl-client.md), [binance-client](repos/binance-client.md), [bybit-client](repos/bybit-client.md) | Typed venue clients, local books, `Live_feed` market data; Binance and Bybit also carry the `Mm_core.Venue.S` adapter | done |
+| Feeds | [okx-feed](repos/okx-feed.md), [coinbase-feed](repos/coinbase-feed.md), [kraken-feed](repos/kraken-feed.md), [deribit-feed](repos/deribit-feed.md), [bitget-feed](repos/bitget-feed.md) | Read-only public market data as a `Market_data.Feed.t`, no trading | done |
 | Market making | [mm-core](repos/mm-core.md) | Pure quoter, reconciler, risk, `Venue.S`, `Live.Make` loop | done |
 | Market making | [hl-mm](repos/hl-mm.md) | Hyperliquid `Venue.S` adapter and `hl-mm` binary | done |
 | Market making | [market-maker](repos/market-maker.md) | One `market-maker` binary for all three venues | done |
@@ -58,12 +64,23 @@ graph LR
     hl_sim["hl-sim"]
     binance_sim["binance-sim"]
     bybit_sim["bybit-sim"]
+    equities_core["equities-core"]
+    nyse_sim["nyse-sim"]
+    cboe_sim["cboe-sim"]
+    cme_sim["cme-sim"]
   end
   subgraph clients["Clients"]
     venue_net["venue-net"]
     hl_client["hl-client"]
     binance_client["binance-client"]
     bybit_client["bybit-client"]
+  end
+  subgraph feeds["Feeds"]
+    okx_feed["okx-feed"]
+    coinbase_feed["coinbase-feed"]
+    kraken_feed["kraken-feed"]
+    deribit_feed["deribit-feed"]
+    bitget_feed["bitget-feed"]
   end
   subgraph mm["Market making"]
     mm_core["mm-core"]
@@ -115,6 +132,28 @@ graph LR
   market_recorder --> hl_client
   market_recorder --> binance_client
   market_recorder --> bybit_client
+  equities_core --> exchange_core
+  nyse_sim --> engine_pkg
+  nyse_sim --> equities_core
+  cboe_sim --> engine_pkg
+  cboe_sim --> equities_core
+  cme_sim --> engine_pkg
+  cme_sim --> equities_core
+  okx_feed --> market_data
+  okx_feed --> venue_net
+  coinbase_feed --> market_data
+  coinbase_feed --> venue_net
+  kraken_feed --> market_data
+  kraken_feed --> venue_net
+  deribit_feed --> market_data
+  deribit_feed --> venue_net
+  bitget_feed --> market_data
+  bitget_feed --> venue_net
+  market_recorder --> okx_feed
+  market_recorder --> coinbase_feed
+  market_recorder --> kraken_feed
+  market_recorder --> deribit_feed
+  market_recorder --> bitget_feed
 
   hl_mm -.-> hl_sim
   binance_client -.-> binance_sim
@@ -127,7 +166,9 @@ graph LR
   infra -.-> market_data
 ```
 
-`fixed-decimal`, `venue-net` and `parquet` depend on no org package. `exchange-core`
+The `*-feed` repositories also list `exchange-core` (Coinbase, Kraken, Deribit) and
+`fixed-decimal` (Kraken) directly. `fixed-decimal`, `venue-net` and `parquet` depend on no
+org package. `exchange-core`
 holds two packages because `order-book` sits between them:
 `fixed-decimal -> exchange-core -> order-book -> exchange-core-engine`.
 
@@ -139,6 +180,7 @@ graph LR
     hl_api["Hyperliquid API"]
     bn_api["Binance USD-M API"]
     by_api["Bybit v5 API"]
+    more_api["OKX, Coinbase, Kraken, Deribit, Bitget public APIs"]
   end
   subgraph sims["Simulators"]
     hl_sim["hl-sim :3000"]
@@ -146,6 +188,7 @@ graph LR
     by_sim["bybit-sim :3400"]
   end
   live_feed["Live_feed in hl-, binance-, bybit-client"]
+  feeds["Live_feed in the five *-feed repositories"]
   recorder["market-recorder"]
   raw["raw minute files .ndjson.zst"]
   norm["norm/ event logs .bin"]
@@ -163,6 +206,8 @@ graph LR
   sims --> live_feed
   live_feed -->|on_raw frames| recorder
   live_feed -->|Market_data.Event| recorder
+  more_api --> feeds
+  feeds -->|on_raw frames, Market_data.Event| recorder
   recorder --> raw
   recorder --> norm
   raw --> uploader
@@ -181,6 +226,8 @@ graph LR
 - Each client's `Live_feed.create ?on_raw config ~symbols ~streams` returns a
   `Market_data.Feed.t` (one pipe each for trades, BBO, L2 and funding) and passes every
   frame's text and receive time to `on_raw` before parsing.
+- The `*-feed` repositories' `Live_feed.create` has the same shape, read-only, over each
+  venue's public websocket.
 - `market-recorder` writes raw frames to Tardis-style minute files and normalized events
   to `market-data` event logs, and hands closed minute files to a configurable upload
   command. See [design/data-platform.md](design/data-platform.md).
