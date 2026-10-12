@@ -238,11 +238,16 @@ file.
   time, as real liquidity refills, rather than only on the next reference change.
 - How to account for the anchor accounts' positions when a simulated strategy's PnL is
   compared with the real venue's.
-- When the TradFi simulators move from their own `Anchoring` modules to `Anchor`. Two
-  pieces stay in the simulators either way: the reference series as a function of venue
-  time (fixed prices with a drift, and series that restart with the session), which a
-  pipe of points paced by `Source.run` only approximates, and keeping the target inside
-  the LULD bands (`nyse-sim`), for which `Anchor` has no hook yet.
+- When the TradFi simulators move from their own `Anchoring` modules to `Anchor`. Nothing
+  is missing in the library any more; the price-anchor README's "TradFi migration" table
+  maps every function and counter. Known differences: `Stats.marks_set` counts changes
+  rather than every tick, `resumes` does not count the first follow, and
+  `Source.to_path` keeps the first change per interval where `cboe-sim` kept the last
+  per bucket.
+- Resolved: the reference as a function of venue time (fixed prices with a drift, series
+  pulled on the venue's clock) is `Path`, passed as `Anchor.create ~path`; keeping the
+  target inside LULD bands or daily limits is `Anchor.create ~clamp`, with
+  `Clamp.within_bands` as the ready-made function (`Stats.clamped` counts its moves).
 - Resolved: the TradFi controls (half-life, pause on venue phases, venue-owned clock,
   series without silence staleness) live in `Anchor`, so the TradFi path needs no
   second library.
