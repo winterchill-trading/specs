@@ -326,8 +326,13 @@ Bugs found in waves 2 and 3:
 - **Native cloud sinks** when the conditions in
   [design/cloud-sinks-and-replication.md](design/cloud-sinks-and-replication.md#when-a-native-sink-is-justified)
   hold.
-- **Replication**: two collectors per exchange in two regions, cross-region
-  replication, merge by earliest `recv_ts` with gap fill.
+- **Replication** (partially done): `market-recorder merge` and
+  `scripts/replicate-day.sh` merge two collectors' days into one canonical `raw/`
+  (frame-text identity within a window, earliest `recv_ts`, disconnects kept only where
+  both copies have a gap, a per-series report); see
+  [repos/market-recorder.md](repos/market-recorder.md#replication). Remaining:
+  sequence-based identity and gap lists, the clock bound, a second collector per
+  exchange in a second region, cross-region replication and the daily merge job.
 - **AWS deployment**: k3s on EC2 in ap-northeast-1 (Binance, Hyperliquid) and
   ap-southeast-1 (Bybit). See [design/deployment.md](design/deployment.md).
 - **Hyperliquid trading**: `hl-client` signs and `hl-mm` trades on testnet; the
