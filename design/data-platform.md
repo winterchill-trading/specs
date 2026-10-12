@@ -108,9 +108,9 @@ whose digest it does not accept, and a writer refuses to append to one.
 `test/fixtures/event-log-v1` holds files written by the code of that time, never
 regenerated, and a test reads them with today's code.
 
-### Compatible digests (in progress)
+### Compatible digests
 
-In progress in `market-data` until its CI is green. Appending a constructor to a stable
+Decided in [ADR 0006](../adr/0006-compatible-event-log-digests.md). Appending a constructor to a stable
 variant keeps old bytes decoding the same but changes the digest: growing `Venue` from
 three to eleven venues did. `Event_log.compatible_digests` lists the digests today's
 reader decodes, newest first, its head being `Event_log.digest`; `Framed` readers and
@@ -134,9 +134,9 @@ Adding an entry follows the Stable discipline:
    extension.
 4. The pinned digests in the tests are updated.
 
-## Instrument catalogue (in progress)
+## Instrument catalogue
 
-In progress in `market-data` until its CI is green. Events carry prices and sizes but not
+Events carry prices and sizes but not
 what they mean. `Market_data.Instrument_info` holds the static facts per instrument:
 
 | Field | Meaning |
