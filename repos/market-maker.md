@@ -48,6 +48,16 @@ unless the REST root is `api.hyperliquid.xyz`) for `-address`, `HL_ADDRESS` or t
 address; without it they are unsigned (`hl-sim`'s `X-Address`). A signed run against
 mainnet is refused unless `-i-understand-mainnet` is passed. The venue minimum order value is read before
 connecting and passed to `Params.for_instrument ~min_notional`.
+- `Order_log`: `-order-log FILE` writes every place and cancel request, its reply, and
+  every order update and fill as CSV with local and venue times; `queries/fills_vs_trades.sql`
+  joins fills to public trades in market-data's Parquet tables (trade id, else price, size,
+  side and nearest time within 2 s).
+- `Cycle_monitor`: Async cycles over 50 ms counted and over 20 ms warned, in the report,
+  the status line and the `e2e-all.sh` table.
+- `market-maker-status ORDER_LOG`: follows an order log in a bonsai_term view (resting
+  orders, position, fees, ack latency, fills); `-once` prints text and is all that works
+  where bonsai_term is absent. `nightly.yml` builds daily against upstream main and runs
+  the e2e script weekly with the latency table in the job summary.
 
 ## Dependencies
 

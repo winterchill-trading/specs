@@ -8,6 +8,11 @@ describes the change. The line is added in the same piece of work that updates t
 pages (see [CLAUDE.md](CLAUDE.md)). Bug fixes, tests and documentation-only changes do not
 belong here.
 
+## 2026-10-13
+
+- `market-maker`: order lifecycle log, Async cycle monitor, nightly workflow and the
+  `market-maker-status` viewer. See [repos/market-maker.md](repos/market-maker.md).
+
 ## 2026-10-12
 
 - `mm-core`: `mm-core-replay` package with a replay binary over event logs; GC counts in
