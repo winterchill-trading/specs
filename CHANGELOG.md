@@ -10,6 +10,8 @@ belong here.
 
 ## 2026-10-12
 
+- all repositories: CI installs dependencies through `infra`'s `ox-setup` action with a
+  cached switch. See [design/deployment.md](design/deployment.md#ci).
 - `mm-core`: hot parameter updates and the rolling action-rate window (`Live.connect_and_start`,
   `Strategy.update_params`, `on_resync`). See [repos/mm-core.md](repos/mm-core.md).
 - `market-recorder`: per-venue client counters on `/metrics` and `/status`, Prometheus alert

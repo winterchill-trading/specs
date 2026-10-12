@@ -298,8 +298,11 @@ Bugs found in waves 2 and 3:
     still restarts the loop; moving it to `Live.update_params` is next.
   - `market-recorder` (done): per-venue parse errors and reconnects on `/metrics` from
     the clients' `stats`, with Prometheus alert rules under `deploy/prometheus/`.
-  - CI cache rollout: every repository's workflow moves to `infra`'s `ox-setup` action
+  - CI cache rollout (done): every repository's workflow uses `infra`'s `ox-setup`
+    action; warm runs take 1.5 to 2.5 minutes, cold 9 to 21
     (see [design/deployment.md](design/deployment.md#ci)).
+  - `market-maker`: reload through `Live.update_params` instead of restarting the loop;
+    expose `action_rate_grace_ms` and `action_rate_cooldown_ms`.
 
 ## Next
 
@@ -382,7 +385,6 @@ across themes. Each theme document orders its own list by value and links the so
 #### Build and deploy ([theme](research/themes/build-and-deploy.md))
 
 - `market-maker`: add nightly builds against upstream `main` and a weekly `e2e-all.sh` run.
-- all repos: move CI to the cached `ox-setup` action (wave 4; replaces `dune-cache`).
 - `market-recorder`: log `RLIMIT_NOFILE` limits at startup (the FD count is exported).
 - `specs`, `infra`: refine AWS deployment with host checks and a chrony check in node bootstrap.
 - `infra`: try proctopus for the local stack and note the result beside the compose stack.
