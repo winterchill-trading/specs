@@ -16,6 +16,9 @@ market maker on Binance or `binance-sim`.
 
 - `Config`: `local` (`:3300`), `mainnet` (routed websocket paths `/public`, `/market`,
   `/private`), `testnet`; API key, optional secret and `recv_window`.
+  `Config.Read_only` has no keys and reaches public endpoints only: everything that sends
+  a key (orders, account, listen keys, `User_ws`, `Venue`) takes `Config.t`, so passing a
+  read-only config is a compile error (`test/must_fail` pins the message).
 - `Rest`: every endpoint in `binance-protocol`; `Signed` requests append `timestamp` and,
   with a secret, the HMAC signature; `api_error` recovers `Api_error.t`.
 - `Market_ws`: one combined-stream connection, acknowledged `SUBSCRIBE`, resubscribe on
@@ -26,8 +29,19 @@ market maker on Binance or `binance-sim`.
   detection and resync.
 - `Feed_normalizer`, `Live_feed`: pure frame-to-event conversion and the
   `Market_data.Feed.t` (`@aggTrade`, `@bookTicker`, `@depth@100ms` plus snapshot,
-  `@markPrice@1s`).
+  `@markPrice@1s`). `Live_feed.start` keeps a handle whose `stats` count frames, parse
+  errors and reconnects; `?time_source` stamps `recv_ts` and drives backoff.
 - `Venue`: `Mm_core.Venue.S` with `config = Config.t`.
+
+## Tests and benchmark
+
+`test/fixtures/*.jsonl` hold BTCUSDT mainnet frames per stream (2026-10-12); every frame
+normalizes (150 trades, 200 BBOs, 59 funding records, one L2 snapshot and 40 deltas) and
+minor words per message are printed. `Live_feed` runs against a scripted local server (a
+malformed frame in `stats`, a reconnect on a synthetic clock). Test pipes are read with
+`Pipe_read` instead of `with_timeout` around `Pipe.read`, which left a read pending that
+swallowed the next value. `bench/main.exe`: about 2.5 us and 480 minor words per trades,
+bbo or funding frame.
 
 ## Dependencies
 
