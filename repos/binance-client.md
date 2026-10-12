@@ -32,6 +32,10 @@ market maker on Binance or `binance-sim`.
   `@markPrice@1s`). `Live_feed.start` keeps a handle whose `stats` count frames, parse
   errors and reconnects; `?time_source` stamps `recv_ts` and drives backoff.
 - `Venue`: `Mm_core.Venue.S` with `config = Config.t`.
+- `Raw_normalizer`: `Market_data.Normalizer.S` adapter over `Feed_normalizer` in replay
+  mode (`create_replay`): books are created on demand and a recorded `GET /depth` reply,
+  which carries no symbol, applies to the symbol of the latest depth update.
+  `binance-cli rebuild-norm` rebuilds event logs from raw minute files.
 
 ## Tests and benchmark
 

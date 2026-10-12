@@ -40,6 +40,10 @@ plus a normalized `Live_feed` for the data platform.
   `activeAssetCtx`. `on_raw` sees each `l2Book` frame once (under `L2` when requested,
   else `Bbo`), so a recorder stores it once; `create_with_stats` counts frames, parse
   errors, server error frames and reconnects; `?time_source` stamps `recv_ts`.
+- `Normalizer`, `Raw_normalizer`: the pure frame-to-event conversion `Live_feed` runs,
+  exposed as a `Market_data.Normalizer.S` adapter so recorded raw files decode offline;
+  `hl-cli rebuild-norm` rebuilds event logs from raw minute files. `Live_feed` resets
+  the normalizer on every connection, so a reconnect re-emits the top of book.
 
 ## Tests
 

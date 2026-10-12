@@ -33,6 +33,9 @@ Async client for the Bybit v5 HTTP and websocket API (category `linear`), a norm
 - `Id_map`: Bybit string ids to `int64` (decimal strings map to themselves, others to
   negative numbers).
 - `Venue`: `Mm_core.Venue.S` with `config = Config.t`.
+- `Raw_normalizer`: `Market_data.Normalizer.S` adapter over the `Live_feed` normalizer;
+  a recorded disconnect resets books and tickers, and deltas are skipped until the next
+  snapshot. `bybit-cli rebuild-norm` rebuilds event logs from raw minute files.
 
 ## Tests and benchmark
 
