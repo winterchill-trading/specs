@@ -254,7 +254,7 @@ graph LR
   on `/ws`. Nothing in the data platform consumes them yet. See
   [design/simulators.md](design/simulators.md#tradfi-simulators).
 - `price-anchor` is planned: anchoring simulator prices to real venues. See
-  [design/simulators.md](design/simulators.md).
+  [design/price-anchor.md](design/price-anchor.md).
 
 ## Conventions shared by every OCaml repository
 
