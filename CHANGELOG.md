@@ -10,6 +10,10 @@ belong here.
 
 ## 2026-10-12
 
+- `nyse-sim`: depends on `price-anchor` and `market-data`; `-anchor-series`,
+  `-anchor-fixed` and `-anchor-scaled` pull a symbol's noise traders towards a reference
+  price in continuous core trading, anchor state and best bid/ask on `GET /`. See
+  [repos/nyse-sim.md](repos/nyse-sim.md).
 - `cme-sim`: depends on `price-anchor` and `market-data`; `-anchor-series`, `-anchor-fixed`
   and `-anchor-scaled` pull a product's noise traders towards a reference price while it
   is open, `/anchors` endpoint. See [repos/cme-sim.md](repos/cme-sim.md).
