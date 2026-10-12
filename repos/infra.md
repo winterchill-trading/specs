@@ -24,7 +24,9 @@ Not an OCaml repository.
 | `docs/runtime-tuning.md`, `scripts/gc-compare.sh` | `OCAMLRUNPARAM` comparison by peak RSS and CPU; memtrace on the ox base image |
 | `test-actions/` | Chaos checks against the running stack: orders, recorder restart, network cut, upload outage |
 | `Tiltfile` | Live rebuild of service images on Rancher Desktop |
-| `scripts/check-pins.sh` | Derives each repository's CI pin order from the sibling `dune-project` files and fails on a missing, misordered or wrong-URL pin (`-a` checks every sibling) |
+| `.github/actions/ox-setup` | Composite action for every repository's CI: OxCaml switch from the `ox` repository at the base image's commit, sibling pins resolved to commits, dependencies installed, the whole switch cached (see [design/deployment.md](../design/deployment.md#ci)) |
+| `docs/ci.md` | Migrating a `ci.yml` to `ox-setup`, the cache key, when it misses, timings |
+| `scripts/check-pins.sh` | Derives each repository's CI pin order from the sibling `dune-project` files and fails on a missing, misordered or wrong-URL pin (`-a` checks every sibling); reads `ox-setup` `pins:` blocks and checks the `ox` commit against the base image |
 | `scripts/ps.sh` | `make ps`: compose status plus each image's commit and sibling pins |
 | `Makefile` | `base`, `build`, `up`, `down`, `logs`, `ps`, `lint`, `chart` |
 | `.github/workflows/base-image.yml` | Builds and pushes `ghcr.io/winterchill-trading/oxcaml-base` on changes and weekly |
@@ -39,7 +41,9 @@ Builds images of `hl-sim`, `binance-sim`, `bybit-sim`, `market-maker`,
 
 `ci.yml`: hadolint on both Dockerfiles, shellcheck on `build.sh`, `scripts/*.sh` and
 `test-actions/*.sh`, `scripts/test-check-pins.sh` on a fixture workspace, `helm lint`
-(default and dev values), rendered example up to date, `docker compose config`.
+(default and dev values), rendered example up to date, `docker compose config`, and the
+`ox-setup-hl-sim` job running the action against an `hl-sim` checkout (a dispatch input
+pins `hl-protocol` at another ref to exercise a partial cache hit).
 `base-image.yml`: multi-arch build and push to GHCR. `service-images.yml`: commit-tagged
 service images, run by hand.
 
@@ -67,6 +71,10 @@ reported stale after 29 s (30 s window) and healthy 1 s after unpause; a 240 s u
 outage left 89 files pending and the backlog drained 4 s after the restore (rclone
 retries for about 150 s before failing, so alert on pending uploads, not failures).
 
+`ox-setup` timings (`ubuntu-latest`, hl-sim, five sibling pins): a cold run with the
+compiler cached takes 1046 s, a warm exact hit 91 s, a partial hit rebuilding one moved
+pin 163 s. hl-sim's own CI went from about 17 minutes per push to about 2.
+
 ## Design
 
 See [design/deployment.md](../design/deployment.md).
@@ -74,5 +82,7 @@ See [design/deployment.md](../design/deployment.md).
 ## Known gaps
 
 - No infrastructure-as-code for AWS; `docs/aws.md` describes the target.
+- Only `hl-sim` uses `ox-setup` so far; the other repositories still run setup-ocaml and
+  `opam pin add` (rollout is wave 4).
 - Compose uses a community MinIO build (`pgsty/minio`) because upstream stopped
   publishing images.
