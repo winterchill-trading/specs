@@ -70,3 +70,6 @@ belong here.
   `monitoring` profile. See [repos/infra.md](repos/infra.md).
 - `oxcaml-claude-skills` provides `check-obj-magic.sh` for other repositories' CI. See
   [repos/oxcaml-claude-skills.md](repos/oxcaml-claude-skills.md).
+- `nyse-sim`, `cboe-sim` and `cme-sim` are done: each ships a server and a `*-sim-cli`
+  binary, with gateway, feed and HTTP ports. See
+  [design/simulators.md](design/simulators.md#tradfi-simulators).
