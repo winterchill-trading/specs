@@ -355,7 +355,8 @@ Bugs found in waves 2 and 3:
   and stalled event log tests [`8312421`][market-recorder-8312421]
   [`9539251`][market-recorder-9539251]; `check-config` venue index
   [`9e96f3e`][market-recorder-9e96f3e]; `e2e-sims.sh` in CI
-  [`968c1a4`][market-recorder-968c1a4]. See
+  [`968c1a4`][market-recorder-968c1a4]; `MEMTRACE` starts memtrace
+  [`f15e611`][market-recorder-f15e611]. See
   [repos/market-recorder.md](repos/market-recorder.md).
 
 - `specs`: this repository.
@@ -416,7 +417,6 @@ across themes. Each theme document orders its own list by value and links the so
 #### Performance ([theme](research/themes/performance.md))
 
 - `mm-core`: add GC counts to reports (the recorder exports GC stats and RSS).
-- `market-recorder`, `infra`: wire memtrace (confirmed on the ox base image) into recorder and Helm.
 - `market-maker`: count Async cycles over 50 ms; warn on cycles over 20 ms (the recorder does).
 - clients, `mm-core`: audit `with_timeout` for abandoned work, as `venue-net` did.
 
@@ -460,6 +460,7 @@ across themes. Each theme document orders its own list by value and links the so
 [market-recorder-8312421]: https://github.com/winterchill-trading/market-recorder/commit/8312421
 [market-recorder-9539251]: https://github.com/winterchill-trading/market-recorder/commit/9539251
 [market-recorder-9e96f3e]: https://github.com/winterchill-trading/market-recorder/commit/9e96f3e
+[market-recorder-f15e611]: https://github.com/winterchill-trading/market-recorder/commit/f15e611
 [market-recorder-968c1a4]: https://github.com/winterchill-trading/market-recorder/commit/968c1a4
 [market-data-64381d1]: https://github.com/winterchill-trading/market-data/commit/64381d1
 [market-data-a61ead7]: https://github.com/winterchill-trading/market-data/commit/a61ead7
