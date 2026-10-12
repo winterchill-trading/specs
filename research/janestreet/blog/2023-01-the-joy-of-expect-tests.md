@@ -25,14 +25,17 @@
 
 ## Relevance to us
 
-- Our repositories already follow this style: [order-book](../../../repos/order-book.md)
+- Context: our repositories already follow this style; [order-book](../../../repos/order-book.md)
   tests print L2 after each step, and [mm-core](../../../repos/mm-core.md) reconciler and
   risk tests are all expect tests.
-- The missing piece is an end-to-end snapshot over real recorded data: raw frames from
-  [market-recorder](../../../repos/market-recorder.md) are never pushed through a client's
-  normalizer and local book in a test.
-- **Action:** in [binance-client](../../../repos/binance-client.md), check in a short raw
-  minute-file fixture of depth frames and add an expect test that feeds it through
-  `Feed_normalizer` and `Local_book`, printing the top three levels per side at the end.
+- **Testing and simulation:** the missing piece is a snapshot over real recorded data: raw
+  frames from [market-recorder](../../../repos/market-recorder.md) are never pushed through a
+  client's normalizer and local book in a test. **Action:** in
+  [binance-client](../../../repos/binance-client.md), check in a short raw minute-file
+  fixture of depth frames and add an expect test that feeds it through `Feed_normalizer` and
+  `Local_book`, printing the top three levels per side at the end.
+- Context: [exchange-core](../../../repos/exchange-core.md) already has scripted-session
+  expect tests (crossing, self-trade, IOC partial fills, cancel and modify) that print state
+  per step, which is the post's order-book example applied to our engine.
 
 Tags: `expect-tests`, `testing`, `market-data`, `replay`
