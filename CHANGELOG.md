@@ -10,6 +10,8 @@ belong here.
 
 ## 2026-10-12
 
+- `exchange-core`: `Market_sim.set_reference` and `set_noise_traders` for the price anchor.
+  See [repos/exchange-core.md](repos/exchange-core.md).
 - all repositories: CI installs dependencies through `infra`'s `ox-setup` action with a
   cached switch. See [design/deployment.md](design/deployment.md#ci).
 - `mm-core`: hot parameter updates and the rolling action-rate window (`Live.connect_and_start`,
