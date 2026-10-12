@@ -89,6 +89,68 @@ graph LR
   rewrites a day's raw files the derived `norm/` and `parquet/` are rebuilt by running it
   again (`-force` where timestamps do not show the change).
 
+### Gap detection
+
+A collector's copy of a stream has a gap when frames the venue sent never reached its file.
+The merge finds gaps per venue, stream and symbol from the fields below, then fills them
+from the peer. Only the fields marked "checked by" are read by our code today; the others
+come from the venues' documentation and need a fixture before the merge relies on them.
+
+| Venue | Stream | Sequence | Contiguous | Checked by |
+| --- | --- | --- | --- | --- |
+| Binance | `l2` (`@depth@100ms`) | `U`, `u`, `pu`: each event's `pu` equals the previous `u` | yes | `Binance_client.Local_book` |
+| Binance | `trades` (`@aggTrade`) | aggregate trade id `a` | yes, per symbol | not checked |
+| Binance | `bbo`, `funding` | none decoded (`E`, `T` times only) | no | not checked |
+| Bybit | `l2` (`orderbook.<depth>`) | `u` +1 per delta; a snapshot (or `u = 1`) restarts it | yes, per topic | `Bybit_client.Local_book` |
+| Bybit | `l2`, `trades`, `funding` | `seq` / cross sequence | no (increasing only) | not checked |
+| Hyperliquid | `l2`, `bbo` | `l2Book` `time`; every message is a full book | no | not checked |
+| Hyperliquid | `trades`, `funding` | trade `tid`; none for `activeAssetCtx` | no | not checked |
+
+- **Contiguous sequences** give exact gaps: the merge lists the missing ids per minute,
+  and a gap is filled when the peer's copy holds every missing id. The output records
+  each unfilled range.
+- **Increasing-only sequences and times** give suspected gaps: a silence longer than the
+  stream's normal interval (Binance depth every 100 ms; for other streams measured from
+  recorded days) where the peer has frames. These are filled by time range,
+  bounded by the clock bound below.
+- **Disconnect lines** (empty lines) and missing minute files mark the gap boundaries
+  directly; reconnects inside the venue clients write nothing today, which is why the
+  sequence checks above matter.
+- **Snapshots.** After a fill, an L2 stream must still replay into a consistent book: a
+  Binance or Bybit fill is accepted only if its first delta continues the last applied
+  `u` of the other copy, otherwise the merge keeps both copies' frames up to the next
+  snapshot from the copy that has one, and the gap is reported, not hidden.
+
+### Clock bound
+
+`recv_ts` of two collectors comes from two hosts' clocks, so "earliest `recv_ts`" is only
+meaningful when the two stamps differ by more than both clocks' error. Each collector
+reports its bound `e` (planned: a clock-error gauge sampled from `chronyc -c tracking`,
+see [market-recorder](../repos/market-recorder.md)); for a pair of frames the bound is
+`e_A + e_B`.
+
+- Frames whose `recv_ts` differ by less than the bound are **unordered**: the merge orders
+  them by venue sequence when there is one, else by `exch_ts`, else by collector id, so
+  the output is deterministic and never claims an ordering the clocks cannot support.
+- A collector whose bound is unknown or above a limit (planned: 10 ms) for a minute is
+  used only to fill gaps in that minute, never to choose the earliest copy.
+- Latency measurements (`recv_ts - exch_ts`) from merged files mix two hosts; per
+  collector latency is read from that collector's unmerged copy.
+
+### Failure table
+
+| Failure | Expected gap | How readers detect it | Recovery |
+| --- | --- | --- | --- |
+| One collector process crashes | Seconds until restart on that collector; none after merge | Disconnect line or missing frames in that copy; peer copy complete | Restart; merge fills from the peer |
+| One node or region down | Minutes to hours in that copy; none after merge | Missing minute files from that collector id | Merge fills from the peer; the down collector's files never arrive |
+| Venue disconnects one collector | Reconnect time (backoff up to 30 s) in that copy | Sequence break (Binance `pu`, Bybit `u`), stream silence | Client resyncs from a snapshot; merge fills from the peer |
+| Both collectors disconnected | Overlap of both outages | Sequence break or silence in both copies | None: the gap stays and is listed in the merge output |
+| Uploader stalled (store down, credentials) | None if the volume holds; files arrive late | `upload-pending.sexp` length, uploader gauges on `/metrics` | Retries with backoff; the merge waits or runs again when files land |
+| Volume full while uploads stall | From the full disk until space returns | `Raw_writer` flush errors; missing minute files | Peer copy fills; alert on the pending queue first |
+| Cross-region replication lag | None; merge input is late | Object missing in the merge bucket, present in the source | Merge runs after a delay or re-runs; day close follows |
+| Clock step on one host | None; ordering inside the bound is unreliable | Clock-error gauge, `recv_ts` going backwards | Treat that minute as fill-only (above) |
+| Parse change in a client | None in raw; derived data wrong | Day-close diffs, parse-error counters (planned) | Rebuild `norm/` and Parquet from raw |
+
 ## Open questions
 
 - Message identity per stream: Binance `u` and Bybit `u`/`seq` sequence numbers, and
@@ -100,6 +162,10 @@ graph LR
   it may run before day close.
 - How the recorder should mark client reconnects (today they are invisible through
   `Market_data.Feed.t`, so only stops write a disconnect line).
+- Tagging events, not only file keys, with collector and region, so a merged `norm/` or
+  Parquet row says which copy it came from and per-collector latency survives the merge.
+- Whether Binance `@aggTrade` ids and Bybit `seq` are identical across two connections
+  (assumed by the gap table above; to be checked on two recorded copies of one minute).
 - Uploading `norm/`, or always regenerating it from raw, which needs a raw-to-norm tool
   that does not exist yet.
 - Cost: cross-region replication doubles storage and adds transfer fees; lifecycle rules
