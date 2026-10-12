@@ -36,7 +36,108 @@ into concrete proposals for our repositories.
 
 ## Top 20
 
-To be filled in once the insights list is complete.
+The twenty insights we would act on first, highest value first.
+
+1. A deterministic engine is reproducible exactly by replaying its inputs. **Action:** Input journal
+   of place/cancel/modify/step/set_mark plus expect test replaying it and diffing drain_events.
+   Source: [State Machine Replication, and Why You Should
+   Care](janestreet/podcast/14-state-machine-replication-and-why-you-should-care.md). Affects:
+   [exchange-core](../repos/exchange-core.md).
+1. Fakes that always behave hide caller bugs; bugification makes worst-allowed behaviour routine in
+   tests. **Action:** Add a seeded bugify mode to the in-memory Venue.S test fake (rejects, delayed
+   cancel acks, split fills, stale open-order polls). Source: [Why Testing is Hard and How to Fix
+   it](janestreet/podcast/26-why-testing-is-hard-and-how-to-fix-it.md). Affects:
+   [mm-core](../repos/mm-core.md).
+1. A too-aggressive market maker never crashes, so quoting and inventory properties must be explicit.
+   **Action:** Base_quickcheck test driving Strategy with random events over seeds: quotes never
+   cross, stay ordered, cannot exceed max_position if all fill. Source: [Why Testing is Hard and How
+   to Fix it](janestreet/podcast/26-why-testing-is-hard-and-how-to-fix-it.md). Affects:
+   [mm-core](../repos/mm-core.md).
+1. Receivers must know when they lost messages; client resyncs are invisible through Feed.t.
+   **Action:** Gap/reconnect event in Market_data.Feed.t written as a disconnect line, tested with a
+   forced Bybit gap. Source: [Multicast and the
+   Markets](janestreet/podcast/03-multicast-and-the-markets.md). Affects:
+   [market-data](../repos/market-data.md), [market-recorder](../repos/market-recorder.md),
+   [hl-client](../repos/hl-client.md), [binance-client](../repos/binance-client.md),
+   [bybit-client](../repos/bybit-client.md).
+1. Late joiners need a compact snapshot, not a replay from midnight. **Action:** Write periodic
+   (per-minute) L2 snapshot events so Replay_feed can start mid-day. Source: [Multicast and the
+   Markets](janestreet/podcast/03-multicast-and-the-markets.md). Affects:
+   [market-recorder](../repos/market-recorder.md), [market-data](../repos/market-data.md).
+1. Bisimulation of an optimized structure against a slow reference via random operation sequences.
+   **Action:** Add a quickcheck bisimulation test of Order_book against a naive list-based reference
+   book. Source: [What the interns have wrought, 2022
+   edition](janestreet/blog/2022-08-what-the-interns-have-wrought-2022.md). Affects:
+   [order-book](../repos/order-book.md).
+1. Engine invariants checked on every step are cheap, strong properties for a deterministic
+   simulator. **Action:** Base_quickcheck test of random place/cancel/step sequences on Exchange
+   asserting zero net position, uncrossed book, unique order ids. Source: [Why Testing is Hard and
+   How to Fix it](janestreet/podcast/26-why-testing-is-hard-and-how-to-fix-it.md). Affects:
+   [exchange-core](../repos/exchange-core.md).
+1. Multi-symbol replay is an n-way merge of per-stream files; correctness must hold for any
+   interleaving. **Action:** Base_quickcheck property test: random multi-symbol events through
+   Event_log and Merge, check global recv_ts order, no loss or duplicates. Source: [Scaling and
+   benchmarking a critical message bus using a new indexing
+   strategy](janestreet/blog/2026-10-scaling-and-benchmarking-a-critical-message-bus.md). Affects:
+   [market-data](../repos/market-data.md).
+1. Failure paths can be forced without real outages (rlimits, LD_PRELOAD, one-thread pool).
+   **Action:** Expect test: Ws_client.connect to a listener that never completes the handshake; check
+   timeout and FD count restored. Source: [How recurring network maintenance exposed 6
+   bugs](janestreet/blog/2026-10-how-recurring-network-maintenance-exposed-6-bugs.md). Affects:
+   [venue-net](../repos/venue-net.md).
+1. Unexpected input that crashes the error path or vanishes silently is the classic pipeline
+   incident; client parse errors are uncounted. **Action:** Count per-stream parse errors from
+   Live_feed into Metrics, expect test with one malformed frame from hl-sim. Source: [Solving Puzzles
+   in Production](janestreet/podcast/20-solving-puzzles-in-production.md). Affects:
+   [market-recorder](../repos/market-recorder.md), [hl-client](../repos/hl-client.md),
+   [binance-client](../repos/binance-client.md), [bybit-client](../repos/bybit-client.md),
+   [hl-sim](../repos/hl-sim.md).
+1. Without tick-to-order measurement a deferred send goes unnoticed. **Action:**
+   recv_ts-to-order-send histogram in Live.Make, p50/p99/max logged at shutdown. Source: [Performance
+   Engineering on Hard Mode](janestreet/podcast/18-performance-engineering-on-hard-mode.md). Affects:
+   [mm-core](../repos/mm-core.md).
+1. Cross-host timestamp comparison is only valid within measured clock error, which we do not record.
+   **Action:** Clock error gauge in /metrics from chronyc tracking every 10 s. Source: [Clock
+   Synchronization](janestreet/podcast/06-clock-synchronization.md). Affects:
+   [market-recorder](../repos/market-recorder.md).
+1. Tested, reviewable transformations catch bad data at each stage. **Action:** Add market-data check
+   running fixed DuckDB assertions (no crossed BBO, positive sizes, monotonic recv_ts, no empty
+   minutes on liquid symbols) after day-close. Source: [Wrestling the world into
+   rows](janestreet/podcast/29-wrestling-the-world-into-rows.md). Affects:
+   [market-data](../repos/market-data.md), [infra](../repos/infra.md).
+1. Owning the catalog is what makes deprecation and schema evolution possible. **Action:** Add
+   market-data catalog -dir D listing per table venues, symbols, date range, file count and leftover
+   numbered parts, with an expect test. Source: [Building a data warehouse from
+   scratch](janestreet/podcast/28-building-a-data-warehouse-from-scratch.md). Affects:
+   [market-data](../repos/market-data.md).
+1. Contract multipliers make raw prices incomparable across venues (1000PEPEUSDT, kPEPE quote per
+   1,000 tokens). **Action:** Add a units_per_contract table exposed as a DuckDB view, with an expect
+   test showing per-token mids agree across three venues. Source: [Wrestling the world into
+   rows](janestreet/podcast/29-wrestling-the-world-into-rows.md). Affects:
+   [market-data](../repos/market-data.md).
+1. A rebuilt normalizer path can be validated by diffing against what ran live. **Action:** Make the
+   raw-to-norm tool's acceptance test rebuild one day and diff it event by event against live norm/
+   logs. Source: [Building a functional email
+   server](janestreet/podcast/08-building-a-functional-email-server.md). Affects:
+   [market-data](../repos/market-data.md), [market-recorder](../repos/market-recorder.md).
+1. Version-skew tests catch writer/reader incompatibilities. **Action:** Check in an event log
+   written by current code and test future versions still read it. Source: [Getting from tested to
+   battle-tested](janestreet/blog/2025-12-getting-from-tested-to-battle-tested.md). Affects:
+   [market-data](../repos/market-data.md).
+1. OxCaml extensions have no stability promise; CI pulls the ox repo unpinned while the base image
+   pins it. **Action:** Pin the ox opam repository to the base image's commit in every CI workflow.
+   Source: [Introducing OxCaml](janestreet/blog/2025-06-introducing-oxcaml.md). Affects:
+   [infra](../repos/infra.md), [fixed-decimal](../repos/fixed-decimal.md).
+1. Captured real traffic is the best codec test data, and the recorder already stores frames
+   verbatim. **Action:** Check a trimmed raw minute file into hl-protocol tests; expect test decodes
+   every frame, prints counts per channel and errors. Source: [A FUSE server for our in-house storage
+   backend](janestreet/blog/2026-10-linux-engineering-depot-fuse.md). Affects:
+   [hl-protocol](../repos/hl-protocol.md), [market-recorder](../repos/market-recorder.md).
+1. No org benchmark exists, so allocation and speed claims are unmeasured. **Action:** Add a
+   core_bench bench for submit/cancel on a 1000-level book in order-book with a README baseline.
+   Source: [Core_bench: better micro-benchmarks through linear
+   regression](janestreet/blog/2014-05-core-bench-micro-benchmarking-for-ocaml.md). Affects:
+   [order-book](../repos/order-book.md).
 
 ## Insights for us
 
