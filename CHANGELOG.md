@@ -10,6 +10,10 @@ belong here.
 
 ## 2026-10-12
 
+- `hl-sim`: depends on `price-anchor`, `market-data`, `hl-client` and `binance-client`;
+  `-anchor VENUE:SYMBOL=COIN` (live), `-anchor-raw` / `-anchor-norm` (recorded) with
+  `-anchor-speed`, `GET /status`, `-input-journal` (engine `Journal`). See
+  [repos/hl-sim.md](repos/hl-sim.md).
 - `nyse-sim`: depends on `price-anchor` and `market-data`; `-anchor-series`,
   `-anchor-fixed` and `-anchor-scaled` pull a symbol's noise traders towards a reference
   price in continuous core trading, anchor state and best bid/ask on `GET /`. See
