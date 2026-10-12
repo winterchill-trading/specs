@@ -6,9 +6,9 @@ Bybit v5 linear perpetual simulator: REST under `/v5`, public stream
 | | |
 | --- | --- |
 | Repository | `winterchill-trading/bybit-sim` |
-| opam package | `bybit-sim` |
-| Library | `bybit-sim` (module `Bybit_sim`) |
-| Binary | `bybit-sim` (`-port` 3400, `-seed`, `-vol-bps`, `-symbols`, `-noise-traders`, `-initial-balance`, `-log-level`) |
+| opam packages | `bybit-sim` (library), `bybit-sim-anchor` (anchor library and binary) |
+| Libraries | `bybit-sim` (module `Bybit_sim`), `bybit-sim-anchor` (module `Bybit_sim_anchor`) |
+| Binary | `bybit-sim` (`-port` 3400, `-seed`, `-vol-bps`, `-symbols`, `-noise-traders`, `-initial-balance`, `-log-level`; `-anchor VENUE:SYMBOL=SIMSYM` (repeatable), `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from T -anchor-to T`, `-anchor-speed X`, `-anchor-status-interval-s`, `-input-journal FILE`) |
 | Status | done |
 
 ## Key modules
@@ -20,19 +20,28 @@ Bybit v5 linear perpetual simulator: REST under `/v5`, public stream
 - `Venue`: the engine plus the registry: trading and account endpoints, event buffering
   for the streams.
 - `Server`: cohttp-async server for REST and both websocket streams; drives the clock
-  and the market simulation.
+  and the market simulation; clock step hooks and plain JSON routes for simulator
+  endpoints.
+- `Bybit_sim_anchor.Spec`, `Reference`, `Anchors` (package `bybit-sim-anchor`): the
+  `-anchor` argument, the reference venues' live feeds and raw normalizers (Bybit and
+  Binance clients), and the anchors of a running server (sources, clock hook,
+  `GET /sim/anchor` status, periodic summary). See
+  [design/price-anchor.md](../design/price-anchor.md).
 
 ## Dependencies
 
 - Depends on: `fixed-decimal`, `exchange-core`, `exchange-core-engine`,
-  `bybit-protocol`, `order-book`.
+  `bybit-protocol`, `order-book`; `bybit-sim-anchor` also on `market-data`,
+  `price-anchor`, `bybit-client` and `binance-client` (a separate package because
+  `bybit-client`'s tests depend on the `bybit-sim` library).
 - Used by: `bybit-client` (tests); built as an image by `infra`; target of
   `market-maker -venue bybit -network local`.
 
 ## CI pin order
 
-`fixed-decimal`, `exchange-core`, `order-book`, `exchange-core-engine`,
-`bybit-protocol`.
+`fixed-decimal`, `exchange-core`, `order-book`, `exchange-core-engine`, `parquet`,
+`market-data`, `price-anchor`, `venue-net`, `bybit-protocol`, `binance-protocol`,
+`mm-core`, `bybit-client`, `binance-client`.
 
 ## Behaviour
 

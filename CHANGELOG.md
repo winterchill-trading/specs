@@ -10,6 +10,11 @@ belong here.
 
 ## 2026-10-12
 
+- `bybit-sim`: new `bybit-sim-anchor` package (library `Bybit_sim_anchor` and the
+  `bybit-sim` binary) depending on `price-anchor`, `market-data`, `bybit-client` and
+  `binance-client`; `-anchor VENUE:SYMBOL=SIMSYM` (live), `-anchor-raw` / `-anchor-norm`
+  with `-anchor-speed`, `GET /sim/anchor`, `-input-journal`. The `bybit-sim` library
+  package keeps its dependencies. See [repos/bybit-sim.md](repos/bybit-sim.md).
 - `binance-sim`: new `binance-sim-anchor` package (library `Binance_sim_anchor` and the
   `binance-sim` binary) depending on `price-anchor`, `market-data` and `binance-client`;
   `-anchor VENUE:SYMBOL=SIM` (live), `-anchor-raw` / `-anchor-norm` with `-anchor-speed`,

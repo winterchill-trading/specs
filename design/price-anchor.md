@@ -8,8 +8,10 @@ levels, trade replay, staleness, live / raw / norm / series sources). Simulators
 through the Hyperliquid and Binance clients, anchor status on `GET /status`, engine
 inputs journaled with `-input-journal`), `binance-sim` (`-anchor`, `-anchor-raw`,
 `-anchor-norm`, `-anchor-speed` with the server clock at the replay speed, Binance
-references only, `GET /sim/anchor`; binary in the `binance-sim-anchor` package), and the
-TradFi path in `cme-sim` and `nyse-sim`
+references only, `GET /sim/anchor`; binary in the `binance-sim-anchor` package),
+`bybit-sim` (`-anchor`, `-anchor-raw`, `-anchor-norm`, `-anchor-speed`; live references
+through the Bybit and Binance clients, `GET /sim/anchor`, `-input-journal`; binary in the
+`bybit-sim-anchor` package), and the TradFi path in `cme-sim` and `nyse-sim`
 (series, fixed and scaled references, mean reversion while open, waiting through
 auctions, pauses and halts; `nyse-sim` keeps the target inside the LULD bands). The
 design is built over interfaces that exist (`Exchange_core_engine.Exchange`, `Journal`,
