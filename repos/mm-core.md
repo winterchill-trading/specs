@@ -34,6 +34,14 @@ cancels and places in the last second trip the kill switch), `soft_max_position`
 `bump_budget` (past the soft limit only the side that would grow the position is pulled).
 `Params.validate` names every field and rejects NaN and infinity in every float.
 
+Hot parameter updates: `Strategy.update_params` returns a new strategy that keeps market
+state, inventory and resting orders (symbol changes and invalid parameters are rejected);
+`Live.connect_and_start` returns the running loop, on which `update_params` swaps
+parameters without a restart or cancel-all, and `stop` ends it. The action-rate kill
+switch is a rolling one-second window; `action_rate_grace_ms` (5000) suspends it after
+every venue reconnect (`Strategy.on_resync`) and `action_rate_cooldown_ms` (none) clears
+an action-rate halt only. Position and drawdown halts stay permanent.
+
 ## Tests and benchmarks
 
 Expect and `Base_quickcheck` tests of the strategy (quotes never cross or breach the
