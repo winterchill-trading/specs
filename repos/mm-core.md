@@ -9,7 +9,7 @@ any venue implementing it.
 | Repository | `winterchill-trading/mm-core` |
 | opam package | `mm-core` |
 | Library | `mm-core` (module `Mm_core`) |
-| Binaries | none |
+| Binaries | `mm-core` (package `mm-core-replay`): `replay -norm DIR -symbol S` drives `Strategy` from a `Replay_feed` event log and prints the plans; no fills are simulated |
 | Status | done |
 
 ## Key modules
@@ -27,7 +27,7 @@ any venue implementing it.
 | `Latency_histogram` | Count, p50, p99 at two significant digits, exact max |
 | `Strategy` | State machine: `on_book`, `on_fill`, `on_open_orders`, `on_account`, `tick ~now` |
 | `Venue` | `module type S`, the Async venue client contract |
-| `Live` | `Make (V : Venue.S)`: feeds, polls, sequenced plan execution, shutdown, `Report` with `tick_to_order` latency, `stop_signal`; optional `?time_source` |
+| `Live` | `Make (V : Venue.S)`: feeds, polls, sequenced plan execution, shutdown, `Report` with `tick_to_order` latency and `gc` counts (minor and major collections, heap words), `stop_signal`; optional `?time_source` |
 
 New parameters, defaulting when absent from a sexp: `max_actions_per_sec` (100; more
 cancels and places in the last second trip the kill switch), `soft_max_position` and
@@ -89,4 +89,6 @@ See [design/market-making.md](../design/market-making.md).
 
 - The position is not flattened on exit; `stop` only cancels resting orders.
 - One symbol per `Live.Make` run.
-- Strategy parameters are static for a run (no online tuning).
+- Venue calls have no timeout in mm-core; a venue that never answers blocks the loop and `stop`.
+- `Params` duration fields are still `int` milliseconds on `main`; the `params-spans` branch
+  makes them `Time_ns.Span.t` and waits for hl-mm and market-maker to adapt.

@@ -10,6 +10,8 @@ belong here.
 
 ## 2026-10-12
 
+- `mm-core`: `mm-core-replay` package with a replay binary over event logs; GC counts in
+  `Live.Report`. See [repos/mm-core.md](repos/mm-core.md).
 - `market-recorder`: raw minute file names may carry a collector id
   (`<HH>-<MM>.<collector>.ndjson[.zst]`, `run -collector`), read by `merge -collector-a/-b`
   and `rebuild-norm -collector`; the `_merge/<date>.json` report gains `text_differs`,
