@@ -166,3 +166,6 @@ belong here.
 - `cboe-sim`: `Anchoring` is a thin wrapper over `price-anchor`'s `Anchor` (`path`,
   `may_engage`, `last_trade`, `clamp` on the LULD bands); targets stay inside the bands.
   See [repos/cboe-sim.md](repos/cboe-sim.md).
+- `cme-sim`: `Anchoring` is a thin wrapper over `price-anchor`'s `Anchor` (`path`,
+  `may_engage` while open, `last_trade`, `clamp` on the daily price limits); targets now
+  stay 30 bps inside the limits. See [repos/cme-sim.md](repos/cme-sim.md).
