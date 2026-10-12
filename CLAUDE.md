@@ -32,6 +32,15 @@ Update specs in the same session, one commit per document, when a change:
 - Present tense, factual, short. Every claim must be checkable in a repository's
   `dune-project`, `*.opam`, `.mli`, CI workflow or README; say "planned" or "in progress"
   for anything not in code yet.
+- Every `design/` page states its kind on the line after the H1, as
+  `Kind: <kind>.`, where the kind is one of
+  - `tutorial`: a guided first run that teaches by doing;
+  - `how-to`: steps or recipes for one task, for a reader who knows the system;
+  - `reference`: facts to look up (tables, formats, columns), complete and dry;
+  - `explanation`: why the design is the way it is, its trade-offs and open questions.
+
+  A page that needs two kinds is two pages. Keep the line when editing, and change it if
+  the page changes kind.
 - Mermaid for diagrams. Node ids use underscores (`exchange_core["exchange-core"]`).
 - Run `npx -y markdownlint-cli2 '**/*.md'` and `scripts/check-mermaid.sh` before
   pushing.
