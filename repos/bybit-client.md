@@ -15,6 +15,9 @@ Async client for the Bybit v5 HTTP and websocket API (category `linear`), a norm
 ## Key modules
 
 - `Config`: `local` (`:3400`), `mainnet`, `testnet`; secret redacted in sexp.
+  `Config.Read_only` has no credential fields (`read_only` drops key, secret and the
+  private stream); `Public_ws.connect` and `Live_feed.connect` take one, so market-data
+  code cannot sign or authenticate.
 - `Rest`: every endpoint in `bybit-protocol`; `X-BAPI-*` signed headers; `Api_error`
   distinguishes venue rejections from transport failures.
 - `Ws_stream`: shared websocket core: `{"op":"ping"}` keepalive, optional auth step,
@@ -23,10 +26,22 @@ Async client for the Bybit v5 HTTP and websocket API (category `linear`), a norm
   subscribing.
 - `Local_book`: orderbook from snapshots and `u`-consecutive deltas; `Gap` resubscribes.
 - `Live_feed` (with pure `Normalizer`): `publicTrade`, `orderbook.1` (BBO),
-  `orderbook.<depth>` (L2), `tickers` (funding).
+  `orderbook.<depth>` (L2), `tickers` (funding). Each frame is decoded once
+  (`Public_ws`'s `on_frame`): an `orderbook.50` frame went from 2861 to 1747 minor words
+  and from 14.3 to 8.5 us. `Live_feed.stats` gives frames, parse errors and reconnects per
+  stream; `?time_source` drives `recv_ts`, keepalive, watchdog and backoff.
 - `Id_map`: Bybit string ids to `int64` (decimal strings map to themselves, others to
   negative numbers).
 - `Venue`: `Mm_core.Venue.S` with `config = Config.t`.
+
+## Tests and benchmark
+
+`test/fixtures` holds 20 s of recorded BTCUSDT mainnet frames per stream; tests decode
+and normalize them with per-stream counts, bound live-path allocation per L2 frame
+(tolerant of per-platform word counts), count malformed frames in `stats` against a
+loopback server and step a reconnect on a synthetic clock. `bench/main.exe` on an
+M-series Mac, decode plus normalize per frame: trades 5.3 us, bbo 2.7 us, l2 6.5 us,
+funding 2.9 us; the normalizer alone is under 1 us.
 
 ## Dependencies
 
@@ -48,4 +63,4 @@ Async client for the Bybit v5 HTTP and websocket API (category `linear`), a norm
 - `Fill.closed_pnl` is `None` (Bybit reports closed PnL per order and position);
   `realized_pnl` is after fees and funding; negative `Id_map` ids are stable only per
   `Venue.t`.
-- The README's opam pin list omits `parquet` and `market-data`, which CI pins.
+- Private streams and order entry are checked against the simulator only.
