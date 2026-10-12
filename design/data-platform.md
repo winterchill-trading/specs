@@ -46,6 +46,12 @@ graph LR
 | Parquet tables | Parquet v1, PLAIN, zstd | `Market_data.Day_close` (batch) or `Parquet_sink` (live) | Research and SQL |
 | SQL | DuckDB views over `read_parquet` globs | `Market_data.Parquet_views`, `market-data query` | Ad-hoc analysis |
 
+Raw zstd minute files serve sequential replay only: a reader decompresses a minute from
+its start, so finding one instrument at one time in them costs a scan. Point queries
+(one symbol, one time range, one column) go through the Parquet tables and DuckDB, which
+read only the row groups and columns they need. Event logs sit in between: sequential, but
+typed and per instrument.
+
 ## File layout
 
 Under the recorder's `data_dir`:
@@ -126,6 +132,33 @@ one-minute candles.
 `D/*/*/parquet/<table>/*.parquet`; `market-data query -dir D "SQL"` runs them with the
 `duckdb` CLI. DuckDB multiplies two `DECIMAL(18,8)` without widening, so cast to
 `DECIMAL(38,16)` or `DOUBLE` first.
+
+## Client pitfalls checklist
+
+Every `Live_feed` (and every `*-feed` repository) is checked against these pitfalls of
+normalized venue feeds. Each item names the test that covers it, or is marked missing
+with the proposed test from the [roadmap](../roadmap.md#from-research).
+
+| Pitfall | Hyperliquid (`hl-client`) | Binance (`binance-client`) | Bybit (`bybit-client`) |
+| --- | --- | --- | --- |
+| Diffs before the snapshot are buffered or dropped, never applied to an empty book | n/a: every `l2Book` is a full book (`test_live_feed.ml` "l2Book gives a snapshot and the top of book") | `test_local_book.ml` "buffer, snapshot, replay and continuous updates" | `test_local_book.ml` "snapshot, deltas, stale and gap" (`Waiting_for_snapshot`) |
+| The first diff after a snapshot joins it (Binance `U <= L <= u`, or `pu = L`) | n/a | `test_local_book.ml` "an idle snapshot is continued by pu = lastUpdateId" | n/a: snapshot and deltas share one `u` sequence |
+| A sequence break is detected and the book dropped | n/a: no sequence | `test_local_book.ml` "a gap drops the book until a newer snapshot" | `test_local_book.ml` "snapshot, deltas, stale and gap" |
+| A gap triggers a resync (new snapshot or resubscribe) | n/a | `test_feed_normalizer.ml` "diff depth: buffered until a snapshot, then deltas; a gap resyncs" | `test_live_feed.ml` "orderbook.50: snapshot, delta, gap" |
+| Stale or duplicate diffs are ignored | n/a | `test_local_book.ml` (`Stale` outcome in the replay test) | `test_local_book.ml` "snapshot, deltas, stale and gap" |
+| A venue restart resets the sequence | n/a | missing: Binance has no restart signal; covered by the gap path | `test_local_book.ml` "snapshot, deltas, stale and gap" (snapshot with `u = 1`) |
+| The wait-for-snapshot buffer is bounded | n/a | `test_local_book.ml` "the buffer is bounded" | n/a: deltas are dropped, not buffered |
+| A reconnect drops the books and resubscribes | `test_ws_loopback.ml` "connect, subscribe, reconnect and resubscribe" | `test_feed_normalizer.ml` "reset drops the books"; missing: a loopback test that a reconnect calls `reset` | missing: a loopback test that a reconnect brings a new snapshot |
+| A silent connection is replaced | `test_ws_loopback.ml` "a silent connection is replaced" (and `venue-net`) | `venue-net` `test_ws_loopback.ml` | `venue-net` `test_ws_loopback.ml` |
+| A gap or reconnect is visible to consumers, not only logged | missing: proposed gap event on `Live_feed` resync | missing: same | missing: same |
+| Undecodable frames are reported, not raised | `test_live_feed.ml` "other channels, unrequested streams and bad frames" | `test_feed_normalizer.ml` "acknowledgements, errors and other events" | `test_live_feed.ml` "acks, pongs and junk" |
+| Parse errors are counted per stream | missing: proposed counter on the recorder's `/metrics` with a malformed-frame test | missing: same | missing: same |
+| Subscriptions are complete after connect and reconnect | `test_live_feed.ml` "subscribe requests" (connect only) | missing: proposed recorder test of subscribe frame counts for three symbols | missing: same |
+| Timestamps are not invented | missing: `activeAssetCtx` copies `recv_ts` into `exch_ts`; proposed `Funding.Stable.V2` with an optional `exch_ts` | `test_feed_normalizer.ml` "aggTrade, bookTicker and markPriceUpdate" | `test_live_feed.ml` "tickers become funding when it changes" |
+| Recorded frames decode end to end | missing: proposed trimmed raw minute fixture per venue, decoded frame by frame | missing: same | missing: same |
+
+Test files are under each repository's `test/`. The `*-feed` repositories carry their own
+gap, resubscribe and bad-frame tests; their pages under `repos/` list them.
 
 ## Comparison with Tardis
 
