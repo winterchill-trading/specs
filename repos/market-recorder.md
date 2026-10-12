@@ -74,10 +74,12 @@ See [design/data-platform.md](../design/data-platform.md),
 
 ## Known gaps
 
-- Parse errors and reconnects happen inside the clients and are invisible through
-  `Market_data.Feed.t`: they are not counted, and reconnects write no disconnect line
-  (only shutdown does). Every client and feed now exposes `stats`; wiring them into
-  `/metrics` is wave 4 work.
+- Reconnects write no disconnect line (only shutdown does). Parse errors and reconnects
+  are read from each client's `stats` and exported per venue as
+  `market_recorder_client_frames_total`, `market_recorder_parse_errors_total` and
+  `market_recorder_reconnects_total`; `deploy/prometheus/alerts.yml` alerts on them.
+- Hyperliquid `bbo` gets no raw frames when `l2` is also subscribed (the client writes
+  each `l2Book` frame once), so that stream is excluded from the health check.
 - Event logs are not uploaded.
 - `hl-sim` serves no `activeAssetCtx`, so a Hyperliquid `Funding` stream against the
   simulator never delivers and keeps `/healthz` at 503.
