@@ -18,7 +18,6 @@
 
 ## Relevance to us
 
-- Hiring post; no technical content that maps onto our repos.
-- **Action:** none.
+- Hiring post; no technical content that maps onto our repos. **Action:** none.
 
 Tags: `hiring`, `culture`
