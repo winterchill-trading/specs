@@ -6,33 +6,45 @@
 
 ## Summary
 
-- The author prefers concrete stories to methodology manifestos and describes the "Iron
-  style" of development that had spread at Jane Street, named after its review tool.
-- Three ingredients: pervasive expect tests, small changes (tens to a few hundred lines,
-  with large work split into chains of dependent features), and review prioritized over
-  writing new code.
-- Expect tests print parser output or periodic state-machine summaries; their diffs show
-  reviewers how a change alters behavior, so almost every semantic change should show up
-  as a new or changed trace.
-- Bug fixes come as two features: one adds a test exhibiting the bug, the next fixes it
-  and the reviewer sees the trace change.
-- A designated "seconder" reviews the whole feature and pushes authors to split work and
-  add tests.
-- The style only became viable once tools made it cheap: Iron caches pre-populated
-  checkouts and prefetches reviews, releases whole chains in one step; registering a test
-  is one `let%expect_test`; the Jenga build system is fast and parallel.
-- Takeaway: tool improvements change the constants of daily work enough to enable new
-  workflows.
+- The author distrusts named methodologies and manifestos and prefers concrete stories of
+  what was tried; this is one: the "Iron style" that had spread at Jane Street, named after
+  its review and release tool.
+- Three ingredients: pervasive expect tests, small changes, and fast review that takes
+  priority over writing new code. Mundane on paper; the details and their interplay were
+  the surprise.
+- Expect tests interleave test code with captured output; the runner proposes a corrected
+  file, and later output changes appear as diffs to accept or reject.
+- Typical uses: print a parser's output on sample data, or drive a state machine through a
+  sequence of transactions and dump state summaries along the way.
+- Their main value is for reviewers: trace diffs show how a change alters behavior, so
+  almost every semantic change should appear as a new test or a changed one.
+- Changes are usually ten to a few hundred lines; big work becomes chains of dependent
+  features, each coherent enough to read, test and often release alone. Reviewers help
+  split monolithic changes.
+- If the trace needed to show a change is missing, a parent feature adds it first; bug
+  fixes come as a feature with a test exhibiting the bug followed by the fix.
+- A designated "seconder" reviews the whole feature, often as a collaborator, and pushes
+  authors toward smaller pieces and more tests, which costs the author but saves the many
+  reviewers and gives authors more autonomy.
+- Small, fast features conflict less, and their conflicts are easier to resolve.
+- Why only recently: tools changed the constants. Iron had to make feature operations fast
+  (cached pre-populated checkouts, prefetching reviews, releasing a whole chain at once, a
+  next-step dashboard).
+- Inline tests need almost no ceremony: adding `let%expect_test` registers the test in CI,
+  and editor bindings rerun, diff and accept tests.
+- The Jenga build system's speed makes switching features and running many tests cheap.
+- Conclusion: investing in tools keeps individuals effective as an organization grows and
+  can open new ways of working.
 
 ## Relevance to us
 
 - Matches how we already work: small frequent commits and ppx_expect traces in every repo,
-  for example state dumps in [exchange-core](../../../repos/exchange-core.md) and
-  [mm-core](../../../repos/mm-core.md).
-- The "test first exhibiting the bug, then the fix" split is not written down in our agent
-  rules in [oxcaml-claude-skills](../../../repos/oxcaml-claude-skills.md).
-- **Action:** add a rule to the `oxcaml-claude-skills` testing skill: a bug fix lands as
-  two commits, first an expect test whose output shows the bug, then the fix whose diff
-  updates that output.
+  such as engine state dumps in [exchange-core](../../../repos/exchange-core.md) and loop
+  traces in [mm-core](../../../repos/mm-core.md).
+- **Testing and simulation:** a bug fix is most convincing as a test exhibiting the bug
+  followed by the fix, and our agent rules do not ask for this. **Action:** add a rule to
+  the testing skill in [oxcaml-claude-skills](../../../repos/oxcaml-claude-skills.md): a
+  bug fix lands as two commits, first an expect test whose output shows the bug, then the
+  fix whose diff updates that output.
 
 Tags: `expect-tests`, `testing`, `culture`, `build`
