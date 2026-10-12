@@ -6,37 +6,64 @@
 
 ## Summary
 
-- Aria, the internal sequenced message bus (terabytes per day), keeps the recent stream
-  in an in-memory ring buffer; lagging clients catch up from it ("tip recovery") by
-  filtering the whole stream down to their topic subtrees with a linear scan.
-- As tip recovery grew, servers hit 100% CPU and clients fell off the tip. The fix is an
-  index per topic partition (all topics sharing a two-segment prefix; a per-topic index
-  was impossible with close to a million topics), merged n-way with a min-heap.
-- A profiling tool varied partition count, interleaving and readers; the heap was the
-  bottleneck, and an agent benchmarked five heap implementations overnight, picking an
-  unboxed one for a 2x gain.
-- Index storage uses a shared pool of 1024-entry blocks that are recycled once their
-  messages leave the ring, instead of worst-case-sized ring buffers (a tip of 32-byte
-  messages would need a 2 GB index per partition).
-- Initial recovery (replay since start of week) once took 13 minutes instead of 2.5
-  seconds because on-disk "subtree stores" grouped topics by a fixed three-segment rule
-  and readers filtered 10x more bytes than needed.
-- Adaptive splitting combines greedy clustering with binary search over per-topic volume:
-  heavy topics get their own store, light siblings share one. Candidates were scored on
-  wasted bytes per read, total and worst case, against data captured from real sessions.
-- Testing: expect tests for split properties, a property test with random messages,
-  topics and random splits checking order and content, and Antithesis runs. Result: about
-  30% less CPU and fewer multi-second tail latencies.
+- Aria is the firm's internal sequenced message bus and hosted service, carrying
+  terabytes per day; growth forced repeated re-architecture. An intern project targeted
+  cheaper reads of a subset of messages and cut CPU by about 30% on production workloads.
+- Aria keeps the recent stream (the "tip") in an in-memory ring buffer; a client that
+  falls behind catches up from it ("tip recovery").
+- Topics form a hierarchical, file-system-like namespace; clients subscribe to a topic or
+  a subtree, and Aria used to filter the whole ring linearly for each subscription. That
+  is cache friendly, but as tip recovery grew some servers hit 100% CPU and clients "fell
+  off the tip". Adding servers was only a stopgap.
+- A per-topic index was impossible (close to a million topics per instance), so the index
+  is per topic partition: all topics sharing a two-segment prefix. A request merges the
+  relevant partition indexes n-way with a min-heap to rebuild the ordered stream.
+- A profiling tool varied partition count, interleaving and reader count. The heap was the
+  bottleneck; an agent was asked to write and benchmark five heap implementations
+  overnight, and an unboxed heap doubled indexed-recovery speed.
+- Validation: many expect tests, Antithesis runs, and a "swarm" of agents reviewing the
+  code.
+- Index memory: per-index ring buffers would need worst-case sizing (32-byte messages
+  would imply a 2 GB index per partition), so indexes draw from a shared pool of
+  1024-entry blocks that are recycled once their messages leave the ring.
+- Initial recovery (a restarting client replays everything since the start of the week,
+  often millions to billions of messages, with many clients restarting together) once
+  took over 13 minutes instead of under 2.5 seconds because Aria read 10x more data than
+  needed.
+- On disk, messages land in chronological per-partition segments, then a separate process
+  splits them into "subtree stores". The old rule grouped by the first three topic segments,
+  so a quiet topic stored next to a busy one forced readers to skip the busy one's bytes,
+  and users had to design topic names around that internal rule.
+- Adaptive splitting uses per-topic volumes (known after persistence): greedy clustering
+  plus binary search gives big topics their own store and folds small siblings together.
+  Candidates were scored on recorded session data by wasted bytes per read, total wasted
+  bytes, the worst topic, and the worst useful-byte ratio, with a quickly built web UI to
+  visualize them.
+- Testing the splitter: expect tests for the intended properties, an existing property
+  test extended to randomize the split (random messages on random topics, then reading
+  random subtrees and checking order and content), and Antithesis runs.
+- Tip indexing is in production with about 30% lower CPU in staging scenarios and no more
+  multi-second tail latencies on upgraded servers; adaptive splitting was in staging.
 
 ## Relevance to us
 
-- [market-data](../../../repos/market-data.md) event logs and the planned replay server
-  ([roadmap](../../../roadmap.md)) face the same question: per-symbol, per-stream files are
-  our version of "subtree stores", and a multi-symbol replay is an n-way merge by time.
-- The "wasted bytes per read" metric is a concrete way to judge our
-  [market-recorder](../../../repos/market-recorder.md) file granularity.
-- **Action:** in `market-data`, add a Base_quickcheck property test that writes random
-  events for several symbols into separate event logs and checks a heap-based merge
-  replays them in global `recv_ts` order with no loss.
+- **Data platform:** a multi-symbol replay is an n-way merge of per-stream files, and its
+  cost is dominated by how files are grouped. **Action:** add a Base_quickcheck property
+  test in [market-data](../../../repos/market-data.md) that writes random events for
+  several symbols and streams to `Event_log`, replays them through `Merge`, and checks
+  global `recv_ts` order and that no event is lost or duplicated.
+- **Data platform:** "wasted bytes per read" is a concrete metric for choosing file
+  granularity. **Action:** in `specs`, add to the data-platform design page a DuckDB query
+  over one recorded day that reports bytes per venue, stream and symbol, to decide whether
+  the planned replay server ([roadmap](../../../roadmap.md)) needs files merged or split.
+- **Performance:** cheap agent-run benchmark sweeps of several implementations beat
+  picking one by intuition. **Action:** add a `bench/` executable in
+  [order-book](../../../repos/order-book.md) that times `submit` and `cancel` on a
+  synthetic book, so alternative price-level structures can be compared by number.
+- **Testing and simulation:** randomizing an internal layout choice (how the tree is
+  split) inside a property test proves the observable output does not depend on it.
+  **Action:** in [market-data](../../../repos/market-data.md), add a property test that
+  writes the same events with random `Framed` buffer and flush sizes and checks the read
+  back events are identical.
 
 Tags: `sequencer`, `replay`, `performance`, `property-testing`, `data-platform`
