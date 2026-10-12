@@ -50,6 +50,14 @@ Until then the command interface is the sink API: a native sink would implement 
 
 ## Replication design (planned)
 
+Status: the merge step is done as `market-recorder merge` (frame-text identity within a
+window, earliest `recv_ts`, disconnect lines kept only where both copies have a gap, a
+`_merge/<date>.json` report) with `scripts/replicate-day.sh` fetching two collectors'
+days through rclone; see [market-recorder](../repos/market-recorder.md#replication).
+Sequence-based identity and gap lists, suspected gaps from silence, the clock bound, the
+L2 snapshot rule, collector ids in keys, and the deployment (second collector,
+cross-region replication, merge job) are planned.
+
 Goal: no gap in the system of record when one collector, node or region fails, and no
 manual merge.
 
