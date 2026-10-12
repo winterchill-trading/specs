@@ -18,6 +18,7 @@ CI workflow and README at the time of writing.
 | [design/](design/) | Cross-repository designs: data platform, example queries, market making, simulators, cloud sinks and replication, deployment |
 | [adr/](adr/) | Architecture decision records, numbered |
 | [postmortems/](postmortems/) | Blameless incident write-ups, from [TEMPLATE.md](postmortems/TEMPLATE.md) |
+| [CHANGELOG.md](CHANGELOG.md) | One line per architecture change, by day |
 | [roadmap.md](roadmap.md) | Done, in progress, next |
 | [CLAUDE.md](CLAUDE.md) | How an agent uses and maintains this repository |
 
@@ -46,7 +47,7 @@ Every new repository, and every pull request that changes architecture (a new
 dependency edge, a public library or binary, an on-disk format, a wire protocol, a
 deployment shape), updates `specs` in the same piece of work: the repository's
 `repos/` page, the dependency graph in `overview.md`, and the relevant `design/` page or
-a new ADR. A spec that disagrees with the code is a bug in the spec.
+a new ADR, and adds a line to `CHANGELOG.md`. A spec that disagrees with the code is a bug in the spec.
 
 ## CI
 

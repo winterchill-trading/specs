@@ -27,6 +27,10 @@ Update specs in the same session, one commit per document, when a change:
   number; mark the superseded one);
 - finishes or starts work listed in [roadmap.md](roadmap.md).
 
+Every such change also adds one line to [CHANGELOG.md](CHANGELOG.md) under today's date
+(UTC), newest day first, naming the repositories and linking the page that describes it.
+A change that needs no spec update needs no changelog line.
+
 ## Writing rules
 
 - Present tense, factual, short. Every claim must be checkable in a repository's
