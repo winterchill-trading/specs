@@ -17,7 +17,6 @@
 
 ## Relevance to us
 
-- Education and ML sponsorship; nothing maps onto our repos.
-- **Action:** none.
+- Education and ML sponsorship; nothing maps onto our repos. **Action:** none.
 
 Tags: `ml`, `education`, `culture`
