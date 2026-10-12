@@ -7,24 +7,28 @@
 ## Summary
 
 - Write-up of a London machine learning seminar that reproduced classic deep learning
-  results in OCaml instead of Python, training on GPU through TensorFlow bindings.
-- The tensorflow-ocaml bindings offer a functional combinator API: VGG-19 is a pipeline of
-  conv/pool blocks, and an LSTM cell is a staged closure over its weight variables.
-- Graph nodes carry a phantom polymorphic-variant type for element kind, so applying a
-  float-only op such as square root to a boolean tensor fails at compile time.
-- Those typed signatures are generated automatically from TensorFlow's operation
-  description file; tensor shapes are not tracked in the types.
-- Demos: neural style transfer with a pretrained VGG-19, and a two-layer character LSTM
-  trained on the Base sources (27k lines) that emits plausible-looking but non-compiling
-  OCaml.
-- Downsides: a thin ML ecosystem, few learning resources, and shape errors without useful
-  locations. Upside: type errors surface before hours of training, not after.
+  results in OCaml rather than Python, training on GPU through TensorFlow.
+- The tensorflow-ocaml bindings expose a functional API: VGG-19 is a pipeline of repeated
+  conv-and-ReLU blocks with max pooling, and an LSTM cell is a staged closure over its
+  weight and bias variables.
+- Graph nodes carry a phantom polymorphic-variant type for the element kind, so operations
+  state which kinds they accept (square root on floats or doubles, comparisons returning
+  booleans) and misuse fails at compile time.
+- The typed wrappers are generated automatically from TensorFlow's operation description
+  file; shapes and dimensions are deliberately not tracked in types.
+- Neural style transfer with a pretrained VGG-19: match high-level features of the content
+  image and position-free low-level feature statistics of the style image.
+- A character-level two-layer LSTM trained on the Base sources (about 27k lines) produced
+  OCaml-looking text that does not compile but gets comments and structure right.
+- Drawbacks: a thin ML ecosystem, few learning resources, and shape errors reported
+  without useful locations (eager mode might help).
+- Benefits: type errors surface before hours of training, and typed functional
+  representations fit neural networks, especially recurrent ones, naturally.
 
 ## Relevance to us
 
-- Weak relevance: no ML in our stack. The phantom-type trick for constraining operations
-  echoes our distinct `Fixed_decimal.Make ()` types for price, size and USD in
-  [fixed-decimal](../../../repos/fixed-decimal.md), which already cover that idea.
-- **Action:** none.
+- No ML in our stack. The phantom-type idea is already covered by distinct
+  `Fixed_decimal.Make ()` types in [fixed-decimal](../../../repos/fixed-decimal.md).
+  **Action:** none.
 
 Tags: `ml`, `ocaml-practice`, `python-interop`
