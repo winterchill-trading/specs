@@ -16,16 +16,23 @@ the same change that finishes or starts them.
 - Data: `parquet` writer, `market-data` (event logs, Parquet sink, day close, DuckDB
   views, replay feed, candles).
 - Agent tooling: `oxcaml-claude-skills` (skills and gotchas log).
+- Read-only feeds: `okx-feed`, `coinbase-feed`, `kraken-feed`, `deribit-feed`,
+  `bitget-feed`, each a `Market_data.Feed.t` verified against the live venue.
+- `equities-core`: US equities, options and futures semantics for the equities
+  simulators.
+- `infra`: base and service images, compose stack, Helm chart, `check-pins.sh` in CI.
+  See [repos/infra.md](repos/infra.md).
+- CI pins: every repository pins its sibling dependencies in dependency order
+  (`infra/scripts/check-pins.sh -a` passes; `hl-mm` and `market-maker` now pin
+  `parquet` and `market-data`).
 
 ## In progress
 
 - `market-recorder`: raw minute files, event logs, uploader, `/healthz` and `/metrics`,
   `market-recorder run -config`. See [repos/market-recorder.md](repos/market-recorder.md).
-- `infra`: base and service images, compose stack, Helm chart, local and AWS notes. See
-  [repos/infra.md](repos/infra.md).
+- `nyse-sim`, `cboe-sim`, `cme-sim`: equities and futures simulators speaking NYSE
+  Pillar and XDP, Cboe BOE and PITCH, and CME iLink 3 and MDP 3.0 over the engine.
 - `specs`: this repository.
-- CI pins: `hl-mm` and `market-maker` do not pin `parquet` and `market-data`, which
-  their client dependencies now need.
 
 ## Next
 
@@ -37,8 +44,6 @@ the same change that finishes or starts them.
   maker can run against history.
 - **Raw-to-norm tool**: drive the venue normalizers over stored raw files to rebuild
   `norm/` (the missing half of [ADR 0002](adr/0002-raw-first-storage.md)).
-- **More exchanges** as `*-feed` repositories (read-only market data: protocol types,
-  `Live_feed`, no trading): OKX, Coinbase, Kraken, Deribit, Bitget.
 - **Native cloud sinks** when the conditions in
   [design/cloud-sinks-and-replication.md](design/cloud-sinks-and-replication.md#when-a-native-sink-is-justified)
   hold.
@@ -177,8 +182,6 @@ across themes. Each theme document orders its own list by value and links the so
 
 - `infra`, all repos: pin the `ox` opam repository to the base image commit in every CI workflow.
 - `market-maker`: add nightly builds against upstream `main` and a weekly `e2e-all.sh` run.
-- `infra`: derive CI pin order from `dune-project` files; fail on missing or misordered pins.
-- `specs`: close the CI pins item; repository pages still report two unpinned dependencies.
 - `infra`: label images with the built commit and each pinned sibling's commit; show in `make ps`.
 - `infra`: tag images by commit; reference explicit tags in the Helm defaults, not `latest`.
 - `market-maker`: print resolved pins in CI and every sibling's HEAD in `e2e-all.sh`.
