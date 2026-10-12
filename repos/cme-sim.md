@@ -24,7 +24,7 @@ A simulator of CME Globex futures speaking iLink 3 order entry and MDP 3.0 marke
 | `Session_handler` | Pure FIXP state machine per connection; sequencing kept per firm and session across reconnects |
 | `Feed`, `Json_feed` | MDP 3.0 publisher (MBP 10 levels, trade summaries, snapshots on connect, settlement) and the same feed as JSON |
 | `Session_clock` | `always-open`, `real` (the Globex week) or `accelerated` phases |
-| `Anchoring` | The price anchor's TradFi path: a series, fixed (with drift) or scaled recorded reference per product; while open, `Market_sim.set_reference ~half_life` before each noise tick; outside the open phase the anchor waits, and the walk restarts from the venue's last price at the open |
+| `Anchoring` | Thin wrapper over `price-anchor`'s `Anchor`, one per anchored product: series, fixed (with drift) or scaled recorded references as a `Path`, pulled on the venue clock (`step_clock:false`, `levels:0`, no mark interval) with `Market_sim.set_reference ~half_life` before each noise tick; `may_engage` is the product's `Open` phase (free walk in pre-open, limit halts and maintenance), `last_trade` the venue's last price (where the walk restarts at the open), `clamp` `Clamp.within_bands` on the daily price limits (30 bps inside) |
 | `Server`, `Frame_io`, `Ilink_client` | Gateway, feed and HTTP listeners (`/`, `/ws`, `/anchors`, `/admin/halt`); SOFH framing; a minimal iLink 3 client |
 
 MDP templates are checked against CME's public schema version 13; decoders skip appended
