@@ -21,7 +21,7 @@ and Multicast PITCH 2.X market data over TCP, on the venue-neutral
 | `Cboe_wire.Pitch_book` | Order-by-order book rebuilt from PITCH (spin, then live), also used to serve spins |
 | `Clock` | Session clock: real New York time, accelerated replay of a whole day, always open, or manual for tests |
 | `Instruments` | A few US equities on unit 1 and SPY option series (OSI symbols) on unit 2 |
-| `Anchoring` | Price anchor for the noise traders: series, fixed (with drift) or scaled recorded crypto references; `Market_sim.set_reference ~half_life` in continuous core trading, free walk in the auction windows, LULD pauses and outside core hours |
+| `Anchoring` | Thin wrapper over `price-anchor`'s `Anchor`, one per anchored listing: series, fixed (with drift) or scaled recorded crypto references as a `Path`, pulled on the exchange clock (`step_clock:false`, `levels:0`) with `Market_sim.set_reference ~half_life`; `may_engage` is continuous core trading (free walk in the auction windows, LULD pauses and outside core hours), `last_trade` the venue's last print, `clamp` `Clamp.within_bands` on the LULD bands |
 | `Venue` | BOE semantics over the engine: FOK, hidden and reserve orders, on-open and on-close orders uncrossed in auctions, and the PITCH events they produce |
 | `Boe_session` | Per-member outbound store (sequences per matching unit, kept for replay) and the per-connection state machine |
 | `Feed` | PITCH sequencing per unit, Time messages, displayed book for spins, TCP and JSON fan-out |
