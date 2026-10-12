@@ -2,10 +2,12 @@
 
 Kind: reference.
 
-Three venue simulators share one engine. `exchange-core-engine` does matching, margin,
+Six venue simulators share one engine. `exchange-core-engine` does matching, margin,
 funding, liquidation and synthetic order flow; each `*-sim` is an adapter that speaks one
-venue's HTTP and websocket API over it. Clients and the market maker run unchanged
-against a simulator or the real venue.
+venue's API over it. The three crypto simulators speak HTTP and websocket JSON, and
+clients and the market maker run unchanged against a simulator or the real venue. The
+three TradFi simulators speak the venues' binary order entry and market data protocols
+over TCP, with US equities and futures rules from `equities-core`.
 
 ```mermaid
 graph TB
@@ -17,10 +19,20 @@ graph TB
   hl_sim["hl-sim: Adapt, Server"]
   bn_sim["binance-sim: Adapt, Params, Server"]
   by_sim["bybit-sim: Adapt, Orders, Venue, Server"]
+  subgraph tradfi["TradFi simulators (binary over TCP)"]
+    nyse_sim["nyse-sim: Pillar, XDP"]
+    cboe_sim["cboe-sim: BOE, PITCH"]
+    cme_sim["cme-sim: iLink 3, MDP 3.0"]
+  end
+  equities_core["equities-core: sessions, ticks, auctions, LULD, halts"]
   anchor["price-anchor (planned)"]
   hl_sim --> exchange
   bn_sim --> exchange
   by_sim --> exchange
+  nyse_sim --> exchange
+  cboe_sim --> exchange
+  cme_sim --> exchange
+  tradfi --> equities_core
   market_sim --> exchange
   exchange --> order_book
   anchor -.->|set_mark, shadow levels, trade fills| exchange
@@ -102,6 +114,45 @@ that made it fillable includes the account's own orders.
 
 Venue specifics (error wording and codes, status mapping, id formats) live in each
 adapter's `Adapt` module; see the `repos/` pages for the gaps of each simulator.
+
+## TradFi simulators
+
+`nyse-sim`, `cboe-sim` and `cme-sim` are free local stand-ins for venues with no free
+real-time data. Each runs the engine behind a venue module that adds the venue's order
+semantics and `equities-core` rules, a gateway port speaking the binary order entry
+protocol, a feed port carrying the multicast market data format over one TCP stream, and
+an HTTP port with the same feed as JSON on `/ws`. Each ships a server and a CLI client
+(`*-sim-cli`) and an end-to-end script. Prices are synthetic: noise traders around a
+random walk.
+
+| | nyse-sim | cboe-sim | cme-sim |
+| --- | --- | --- | --- |
+| Ports (gateway, feed, HTTP) | 4100, 4101, 4102 | 9300, 9301, 9302 | 4300, 4301, 4302 |
+| Order entry | Pillar Gateway binary (Pillar Stream Protocol) | BOE v2 | iLink 3 (SOFH + SBE, FIXP), schema 8 v5 |
+| Market data | XDP Integrated Feed, order by order | Multicast PITCH 2.X, order by order, spin on connect | MDP 3.0 schema 1 v13, market by price, 10 levels, snapshot on connect |
+| Instruments | AAPL, MSFT, IBM, JPM, KO, XOM, BRK B, ZVZZT | AAPL, MSFT, NVDA, AMZN, SPY, ZVZZT; SPY options | ESZ6, NQZ6, CLZ6, GCZ6 |
+| Clock | always open, real (2026 calendar), accelerated | always open, real, accelerated | always open, real Globex week, accelerated |
+| Auctions | opening, closing, LULD reopening | opening, closing | opening and halt reopening call auction |
+| Halts | LULD bands, limit state, 5 min pause; Rule 201 | LULD bands and pause; Rule 201 | daily price limits; a limit trade halts 30 s |
+
+Fidelity against the spec summaries in `equities-core/docs` (each simulator's README has
+the full row-by-row table):
+
+| Area | nyse-sim | cboe-sim | cme-sim |
+| --- | --- | --- | --- |
+| Session layer (login, heartbeats, sequencing, replay) | yes; out-of-sequence messages get CloseResponse 82 and the connection stays up | yes; replay per unit after login, resends ignored | yes; NotApplied on gaps, retransmission up to 2500 messages, sequences kept across reconnects |
+| Orders: limit, market, IOC, Day | yes; market orders become IOC limits at the LULD band | yes; market orders core session only | yes; market orders with protection; Day, GTC, FAK, FOK, MinQty |
+| Post only, reserve or iceberg | partial: ALO rejected rather than re-priced; reserve refresh joins the back of the queue | yes: post only, hidden and reserve with reload | yes: DisplayQty slices join the back of the queue |
+| Self-trade prevention | partial: types 1-5 applied before matching; the engine still stops a taker at its own order | partial: `O`, `B` on top of the engine's cancel-newest; `D`, `S` behave like `N` | engine check only, per session |
+| Modify or replace | partial: loses time priority, OrderID kept | partial: loses priority, ids kept, Reduce Size on the feed | replaces always lose priority, OrderID kept |
+| Market data messages in scope | yes (Add, Modify, Delete, Execution, Replace, Imbalance, Security Status, refresh) | yes (all in-scope long variants) | yes (book, trade summary, security status, snapshot, settlement) |
+| Multicast, A/B lines, recovery servers | no | no | no |
+| Auction fills in engine positions | no | no | no |
+| Fees reported | no | no (charged in the engine) | no |
+
+The engine's order ids are reused as public ids where the venue has them (nyse-sim
+auction-only orders take ids from 1,000,000,000 up). State is in memory only; a restart
+starts a new day.
 
 ## Planned: price-anchor
 
