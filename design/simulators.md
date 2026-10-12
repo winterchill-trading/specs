@@ -75,6 +75,31 @@ subscribers right after it. Each serves HTTP and websockets on one port (cohttp-
 | Fees | taker 3.5 bps, maker 1 bp | taker 5 bps, maker 2 bps | taker 5.5 bps, maker 2 bps |
 | Funding | engine default, hourly | every 8 h at 0.01% | every 8 h at 0.01% |
 
+### Time in force and market orders
+
+The engine knows three times in force (`Exchange_core.Tif`: `Gtc`, `Ioc`, `Alo`) and
+`Market { slippage_bps }`, an IOC order priced `slippage_bps` through the best opposite
+price (`Order_book.market_limit_px`), rejected with `No_liquidity` when the opposite side
+is empty. Every simulator keeps the engine default of 500 bps (5%,
+`Exchange.Config.market_slippage_bps`). Each adapter maps its venue's vocabulary onto
+these:
+
+| | hl-sim | binance-sim | bybit-sim |
+| --- | --- | --- | --- |
+| Venue TIFs accepted | `Gtc`, `Ioc`, `Alo` (passed through) | `GTC`, `IOC`, `FOK`, `GTX`; `GTD` and `RPI` rejected (`-1115`) | `GTC`, `IOC`, `FOK`, `PostOnly`; `RPI` rejected (10001) |
+| Default TIF | none: the wire requires one | none: `LIMIT` requires `timeInForce` | `GTC`; market orders are `IOC` |
+| Post only | `Alo`: rejected with "Post only order would have immediately matched, bbo was ..." | `GTX` to engine `Alo`: `-5022` | `PostOnly` to engine `Alo`: accepted, then cancelled with `EC_PostOnlyWillTakeLiquidity` |
+| FOK | not a venue TIF | checked against the opposite depth up to the limit price (own orders included), then sent as engine `Ioc`; unfillable: `-5021`, not recorded | checked with `Adapt.fok_fillable` (own orders included), then engine `Ioc`; unfillable: accepted, then cancelled with `EC_NoEnoughQtyToFill` |
+| IOC with no fill | error "Order could not immediately match against any resting orders." | `EXPIRED` order in the response, not kept | accepted, then cancelled with `EC_NoImmediateQtyToFill` |
+| IOC remainder | cancelled; status `Filled` for the filled part | `EXPIRED` with the executed quantity | cancelled after the fills |
+| Market orders | not on the wire: clients send an `Ioc` limit priced through the book, as the SDKs do; `Adapt.market_order` exposes the engine's market order for tests | `MARKET`: engine market order, 5% through the best opposite price; `MARKET_LOT_SIZE` bounds the size | `Market`: engine market order, 5% through the best opposite price |
+| Amend or modify | cancel, then place the replacement with a new oid (same TIF) | not served | the replacement rests as `Gtc` (or `Alo` for `PostOnly`), whatever the original TIF |
+| Self-trade (engine cancels the taker remainder) | nothing filled: error "Order would have matched against own resting order." | nothing filled: `-2010`; a cancelled remainder: `EXPIRED_IN_MATCH` on the user stream | accepted, then cancelled with `EC_BySelfMatch` |
+
+A FOK order is checked and then sent as IOC in two steps on the scheduler thread, so
+nothing runs between them; self-trade prevention can still cut it short when the depth
+that made it fillable includes the account's own orders.
+
 Venue specifics (error wording and codes, status mapping, id formats) live in each
 adapter's `Adapt` module; see the `repos/` pages for the gaps of each simulator.
 
