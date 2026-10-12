@@ -6,27 +6,42 @@
 
 ## Summary
 
-- Jane Street trains on huge, low signal-to-noise datasets (on the order of a billion
-  examples), which need shuffling before SGD but do not fit in RAM.
-- The method is a two-pass external shuffle: first append each record to one of M random
-  "piles" (files), then shuffle each pile in memory and concatenate.
-- Correctness argument: it is equivalent to tagging each record with a uniform random key
-  and sorting, with pile choice acting as a radix on the leading digits.
-- Oversized piles are rare if memory allows a margin of about six standard deviations;
-  restarting on overflow does not bias the result because pile sizes are independent of the
-  permutation (except with a byte-size threshold on variable-length records).
-- Practical tricks: run pass one in parallel per input file and fold it into preprocessing;
-  shuffle piles lazily at load time; keep piles as circular buffers to maintain a shuffled
-  rolling window; cheap reshuffles by permuting pile order.
-- Measured on 220 million 9 kB examples (320 GB compressed HDF5): random access would take
-  years per epoch, while the two-pass approach is about 1000x faster; even on uncompressed
-  local SSD, sequential reads beat random reads by about 48x.
+- Jane Street often has low signal-to-noise data in huge quantity (on the order of a
+  billion weakly labelled examples), which raises the engineering question of shuffling a
+  dataset that does not fit in RAM.
+- In memory, Fisher-Yates suffices; the post presents a known but rarely written-up
+  external algorithm and argues it is the difference between feasible and infeasible.
+- Two-pass shuffle: pick M piles so that one pile fits in RAM and M files can be open;
+  pass one appends each record to a uniformly random pile, pass two shuffles each pile in
+  memory and concatenates. Linear time, dominated by reading and writing everything twice,
+  and it works for variable-length records.
+- Correctness: equivalent to attaching a uniform random key to each record and sorting; the
+  pile choice acts like a radix sort on the key's leading digits.
+- Oversized piles: allow headroom of about six standard deviations (chance of overflow
+  around one in a million with 1000 piles); restarting on overflow does not bias the result
+  because pile sizes reveal nothing about order, except when the threshold is in bytes for
+  variable-length records, where recursion is the unbiased fix.
+- The same margin works when pile storage must be preallocated.
+- Practical variants: run pass one in parallel per input file and merge piles; fold pass
+  one into preprocessing so it is nearly free; shuffle piles lazily at training time, even
+  double-buffering two piles.
+- A colleague's trick: treat each pile as a circular buffer in time order to maintain a
+  half-shuffled rolling window of recent years incrementally; permuting pile load order
+  gives cheap approximate reshuffles.
+- Why shuffle: SGD with serially correlated gradient noise and non-commuting updates learns
+  badly (50,000 cats then 50,000 dogs); a small local reservoir only helps if correlations
+  are shorter than the reservoir.
+- Measurements on 220 million 9 kB examples (2 TB raw, 320 GB compressed HDF5): random
+  access costs about 394 ms per example (years per pass) versus 120 microseconds
+  sequentially, about 1000x; on uncompressed local SSD the gap is still about 48x.
 
 ## Relevance to us
 
-- Indirect: the sequential-versus-random access numbers back our design of streaming whole
-  minute files and event logs in [market-data](../../../repos/market-data.md) replay and day
-  close rather than seeking per record. We do no model training that needs shuffling.
-- **Action:** none.
+- We train no models, so the shuffle itself does not apply; the access-pattern numbers do.
+- **Data platform:** random access into compressed files is orders of magnitude slower than
+  streaming, which argues that per-record lookups belong in Parquet, not in raw zstd minute
+  files. **Action:** add a sentence to the layers table notes in `specs`
+  `design/data-platform.md` stating that raw files are for sequential replay only and point
+  queries go through Parquet or DuckDB.
 
 Tags: `ml`, `data-platform`, `performance`
