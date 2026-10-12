@@ -1,5 +1,7 @@
 # Market making
 
+Kind: explanation.
+
 One strategy, three venues. `mm-core` holds a pure strategy and an Async event loop
 parameterised by a venue signature; each venue client implements the signature; the
 `market-maker` binary picks one at runtime.
