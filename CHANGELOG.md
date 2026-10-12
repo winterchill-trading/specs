@@ -10,6 +10,10 @@ belong here.
 
 ## 2026-10-12
 
+- `cboe-sim`: depends on `price-anchor` and `market-data`; `-anchor-series`,
+  `-anchor-fixed` and `-anchor-scaled` pull a listing's noise traders towards a reference
+  price in continuous core trading; the LULD reference is the mean of the venue's own
+  prints over five minutes. See [repos/cboe-sim.md](repos/cboe-sim.md).
 - `bybit-sim`: new `bybit-sim-anchor` package (library `Bybit_sim_anchor` and the
   `bybit-sim` binary) depending on `price-anchor`, `market-data`, `bybit-client` and
   `binance-client`; `-anchor VENUE:SYMBOL=SIMSYM` (live), `-anchor-raw` / `-anchor-norm`

@@ -148,6 +148,8 @@ graph LR
   nyse_sim --> equities_core
   cboe_sim --> engine_pkg
   cboe_sim --> equities_core
+  cboe_sim --> price_anchor
+  cboe_sim --> market_data
   cme_sim --> engine_pkg
   cme_sim --> equities_core
   okx_feed --> market_data

@@ -11,9 +11,10 @@ inputs journaled with `-input-journal`), `binance-sim` (`-anchor`, `-anchor-raw`
 references only, `GET /sim/anchor`; binary in the `binance-sim-anchor` package),
 `bybit-sim` (`-anchor`, `-anchor-raw`, `-anchor-norm`, `-anchor-speed`; live references
 through the Bybit and Binance clients, `GET /sim/anchor`, `-input-journal`; binary in the
-`bybit-sim-anchor` package), and the TradFi path in `cme-sim` and `nyse-sim`
+`bybit-sim-anchor` package), and the TradFi path in `cme-sim`, `nyse-sim` and `cboe-sim`
 (series, fixed and scaled references, mean reversion while open, waiting through
-auctions, pauses and halts; `nyse-sim` keeps the target inside the LULD bands). The
+auctions, pauses and halts; `nyse-sim` keeps the target inside the LULD bands, `cboe-sim`
+takes its LULD reference from the mean of its own prints over five minutes). The
 design is built over interfaces that exist (`Exchange_core_engine.Exchange`, `Journal`,
 `Stepped`, `Market_sim`, `Market_data.Feed`, `Market_data.Raw_reader`) plus the additions
 listed under
