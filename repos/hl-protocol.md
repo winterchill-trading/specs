@@ -23,7 +23,23 @@ websocket API. Types and codecs only, no I/O.
 - Info endpoint: `Info_request` (`l2Book`, `allMids`, `openOrders`, `userFills`,
   `clearinghouseState`, `meta`), `Info_response`, `L2_book`, `All_mids`, `Open_order`,
   `User_fill`, `Clearinghouse_state`, `Meta`.
-- Websocket: `Subscription`, `Ws_request`, `Trade`, `Order_update`, `Ws_message`.
+- Websocket: `Subscription`, `Ws_request`, `Trade`, `Order_update`, `Ws_message`, and
+  `Asset_ctx` for the `activeAssetCtx` channel (funding, mark, oracle, volumes):
+  `Asset_ctx.Request` builds its (un)subscribe requests and `Asset_ctx.of_ws_message`
+  reads it from `Ws_message.Unknown`, so the exhaustively matched variants stay as they
+  are. `subscriptionResponse` echoes of unmodelled subscriptions also stay `Unknown`.
+- `Clearinghouse_state`: `liquidationPx` is an option, `None` when absent, `null` or
+  outside the fixed-point range (about 4.6e10).
+
+## Coverage
+
+`test/fixtures/mainnet-info-ws-2026-10-12` (trimmed info responses and websocket frames
+of one account) and `test/fixtures/hyperliquid-BTC-2026-10-12T13-35` (a recorded raw
+minute) are decoded and re-encoded by tests. Verified against these mainnet samples: the
+six info responses (including large and `null` `liquidationPx`), the websocket requests,
+`subscriptionResponse`, `trades`, `l2Book`, `allMids`, `userFills`, `orderUpdates`,
+`activeAssetCtx` (perps), `pong` and `error`. The exchange requests and responses are
+checked against hand-written samples and the simulator only.
 
 ## Dependencies
 
@@ -36,10 +52,10 @@ websocket API. Types and codecs only, no I/O.
 
 ## Known gaps
 
-- Signatures are opaque JSON, never produced or checked; signing for the real
-  `/exchange` endpoint is out of scope.
+- Signatures are opaque JSON here; `hl-client`'s `Signing` produces them.
 - Numbers are re-encoded in shortest form; digits past the 8th decimal are dropped.
 - Only the listed fields are kept. Unknown channels decode to `Ws_message.Unknown`,
   unknown order statuses to `Order_update.Status.Other`.
-- `Subscription` has no `activeAssetCtx`; `hl-client`'s `Live_feed` builds that
-  subscription by hand and decodes it from `Ws_message.Unknown`.
+- `Subscription` and `Ws_message` have no `activeAssetCtx` constructor; it is reached
+  through `Asset_ctx` and `Unknown`. The spot shape of `activeAssetCtx` comes from a
+  sample only.
