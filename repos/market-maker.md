@@ -48,6 +48,7 @@ unless the REST root is `api.hyperliquid.xyz`) for `-address`, `HL_ADDRESS` or t
 address; without it they are unsigned (`hl-sim`'s `X-Address`). A signed run against
 mainnet is refused unless `-i-understand-mainnet` is passed. The venue minimum order value is read before
 connecting and passed to `Params.for_instrument ~min_notional`.
+
 - `Order_log`: `-order-log FILE` writes every place and cancel request, its reply, and
   every order update and fill as CSV with local and venue times; `queries/fills_vs_trades.sql`
   joins fills to public trades in market-data's Parquet tables (trade id, else price, size,
