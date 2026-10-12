@@ -26,15 +26,21 @@
 
 ## Relevance to us
 
-- [market-recorder](../../../repos/market-recorder.md) is a long-running process that
-  pipes frames from the three `Live_feed`s into writers and an uploader; a slow disk or
-  upload stalls are exactly the unbounded-queue failure the second example shows.
-- [market-maker](../../../repos/market-maker.md) and the simulators are also long-lived and
-  would benefit from an opt-in heap trace.
-- Caveat: Memtrace relies on the runtime's statistical memory profiler, which was missing
-  from early OCaml 5 releases; whether the `5.2.0+ox` switch supports it must be checked.
-- **Action:** check that `memtrace` installs and records a trace on the `5.2.0+ox` switch; if
-  it does, add `Memtrace.trace_if_requested ()` to the `market-recorder run` entry point and
-  note the `MEMTRACE` variable in its repo page.
+- **Performance:** a sampled allocation trace that is cheap enough for production finds
+  leaks with little more than a time-window filter. **Action:** check that `memtrace`
+  installs and records on the `5.2.0+ox` switch (it needs the runtime's statistical memory
+  profiler, absent from early OCaml 5 releases); if it does, call
+  `Memtrace.trace_if_requested ()` at the start of `market-recorder run` in
+  [market-recorder](../../../repos/market-recorder.md) and document `MEMTRACE` on its page.
+- **Data platform:** a producer outrunning its consumer through an unbounded queue shows up
+  as steadily growing object lifetimes. **Action:** add a `market-recorder` test that stalls
+  the `Norm_writer` side while feeding simulated input and prints how many events end up
+  buffered, to show whether the pipes apply pushback.
+- **Build and deploy:** opt-in tracing driven by an environment variable needs no rebuild to
+  use in a deployed container. **Action:** add a commented `MEMTRACE` env entry and a
+  writable trace path to the recorder Helm values in [infra](../../../repos/infra.md), once
+  Memtrace is confirmed to work.
+- **Research tooling:** the trace format is readable from OCaml for custom analyses, such as
+  lifetime-by-allocation-site plots. **Action:** none until we have a trace worth analysing.
 
 Tags: `gc`, `allocation`, `observability`, `ops`
