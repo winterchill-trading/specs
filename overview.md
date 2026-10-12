@@ -1,0 +1,204 @@
+# Overview
+
+The organization builds a crypto perpetuals trading stack in OxCaml on the Jane Street
+libraries (Core, Async, ppx_jane): exchange simulators for Hyperliquid, Binance USD-M
+Futures and Bybit v5 linear, typed clients for the same three venues, one venue-neutral
+market-making strategy that runs on all of them, and a raw-first market data platform
+that records live feeds and turns them into Parquet for SQL. Every repository is an opam
+package (or two), built with dune 3.17, tested with ppx_expect and Base_quickcheck, and
+pinned from GitHub in CI. Locally all repositories sit side by side under one directory
+with an untracked `dune-workspace`, so dune resolves siblings by public name.
+
+## Repositories by layer
+
+| Layer | Repository | Role | Status |
+| --- | --- | --- | --- |
+| Primitives | [fixed-decimal](repos/fixed-decimal.md) | 10^-8 fixed-point decimals, distinct types per use | done |
+| Primitives | [exchange-core](repos/exchange-core.md) | Venue-neutral types (package `exchange-core`) and the exchange engine (package `exchange-core-engine`) | done |
+| Protocols | [hl-protocol](repos/hl-protocol.md) | Hyperliquid wire types and JSON codecs | done |
+| Protocols | [binance-protocol](repos/binance-protocol.md) | Binance USD-M wire types, codecs, HMAC signing | done |
+| Protocols | [bybit-protocol](repos/bybit-protocol.md) | Bybit v5 linear wire types, codecs, signing | done |
+| Engine and simulators | [order-book](repos/order-book.md) | Price-time priority book and matching | done |
+| Engine and simulators | `exchange-core-engine` | Matching, clearinghouse, margin, funding, liquidation, noise traders (in [exchange-core](repos/exchange-core.md)) | done |
+| Engine and simulators | [hl-sim](repos/hl-sim.md), [binance-sim](repos/binance-sim.md), [bybit-sim](repos/bybit-sim.md) | HTTP and websocket servers speaking each venue's API over the engine | done |
+| Clients | [venue-net](repos/venue-net.md) | Async HTTP and reconnecting websocket transport | done |
+| Clients | [hl-client](repos/hl-client.md), [binance-client](repos/binance-client.md), [bybit-client](repos/bybit-client.md) | Typed venue clients, local books, `Live_feed` market data; Binance and Bybit also carry the `Mm_core.Venue.S` adapter | done |
+| Market making | [mm-core](repos/mm-core.md) | Pure quoter, reconciler, risk, `Venue.S`, `Live.Make` loop | done |
+| Market making | [hl-mm](repos/hl-mm.md) | Hyperliquid `Venue.S` adapter and `hl-mm` binary | done |
+| Market making | [market-maker](repos/market-maker.md) | One `market-maker` binary for all three venues | done |
+| Data platform | [parquet](repos/parquet.md) | Pure OCaml Parquet writer | done |
+| Data platform | [market-data](repos/market-data.md) | Normalized types, event logs, Parquet sink, day close, DuckDB views, replay | done |
+| Data platform | [market-recorder](repos/market-recorder.md) | Live recorder: raw minute files, event logs, uploader, metrics | in progress |
+| Tooling | [infra](repos/infra.md) | Container images, compose stack, Helm chart, deployment notes | in progress |
+| Tooling | [oxcaml-claude-skills](repos/oxcaml-claude-skills.md) | Agent skills and the gotchas log | done |
+| Tooling | specs | This repository | in progress |
+
+## Dependency graph
+
+Edges point from a package to the org packages it depends on, taken from each
+`dune-project`. Edges implied by a longer path are left out for legibility (for example
+`hl-sim` also lists `order-book` and `exchange-core` directly); each `repos/` page lists
+the full set. Dotted edges are test-only dependencies (`:with-test`) or, for `infra`,
+images it builds.
+
+```mermaid
+graph LR
+  subgraph primitives["Primitives"]
+    fixed_decimal["fixed-decimal"]
+    exchange_core["exchange-core"]
+  end
+  subgraph protocols["Protocols"]
+    hl_protocol["hl-protocol"]
+    binance_protocol["binance-protocol"]
+    bybit_protocol["bybit-protocol"]
+  end
+  subgraph engine["Engine and simulators"]
+    order_book["order-book"]
+    engine_pkg["exchange-core-engine"]
+    hl_sim["hl-sim"]
+    binance_sim["binance-sim"]
+    bybit_sim["bybit-sim"]
+  end
+  subgraph clients["Clients"]
+    venue_net["venue-net"]
+    hl_client["hl-client"]
+    binance_client["binance-client"]
+    bybit_client["bybit-client"]
+  end
+  subgraph mm["Market making"]
+    mm_core["mm-core"]
+    hl_mm["hl-mm"]
+    market_maker["market-maker"]
+  end
+  subgraph data["Data platform"]
+    parquet["parquet"]
+    market_data["market-data"]
+    market_recorder["market-recorder"]
+  end
+  subgraph tooling["Tooling"]
+    infra["infra"]
+    skills["oxcaml-claude-skills"]
+    specs["specs"]
+  end
+
+  exchange_core --> fixed_decimal
+  order_book --> exchange_core
+  engine_pkg --> order_book
+  hl_protocol --> exchange_core
+  binance_protocol --> exchange_core
+  bybit_protocol --> exchange_core
+  hl_sim --> engine_pkg
+  hl_sim --> hl_protocol
+  binance_sim --> engine_pkg
+  binance_sim --> binance_protocol
+  bybit_sim --> engine_pkg
+  bybit_sim --> bybit_protocol
+  market_data --> exchange_core
+  market_data --> parquet
+  mm_core --> exchange_core
+  hl_client --> hl_protocol
+  hl_client --> venue_net
+  hl_client --> market_data
+  binance_client --> binance_protocol
+  binance_client --> venue_net
+  binance_client --> market_data
+  binance_client --> mm_core
+  bybit_client --> bybit_protocol
+  bybit_client --> venue_net
+  bybit_client --> market_data
+  bybit_client --> mm_core
+  hl_mm --> hl_client
+  hl_mm --> mm_core
+  market_maker --> hl_mm
+  market_maker --> binance_client
+  market_maker --> bybit_client
+  market_recorder --> hl_client
+  market_recorder --> binance_client
+  market_recorder --> bybit_client
+
+  hl_mm -.-> hl_sim
+  binance_client -.-> binance_sim
+  bybit_client -.-> bybit_sim
+  infra -.-> hl_sim
+  infra -.-> binance_sim
+  infra -.-> bybit_sim
+  infra -.-> market_maker
+  infra -.-> market_recorder
+  infra -.-> market_data
+```
+
+`fixed-decimal`, `venue-net` and `parquet` depend on no org package. `exchange-core`
+holds two packages because `order-book` sits between them:
+`fixed-decimal -> exchange-core -> order-book -> exchange-core-engine`.
+
+## Runtime data flow
+
+```mermaid
+graph LR
+  subgraph venues["Venues"]
+    hl_api["Hyperliquid API"]
+    bn_api["Binance USD-M API"]
+    by_api["Bybit v5 API"]
+  end
+  subgraph sims["Simulators"]
+    hl_sim["hl-sim :3000"]
+    bn_sim["binance-sim :3300"]
+    by_sim["bybit-sim :3400"]
+  end
+  live_feed["Live_feed in hl-, binance-, bybit-client"]
+  recorder["market-recorder"]
+  raw["raw minute files .ndjson.zst"]
+  norm["norm/ event logs .bin"]
+  uploader["Uploader: rclone command"]
+  s3[("S3 bucket")]
+  day_close["market-data day-close"]
+  pq["parquet/ tables"]
+  duckdb["DuckDB SQL"]
+  mm["market-maker"]
+  anchor["price-anchor (planned)"]
+
+  hl_api --> live_feed
+  bn_api --> live_feed
+  by_api --> live_feed
+  sims --> live_feed
+  live_feed -->|on_raw frames| recorder
+  live_feed -->|Market_data.Event| recorder
+  recorder --> raw
+  recorder --> norm
+  raw --> uploader
+  uploader --> s3
+  norm --> day_close
+  day_close --> pq
+  pq -->|rclone copy| s3
+  pq --> duckdb
+  s3 --> duckdb
+  mm -->|orders, Venue.S| sims
+  mm -.->|testnet or mainnet| venues
+  venues -.-> anchor
+  anchor -.->|mark, top-N levels, trades| sims
+```
+
+- Each client's `Live_feed.create ?on_raw config ~symbols ~streams` returns a
+  `Market_data.Feed.t` (one pipe each for trades, BBO, L2 and funding) and passes every
+  frame's text and receive time to `on_raw` before parsing.
+- `market-recorder` writes raw frames to Tardis-style minute files and normalized events
+  to `market-data` event logs, and hands closed minute files to a configurable upload
+  command. See [design/data-platform.md](design/data-platform.md).
+- `day-close` turns a finished day of event logs into Parquet tables and candles; in the
+  Helm chart it runs as a CronJob next to the recorder and uploads `parquet/` with rclone.
+  See [design/deployment.md](design/deployment.md).
+- `market-maker` drives a simulator or a real venue through `Mm_core.Live.Make`. See
+  [design/market-making.md](design/market-making.md).
+- `price-anchor` is planned: anchoring simulator prices to real venues. See
+  [design/simulators.md](design/simulators.md).
+
+## Conventions shared by every OCaml repository
+
+- `open! Core`, an `.mli` for every module, labelled arguments, ppx_jane derivations.
+- Times are `int` nanoseconds or `Time_ns.t`; venue millisecond timestamps are converted
+  at the edge.
+- Prices, sizes and USD amounts are `Exchange_core.Price`, `Size`, `Usd`: distinct
+  `Fixed_decimal.Make ()` types counting 10^-8 units in an `int`.
+- Wire codecs live only in `*-protocol` repositories; `exchange-core` types carry no JSON.
+- CI uses `ocaml/setup-ocaml@v3` with the `5.2.0+ox` compiler from the `ox` opam
+  repository and pins sibling repositories from GitHub in dependency order.
