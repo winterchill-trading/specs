@@ -10,6 +10,8 @@ belong here.
 
 ## 2026-10-12
 
+- `market-data`: `Raw_reader`, `Feed.With_gaps` and `Replay_feed.of_raw`, the shared raw-file
+  reader for the replay server and the price anchor. See [repos/market-data.md](repos/market-data.md).
 - `hl-client`, `binance-client`, `bybit-client`: `Raw_normalizer` adapters and `rebuild-norm`,
   so every recorded venue decodes offline. See the repository pages.
 - `exchange-core`: `Market_sim.set_reference` and `set_noise_traders` for the price anchor.
