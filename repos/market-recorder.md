@@ -92,7 +92,9 @@ also writing a disconnect line into the open minute file);
 `market_recorder_exchange_lag_seconds` per venue (latest `recv_ts - exch_ts`, funding
 excluded); `market_recorder_clock_error_seconds`; `market_recorder_long_cycles_total`
 and `_longest_cycle_seconds`; `market_recorder_max_fds` (soft `RLIMIT_NOFILE`, also
-logged at startup with the hard limit). `check-config` errors name the entry as
+logged at startup with the hard limit). `MEMTRACE=FILE` starts memtrace before Async
+(`Memtrace.trace_if_requested`, `MEMTRACE_RATE`), as infra's compose and Helm pass it;
+CI checks that a trace is written. `check-config` errors name the entry as
 `venues[i] <venue>: ...`.
 
 ## Metrics added in wave 2
