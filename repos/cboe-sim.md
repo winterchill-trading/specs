@@ -28,11 +28,12 @@ and Multicast PITCH 2.X market data over TCP, on the venue-neutral
 | `Net`, `Server` | Frame readers; BOE gateway, PITCH feed (spin then live) and the HTTP port with the `/ws` JSON feed |
 
 Listings: AAPL, MSFT, NVDA, AMZN, SPY and the test symbol ZVZZT on unit 1; SPY options
-expiring 2026-12-18 (strikes 590, 600, 610) on unit 2. The clock is `always-open`,
-`real` (New York time, NYSE calendar) or `accelerated` (a whole day in about 16 minutes
-at speed 60). Prices are synthetic, optionally anchored to a reference price
-([design/price-anchor.md](../design/price-anchor.md#tradfi-simulators)). Fidelity against the BOE and PITCH summaries is
-summarised in [design/simulators.md](../design/simulators.md#tradfi-simulators).
+expiring 2026-12-18 (strikes 590, 600, 610) on unit 2. The clock is `always-open`, `real`
+(New York time, NYSE calendar) or `accelerated` (a whole day in about 16 minutes at speed
+60). Prices are synthetic, optionally anchored to a reference price
+([design/price-anchor.md](../design/price-anchor.md#tradfi-simulators)). Fidelity against
+the BOE and PITCH summaries is summarised in
+[design/simulators.md](../design/simulators.md#tradfi-simulators).
 
 ## Dependencies
 

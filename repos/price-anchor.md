@@ -30,17 +30,17 @@ self-trade prevention would stop them at the anchor's own shadow orders.
 
 ## Tests
 
-Expect tests on the synthetic exchange clock: an anchored run with noise traders replays
-bit for bit from its recorded inputs; mark precedence and the `mark_interval` throttle;
-funding conversion; shadow levels, consumed size, crossing skip and `queue_ahead`;
-trade replay through the price and at the price behind the queue; staleness before the
-first snapshot, after silence and after a gap, with the hand-back to the noise traders'
-walk; sources from raw minute files (with a disconnect), event logs, series files, and
-paced replay on a synthetic `Time_source`; TradFi controls: half-life convergence,
-a phase toggle that pauses and restarts the walk from the last trade, a venue-owned
-clock, series without silence staleness, a clamp following a moving band, a path pulled
-through a halt; `Path` step function and drift, `Source.to_path`, `Clamp.within_bands`. `bench/bench_anchor.exe`: 6.5 us per event
-with an empty simulated book, 36 us with 500 resting client orders.
+Expect tests on the synthetic exchange clock: an anchored run with noise traders replays bit
+for bit from its recorded inputs; mark precedence and the `mark_interval` throttle; funding
+conversion; shadow levels, consumed size, crossing skip and `queue_ahead`; trade replay
+through the price and at the price behind the queue; staleness before the first snapshot,
+after silence and after a gap, with the hand-back to the noise traders' walk; sources from
+raw minute files (with a disconnect), event logs, series files, and paced replay on a
+synthetic `Time_source`; TradFi controls: half-life convergence, a phase toggle that pauses
+and restarts the walk from the last trade, a venue-owned clock, series without silence
+staleness, a clamp following a moving band, a path pulled through a halt; `Path` step
+function and drift, `Source.to_path`, `Clamp.within_bands`. `bench/bench_anchor.exe`: 6.5 us
+per event with an empty simulated book, 36 us with 500 resting client orders.
 
 ## Dependencies
 
