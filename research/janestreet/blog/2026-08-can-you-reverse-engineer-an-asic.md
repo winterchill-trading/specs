@@ -6,22 +6,28 @@
 
 ## Summary
 
-- Puzzle announcement: a small chip is published only as its final GDS mask (metal,
-  routing and transistor layers) plus sample inputs and outputs; solvers must recover a
-  netlist, work out the circuit's purpose, and drive it to emit a hidden answer string.
-- Includes a short primer on the flow from HDL to synthesized netlist, placement and
-  routing, and the GDS file a foundry fabricates from.
-- Hints: the floorplan mirrors the design's structure, one block produces the output but
-  does not affect the success signal, and solvers need their own simulator; reset must be
-  toggled before each attempt.
-- A warm-up (a binary adder with Verilog, netlist and GDS) is provided; open tools such as
-  KLayout and Magic open the files, and the design uses an open-source PDK.
-- Rules ask entrants not to feed puzzle files directly to AI tools, while allowing AI for
-  helper scripts; submissions closed 2026-09-04. It teases a later chip design contest.
+- Second puzzle after the neural network one, going further down the stack: a small chip
+  is published only as its final mask layout (metal, routing and active transistor layers)
+  with sample inputs and outputs.
+- Primer: hardware is written in an HDL such as Verilog, synthesized into a gate netlist,
+  then placed and routed across stacked metal layers; the result is a GDS file of polygons,
+  which is what a foundry fabricates. Everything the chip does is in it, but nothing is
+  labelled.
+- The task: recover a netlist from the layout, work out what the circuit is for, then
+  drive it to produce the output it expects and read the hidden answer string.
+- Hints: the physical arrangement mirrors the design; one section only generates the
+  output and can be ignored at first; solvers need their own simulator; success is a signal
+  going high; reset must be toggled before each attempt; easter eggs are hidden in the
+  circuit and repository.
+- A warm-up (a binary adder with its Verilog, netlist and GDS) helps solvers test their
+  tools; the design uses an open-source PDK and opens in KLayout or Magic.
+- Rules ask solvers not to feed puzzle files to AI tools or write their write-ups with AI,
+  while allowing AI for helper scripts and the warm-up; submissions closed 2026-09-04.
+- It announces a later competition to design a chip that would actually be fabricated.
 
 ## Relevance to us
 
-- Puzzle and recruiting post; no bearing on our repos.
+- Puzzle and recruiting post; it does not touch our repos.
 - **Action:** none.
 
 Tags: `hardware`, `education`, `hiring`
