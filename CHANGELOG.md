@@ -163,3 +163,6 @@ belong here.
 - `infra`: the `ox-setup` composite action builds and caches the OxCaml switch for every
   repository's CI; `hl-sim` uses it, and `check-pins.sh` reads its `pins:` block. See
   [design/deployment.md](design/deployment.md#ci).
+- `cboe-sim`: `Anchoring` is a thin wrapper over `price-anchor`'s `Anchor` (`path`,
+  `may_engage`, `last_trade`, `clamp` on the LULD bands); targets stay inside the bands.
+  See [repos/cboe-sim.md](repos/cboe-sim.md).
