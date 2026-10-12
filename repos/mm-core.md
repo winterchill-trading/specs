@@ -21,12 +21,45 @@ any venue implementing it.
 | `Fill`, `Order_update` | Account events as the strategy sees them |
 | `Market_state` | Last book, mid, microprice, EWMA volatility |
 | `Inventory` | Position, average entry, realized and unrealized PnL, fees |
-| `Quote`, `Quoter` | Desired orders; `quote : Params.t -> Market_state.t -> Inventory.t -> Quote.t list` |
+| `Quote`, `Quoter` | Desired orders; `quote : Params.t -> Market_state.t -> Inventory.t -> Quote.t list`; `quote_with_reasons` (typed `Unquoted.t` per empty side); `For_testing.explain` |
 | `Action`, `Reconciler` | `Keep`/`Cancel`/`Place`; minimal plan from resting orders, deterministic client ids |
-| `Risk` | Kill switch and flatten plan |
+| `Risk` | Kill switch, one second `Action_rate` window, flatten plan |
+| `Latency_histogram` | Count, p50, p99 at two significant digits, exact max |
 | `Strategy` | State machine: `on_book`, `on_fill`, `on_open_orders`, `on_account`, `tick ~now` |
 | `Venue` | `module type S`, the Async venue client contract |
-| `Live` | `Make (V : Venue.S)`: feeds, polls, sequenced plan execution, shutdown, `Report`, `stop_signal` |
+| `Live` | `Make (V : Venue.S)`: feeds, polls, sequenced plan execution, shutdown, `Report` with `tick_to_order` latency, `stop_signal`; optional `?time_source` |
+
+New parameters, defaulting when absent from a sexp: `max_actions_per_sec` (100; more
+cancels and places in the last second trip the kill switch), `soft_max_position` and
+`bump_budget` (past the soft limit only the side that would grow the position is pulled).
+`Params.validate` names every field and rejects NaN and infinity in every float.
+
+## Tests and benchmarks
+
+Expect and `Base_quickcheck` tests of the strategy (quotes never cross or breach the
+limit; reconciling right after applying a plan only keeps; `Risk.flatten` only sends
+reduce-only orders; one fixed state quoted under each preset); live-loop tests over an
+in-memory `Venue.S` with a seeded bug mode (random rejects, late cancel acks, split fills,
+stale polls, places that time out but rest later, slow answers); a property test feeding
+random book, fill and wait scripts through `Live.Make` on a synthetic `Time_source`; and
+`test/stepped.ml`, a deterministic stepped harness with a toy exchange and seeded fills,
+one run pinned line by line.
+
+The live-loop property test found a real bug: the reconciler could keep a resting order
+at the next ladder level's price, so the ladder held two orders on one price level. It
+now keeps an order only if it lies strictly between the previous level's final price and
+the next desired price (commit `c7697d9`).
+
+core_bench, M-series Mac, dev profile:
+
+| Case | Time/run | Minor words/run |
+| --- | ---: | ---: |
+| `quote` flat | 362 ns | 357 |
+| `quote` long | 363 ns | 357 |
+| `quote` + `reconcile` (all kept) | 1125 ns | 748 |
+
+Before the ladder kept per-rung terms for `explain` and the unquoted reasons, `quote` was
+317 ns and 221 words.
 
 ## Dependencies
 
