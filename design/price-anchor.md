@@ -6,9 +6,10 @@ Status: library done in [price-anchor](../repos/price-anchor.md) (mark, funding,
 levels, trade replay, staleness, live / raw / norm / series sources); the simulators'
 `-anchor*` flags are not wired yet, except the TradFi path in `cme-sim` and `nyse-sim`
 (series, fixed and scaled references, mean reversion while open, waiting through
-auctions, pauses and halts; `nyse-sim` keeps the target inside the LULD bands). The design is built over interfaces that exist
-(`Exchange_core_engine.Exchange`, `Journal`, `Stepped`, `Market_sim`, `Market_data.Feed`,
-`Market_data.Raw_reader`) plus the additions listed under
+auctions, pauses and halts; `nyse-sim` keeps the target inside the LULD bands). The
+design is built over interfaces that exist (`Exchange_core_engine.Exchange`, `Journal`,
+`Stepped`, `Market_sim`, `Market_data.Feed`, `Market_data.Raw_reader`) plus the additions
+listed under
 [Changes to existing repositories](#changes-to-existing-repositories).
 
 The simulators' prices come from `Market_sim`, a seeded random walk with noise traders

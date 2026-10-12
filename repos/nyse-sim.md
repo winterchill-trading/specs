@@ -31,8 +31,9 @@ Multicast feeds are carried over TCP in the simulator. Listed: AAPL, MSFT, IBM, 
 XOM, BRK B and the test symbol ZVZZT. The clock is `always-open` (core session),
 `real` (New York time, 2026 holiday calendar) or `accelerated`. Prices are synthetic:
 noise traders around a random walk, optionally anchored to a reference price
-([design/price-anchor.md](../design/price-anchor.md#tradfi-simulators)). Fidelity against the Pillar and XDP summaries is
-summarised in [design/simulators.md](../design/simulators.md#tradfi-simulators).
+([design/price-anchor.md](../design/price-anchor.md#tradfi-simulators)). Fidelity against
+the Pillar and XDP summaries is summarised in
+[design/simulators.md](../design/simulators.md#tradfi-simulators).
 
 ## Dependencies
 
