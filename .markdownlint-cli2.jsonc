@@ -1,0 +1,10 @@
+{
+  "config": {
+    "default": true,
+    // Tables and Mermaid sources are allowed to run long.
+    "MD013": { "line_length": 100, "tables": false, "code_blocks": false },
+    // Repeated headings such as "Status" are expected across sibling sections.
+    "MD024": { "siblings_only": true }
+  },
+  "ignores": ["node_modules/**"]
+}
