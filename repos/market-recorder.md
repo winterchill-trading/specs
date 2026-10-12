@@ -92,5 +92,3 @@ See [design/data-platform.md](../design/data-platform.md),
   simulator never delivers and keeps `/healthz` at 503.
 - One collector per venue; no replication yet.
 - Minute files are compressed whole in memory on roll.
-- `rebuild-norm` writes no L2 snapshot index (`norm/l2/_snapshots/`):
-  `Market_data.Rebuild_norm.run` takes no snapshot interval.
