@@ -340,6 +340,23 @@ Bugs found in waves 2 and 3:
   `queries/lead_lag.sql` [`3f4cef2`][market-data-3f4cef2]: on 85 s of mainnet BTC
   perpetuals Binance leads Bybit, OKX and Bitget by 17 to 33 ms. See
   [repos/market-data.md](repos/market-data.md).
+- Wave 6: `market-recorder` (done): `merge` identifies frames by venue sequence
+  (Binance `u`/`a`, Bybit book `u`) [`fd4b1c2`][market-recorder-fd4b1c2], lists exact
+  sequence gaps per series [`e01f00e`][market-recorder-e01f00e], reports suspected gaps
+  from silence [`d5b6f56`][market-recorder-d5b6f56], takes a `-clock-error` bound
+  [`d6f5653`][market-recorder-d6f5653], matches across midnight
+  [`5e2681b`][market-recorder-5e2681b]; collector ids in raw file names honoured by
+  `merge` and `rebuild-norm` [`dfc1ac9`][market-recorder-dfc1ac9]
+  [`b31caf8`][market-recorder-b31caf8] [`c7f2317`][market-recorder-c7f2317]; client gaps
+  write disconnect lines and `gaps_total` [`6eb774e`][market-recorder-6eb774e]; clock
+  error, exchange lag, long cycle and `max_fds` gauges
+  [`af7e618`][market-recorder-af7e618] [`a119187`][market-recorder-a119187]
+  [`788836b`][market-recorder-788836b] [`d62cff1`][market-recorder-d62cff1]; subscribe
+  and stalled event log tests [`8312421`][market-recorder-8312421]
+  [`9539251`][market-recorder-9539251]; `check-config` venue index
+  [`9e96f3e`][market-recorder-9e96f3e]; `e2e-sims.sh` in CI
+  [`968c1a4`][market-recorder-968c1a4]. See
+  [repos/market-recorder.md](repos/market-recorder.md).
 
 - `specs`: this repository.
 - Wave 4 from research:
@@ -364,9 +381,11 @@ Bugs found in waves 2 and 3:
   `scripts/replicate-day.sh` merge two collectors' days into one canonical `raw/`
   (frame-text identity within a window, earliest `recv_ts`, disconnects kept only where
   both copies have a gap, a per-series report); see
-  [repos/market-recorder.md](repos/market-recorder.md#replication). Remaining:
-  sequence-based identity and gap lists, the clock bound, a second collector per
-  exchange in a second region, cross-region replication and the daily merge job.
+  [repos/market-recorder.md](repos/market-recorder.md#replication). Sequence identity
+  and gap lists, silences, the clock bound, the day boundary and collector ids are done
+  (wave 6). Remaining: ordering inside the clock bound, the L2 snapshot rule, a second
+  collector per exchange in a second region, cross-region replication and the daily
+  merge job.
 - **AWS deployment**: k3s on EC2 in ap-northeast-1 (Binance, Hyperliquid) and
   ap-southeast-1 (Bybit). See [design/deployment.md](design/deployment.md).
 - **specs upkeep**: every new repository and architecture change updates these pages
@@ -381,14 +400,10 @@ across themes. Each theme document orders its own list by value and links the so
 #### State machines and logs ([theme](research/themes/state-machines-and-logs.md))
 
 - `market-data`, clients: emit a gap event on `Live_feed` resync; document reconnect frame loss.
-- `market-recorder`: test subscribe frame counts at connect and reconnect for three symbols.
 
 #### Data platform ([theme](research/themes/data-platform.md))
 
 - `infra`: run `market-data check` after the day-close job (the command exists).
-- `market-recorder`: add a clock-error gauge sampled from `chronyc` to `/metrics`.
-- `market-recorder`: add a latest `recv_ts - exch_ts` gauge (the `lag` view exists).
-- `market-recorder`: test a stalled `Norm_writer` and print buffered events to check backpressure.
 - `market-recorder`: add a `Venue_source.S` module type and register the clients as modules.
 - `market-recorder`: export the `Parquet_sink` dropped count on `/metrics` if it adopts the sink.
 
@@ -396,19 +411,18 @@ across themes. Each theme document orders its own list by value and links the so
 
 - all repos: add the `check-obj-magic.sh` job from `oxcaml-claude-skills` to CI.
 - `mm-core`: use `Time_ns.Span.t` for the `_ms` fields of `Params.t`.
-- `market-recorder`: tag `check-config` errors with the venue index; log `[%here]` in errors.
+- `market-recorder`: log `[%here]` in errors (`check-config` errors carry the venue index).
 
 #### Performance ([theme](research/themes/performance.md))
 
 - `mm-core`: add GC counts to reports (the recorder exports GC stats and RSS).
 - `market-recorder`, `infra`: wire memtrace (confirmed on the ox base image) into recorder and Helm.
-- `market-recorder`, `market-maker`: count Async cycles over 50 ms; warn on cycles over 20 ms.
+- `market-maker`: count Async cycles over 50 ms; warn on cycles over 20 ms (the recorder does).
 - clients, `mm-core`: audit `with_timeout` for abandoned work, as `venue-net` did.
 
 #### Testing and simulation ([theme](research/themes/testing-and-simulation.md))
 
 - protocol repos: check in a trimmed raw minute per venue; test decoding every frame.
-- `market-recorder`: run `e2e-sims.sh` (which now fails on problems) in CI.
 - simulators: pin each row of the
   [TIF and market order table](design/simulators.md#time-in-force-and-market-orders) in a test.
 - `market-data`, `hl-sim`: compare trade share and BBO inter-arrival with live data.
@@ -422,7 +436,6 @@ across themes. Each theme document orders its own list by value and links the so
 #### Build and deploy ([theme](research/themes/build-and-deploy.md))
 
 - `market-maker`: add nightly builds against upstream `main` and a weekly `e2e-all.sh` run.
-- `market-recorder`: log `RLIMIT_NOFILE` limits at startup (the FD count is exported).
 - `specs`, `infra`: refine AWS deployment with host checks and a chrony check in node bootstrap.
 - `infra`: try proctopus for the local stack and note the result beside the compose stack.
 
@@ -431,6 +444,23 @@ across themes. Each theme document orders its own list by value and links the so
 - `market-maker`, `market-data`: log order lifecycle events; join fills to public trades.
 - `mm-core`: pick reference venues from `market-data`'s `queries/lead_lag.sql` on a full day.
 
+[market-recorder-fd4b1c2]: https://github.com/winterchill-trading/market-recorder/commit/fd4b1c2
+[market-recorder-e01f00e]: https://github.com/winterchill-trading/market-recorder/commit/e01f00e
+[market-recorder-d5b6f56]: https://github.com/winterchill-trading/market-recorder/commit/d5b6f56
+[market-recorder-d6f5653]: https://github.com/winterchill-trading/market-recorder/commit/d6f5653
+[market-recorder-5e2681b]: https://github.com/winterchill-trading/market-recorder/commit/5e2681b
+[market-recorder-dfc1ac9]: https://github.com/winterchill-trading/market-recorder/commit/dfc1ac9
+[market-recorder-b31caf8]: https://github.com/winterchill-trading/market-recorder/commit/b31caf8
+[market-recorder-c7f2317]: https://github.com/winterchill-trading/market-recorder/commit/c7f2317
+[market-recorder-6eb774e]: https://github.com/winterchill-trading/market-recorder/commit/6eb774e
+[market-recorder-af7e618]: https://github.com/winterchill-trading/market-recorder/commit/af7e618
+[market-recorder-a119187]: https://github.com/winterchill-trading/market-recorder/commit/a119187
+[market-recorder-788836b]: https://github.com/winterchill-trading/market-recorder/commit/788836b
+[market-recorder-d62cff1]: https://github.com/winterchill-trading/market-recorder/commit/d62cff1
+[market-recorder-8312421]: https://github.com/winterchill-trading/market-recorder/commit/8312421
+[market-recorder-9539251]: https://github.com/winterchill-trading/market-recorder/commit/9539251
+[market-recorder-9e96f3e]: https://github.com/winterchill-trading/market-recorder/commit/9e96f3e
+[market-recorder-968c1a4]: https://github.com/winterchill-trading/market-recorder/commit/968c1a4
 [market-data-64381d1]: https://github.com/winterchill-trading/market-data/commit/64381d1
 [market-data-a61ead7]: https://github.com/winterchill-trading/market-data/commit/a61ead7
 [market-data-3c978c7]: https://github.com/winterchill-trading/market-data/commit/3c978c7
