@@ -8,8 +8,8 @@ the XDP Integrated Feed over TCP, on the venue-neutral `exchange-core-engine`.
 | Repository | `winterchill-trading/nyse-sim` |
 | opam package | `nyse-sim` |
 | Libraries | `nyse-sim` (module `Nyse_sim`), `nyse-sim.wire` (module `Nyse_sim_wire`) |
-| Binaries | none yet |
-| Status | in progress |
+| Binaries | `nyse-sim` (`-gateway-port` 4100, `-feed-port` 4101, `-http-port` 4102, `-symbols`, `-noise`, `-clock`, `-start-time`, `-speed`), `nyse-sim-cli` |
+| Status | done |
 
 ## Key modules
 
@@ -22,8 +22,15 @@ the XDP Integrated Feed over TCP, on the venue-neutral `exchange-core-engine`.
 | `Venue` | Pillar order semantics over `Exchange_core_engine.Exchange`: validation with `Equities_core.Order_types`, session, LULD bands and pauses, short sale restriction, opening and closing auctions |
 | `Market_event` | What the venue publishes, in matching order |
 | `Feed` | XDP publisher: sequence reset, time references, symbol mappings, heartbeats, refresh for late joiners; JSON subscribers get the same messages |
+| `Gateway`, `Session_handler`, `Framing` | Per-user Pillar streams (TG, GT, REF), one TCP session's state machine, stream framing |
+| `Server` | Gateway and feed TCP listeners, `GET /` venue summary and the `/ws` JSON feed on the HTTP port |
+| `Pillar_client` | Client used by `nyse-sim-cli` and the end-to-end script |
 
-Multicast feeds are carried over TCP in the simulator.
+Multicast feeds are carried over TCP in the simulator. Listed: AAPL, MSFT, IBM, JPM, KO,
+XOM, BRK B and the test symbol ZVZZT. The clock is `always-open` (core session),
+`real` (New York time, 2026 holiday calendar) or `accelerated`. Prices are synthetic:
+noise traders around a random walk. Fidelity against the Pillar and XDP summaries is
+summarised in [design/simulators.md](../design/simulators.md#tradfi-simulators).
 
 ## Dependencies
 
@@ -38,5 +45,10 @@ Multicast feeds are carried over TCP in the simulator.
 
 ## Known gaps
 
-- No server binary yet: the venue, feed and codecs are libraries driven by tests.
-- No JSON/HTTP and websocket surface for `market-data` live feeds and `market-maker` yet.
+- No multicast, A/B lines or retransmission server; one XDP channel, one gateway.
+- Auction-only and reserve orders live in the venue, not the engine: auction fills do not
+  move engine positions.
+- Modify loses time priority (the engine has no in-place reduction).
+- No market-wide circuit breakers, fees on execution reports, or real prices.
+- No `Market_data.Feed.t` over the JSON feed, and no `Venue.S` adapter for
+  `market-maker`.
