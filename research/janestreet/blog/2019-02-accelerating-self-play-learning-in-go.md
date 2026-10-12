@@ -6,22 +6,27 @@
 
 ## Summary
 
-- Announces the KataGo paper, code and trained nets: a personal research project by a Jane
-  Street researcher, run on compute the firm provided.
-- Context: AlphaZero, ELF OpenGo and Leela Zero needed thousands of TPUs/GPUs or a year of
-  volunteer compute to reach top strength.
-- The new techniques together appear to speed learning by roughly 5x versus Leela Zero to
-  reach strong professional level, and close to 100x in early training.
-- Reaching amateur-dan strength on 19x19 becomes feasible with a few GPUs in a day or two.
-- One network can be trained to play across many board sizes at a small strength cost.
-- Adding score maximization as a secondary training target speeds learning and lets the
-  bot handle handicap games, which other zero-trained bots struggle with.
-- Includes a board-ownership prediction head visualized per point.
+- Jane Street has been exploring machine learning for its models; this post announces the
+  KataGo paper, source code, trained networks and an online bot from a researcher's
+  personal Go project, run on compute the firm provided.
+- Context: AlphaZero needed thousands of TPUs for days, ELF OpenGo about two thousand GPUs
+  for over a week, and the volunteer-run Leela Zero more than a year to reach top strength.
+- The runs here were much shorter (several short runs and one medium run) yet reached
+  strong professional, possibly superhuman, strength.
+- Combined techniques appear to speed learning roughly 5x versus Leela Zero to strong
+  professional level, and close to 100x in early training.
+- Reaching amateur-dan strength on 19x19 becomes possible with a few GPUs in a day or two.
+- With the right architecture one network plays well across many board sizes, at a small
+  strength cost.
+- Score maximization as a secondary objective speeds learning and lets the bot play
+  handicap games sensibly, which zero-trained bots usually handle poorly.
+- The network also predicts final ownership of each board point; more experiments were
+  planned for later posts.
 
 ## Relevance to us
 
-- Weak relevance: reinforcement learning research for a board game. Nothing in
-  [mm-core](../../../repos/mm-core.md) or the data platform uses learned models today.
-- **Action:** none.
+- No relevant insight: reinforcement learning for a board game; nothing in
+  [mm-core](../../../repos/mm-core.md) or the data platform uses learned models.
+  **Action:** none.
 
 Tags: `ml`, `culture`
