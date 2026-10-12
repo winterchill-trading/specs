@@ -5,9 +5,9 @@ libraries (Core, Async, ppx_jane): exchange simulators for Hyperliquid, Binance 
 Futures and Bybit v5 linear, typed clients for the same three venues, one venue-neutral
 market-making strategy that runs on all of them, read-only market data feeds for five
 more venues (OKX, Coinbase, Kraken, Deribit, Bitget), and a raw-first market data
-platform that records live feeds and turns them into Parquet for SQL. Simulators of NYSE,
-Cboe and CME, speaking their binary protocols over shared US equities and futures
-semantics, are in progress. Every repository is an opam
+platform that records live feeds and turns them into Parquet for SQL. A TradFi layer adds
+simulators of NYSE, Cboe and CME that speak those venues' binary protocols over TCP, on
+the same engine plus shared US equities and futures semantics. Every repository is an opam
 package (or two), built with dune 3.17, tested with ppx_expect and Base_quickcheck, and
 pinned from GitHub in CI. Locally all repositories sit side by side under one directory
 with an untracked `dune-workspace`, so dune resolves siblings by public name.
@@ -24,8 +24,8 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Engine and simulators | [order-book](repos/order-book.md) | Price-time priority book and matching | done |
 | Engine and simulators | `exchange-core-engine` | Matching, clearinghouse, margin, funding, liquidation, noise traders (in [exchange-core](repos/exchange-core.md)) | done |
 | Engine and simulators | [hl-sim](repos/hl-sim.md), [binance-sim](repos/binance-sim.md), [bybit-sim](repos/bybit-sim.md) | HTTP and websocket servers speaking each venue's API over the engine | done |
-| Engine and simulators | [equities-core](repos/equities-core.md) | US equities, options and futures semantics: sessions, ticks, lots, symbology, auctions, order types, halts, fees | done |
-| Engine and simulators | [nyse-sim](repos/nyse-sim.md), [cboe-sim](repos/cboe-sim.md), [cme-sim](repos/cme-sim.md) | NYSE Pillar and XDP, Cboe BOE and PITCH, CME iLink 3 and MDP 3.0 over the engine | in progress |
+| TradFi | [equities-core](repos/equities-core.md) | US equities, options and futures semantics: sessions, ticks, lots, symbology, auctions, order types, halts, fees | done |
+| TradFi | [nyse-sim](repos/nyse-sim.md), [cboe-sim](repos/cboe-sim.md), [cme-sim](repos/cme-sim.md) | NYSE Pillar and XDP, Cboe BOE and PITCH, CME iLink 3 and MDP 3.0 over the engine, binary over TCP | done |
 | Clients | [venue-net](repos/venue-net.md) | Async HTTP and reconnecting websocket transport | done |
 | Clients | [hl-client](repos/hl-client.md), [binance-client](repos/binance-client.md), [bybit-client](repos/bybit-client.md) | Typed venue clients, local books, `Live_feed` market data; Binance and Bybit also carry the `Mm_core.Venue.S` adapter | done |
 | Feeds | [okx-feed](repos/okx-feed.md), [coinbase-feed](repos/coinbase-feed.md), [kraken-feed](repos/kraken-feed.md), [deribit-feed](repos/deribit-feed.md), [bitget-feed](repos/bitget-feed.md) | Read-only public market data as a `Market_data.Feed.t`, no trading | done |
@@ -64,6 +64,8 @@ graph LR
     hl_sim["hl-sim"]
     binance_sim["binance-sim"]
     bybit_sim["bybit-sim"]
+  end
+  subgraph tradfi["TradFi"]
     equities_core["equities-core"]
     nyse_sim["nyse-sim"]
     cboe_sim["cboe-sim"]
@@ -187,6 +189,13 @@ graph LR
     bn_sim["binance-sim :3300"]
     by_sim["bybit-sim :3400"]
   end
+  subgraph tradfi_sims["TradFi simulators, binary over TCP"]
+    nyse_sim["nyse-sim :4100-4102"]
+    cboe_sim["cboe-sim :9300-9302"]
+    cme_sim["cme-sim :4300-4302"]
+  end
+  tradfi_cli["*-sim-cli, e2e scripts, own SBE or BOE code"]
+  tradfi_json["JSON feed on /ws"]
   live_feed["Live_feed in hl-, binance-, bybit-client"]
   feeds["Live_feed in the five *-feed repositories"]
   recorder["market-recorder"]
@@ -221,6 +230,10 @@ graph LR
   mm -.->|testnet or mainnet| venues
   venues -.-> anchor
   anchor -.->|mark, top-N levels, trades| sims
+  tradfi_cli -->|Pillar, BOE, iLink 3 orders| tradfi_sims
+  tradfi_sims -->|XDP, PITCH, MDP 3.0| tradfi_cli
+  tradfi_sims --> tradfi_json
+  anchor -.->|noise anchored to a reference| tradfi_sims
 ```
 
 - Each client's `Live_feed.create ?on_raw config ~symbols ~streams` returns a
@@ -236,6 +249,10 @@ graph LR
   See [design/deployment.md](design/deployment.md).
 - `market-maker` drives a simulator or a real venue through `Mm_core.Live.Make`. See
   [design/market-making.md](design/market-making.md).
+- The TradFi simulators have no real data source: noise traders move their books, and
+  their order entry and market data are binary over TCP, with the feed repeated as JSON
+  on `/ws`. Nothing in the data platform consumes them yet. See
+  [design/simulators.md](design/simulators.md#tradfi-simulators).
 - `price-anchor` is planned: anchoring simulator prices to real venues. See
   [design/simulators.md](design/simulators.md).
 
