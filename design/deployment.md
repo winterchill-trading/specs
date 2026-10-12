@@ -81,6 +81,46 @@ incomplete also fails to build as an image (see the `hl-mm` and `market-maker` p
 `charts/rendered-example.yaml` is `helm template` of the dev profile; CI fails if it is
 stale, and runs `helm lint`, hadolint, shellcheck and `docker compose config`.
 
+## CI
+
+Every repository builds on GitHub Actions against the same toolchain as the base image:
+the `ox` opam repository is pinned to the base image's commit in every workflow, and
+`infra/scripts/check-pins.sh` fails when a workflow's commit or sibling pin order drifts.
+Building the OxCaml compiler and the sibling dependencies from source takes about 17
+minutes per push, so `infra` provides a composite action,
+`winterchill-trading/infra/.github/actions/ox-setup@main`, that replaces the
+setup-ocaml step, the `opam pin add` lines and `opam install --deps-only`
+(`infra/docs/ci.md` has the migration recipe).
+
+- **Inputs**: `pins` (one `name url` per line, in dependency order, optionally
+  `#<ref>`), `with-test`, `working-directory`, and `ox-repository` (default: the base
+  image's commit, so a bump in `infra` reaches every repository).
+- **Cache key**: OS, architecture, runner image, compiler, `ox` commit, the pin names,
+  the commits the pins resolve to (`git ls-remote` at the start of the run; pins are then
+  added at exactly those commits) and the repository's `*.opam` files. The cached path
+  is the whole local switch, saved right after the dependencies install, so a failing
+  build still leaves a warm cache.
+- **Restore**: an exact hit installs nothing; a partial hit (same compiler, `ox` commit
+  and pin names) re-pins and `opam reinstall`s only the siblings whose commit moved, with
+  their dependents; a miss builds everything. A push to `fixed-decimal` rebuilds every
+  pin above it; a push to `hl-protocol` rebuilds only `hl-protocol`. A new `ox` commit,
+  compiler or Ubuntu release is a full miss.
+- **Size**: the saved switch is about 2.5 GB and restores in about 30 s. GitHub keeps
+  10 GB per repository, so a busy repository keeps roughly the last dozen entries.
+
+Timings on `ubuntu-latest` (hl-sim, five sibling pins, seconds, 2026-10-12):
+
+| Run | setup-ocaml | Restore | Pins and dependencies | Save | Build and test | Job |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Cold, compiler not cached | 957 | 0 | 971 | 27 | 17 | 1973 |
+| Cold, compiler cached | 43 | 0 | 959 | 27 | 16 | 1046 |
+| Warm, exact hit | 34 | 31 | 2 | - | 23 | 91 |
+| Partial, `hl-protocol` two commits back | 40 | 55 | 27 | 26 | 14 | 163 |
+
+hl-sim's own CI uses the action since 2026-10-12 (a warm rerun took 117 s, against about
+1020 s before). Rolling it out to the other repositories is in progress (see the
+[roadmap](../roadmap.md)).
+
 ## AWS target (planned)
 
 | Region | Venues | Reason |
