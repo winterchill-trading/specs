@@ -391,6 +391,13 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
 - Open: verify on testnet that another address's user streams are readable and what
   the 10-unique-users websocket limit counts.
 
+## Fiat rails
+
+- [griffin-client](repos/griffin-client.md) (done): sandbox client and `griffin` CLI, with
+  the live sandbox walk passing. Open: signed requests accepted end to end, real webhook
+  deliveries.
+- `lightspark-client` (in progress).
+
 ## Next
 
 - **Native cloud sinks** when the conditions in
