@@ -34,7 +34,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Market making | [hl-mm](repos/hl-mm.md) | Hyperliquid `Venue.S` adapter and `hl-mm` binary | done |
 | Market making | [market-maker](repos/market-maker.md) | One `market-maker` binary for all three venues | done |
 | Copy trading | [hl-copy-core](repos/hl-copy-core.md) | Pure mirroring, scaling, caps and leader scoring | done |
-| Copy trading | [hl-leaderboard](repos/hl-leaderboard.md) | Leader collection, scoring and `/leaders` JSON | in progress |
+| Copy trading | [hl-leaderboard](repos/hl-leaderboard.md) | Leader collection, scoring and `/leaders` JSON | done |
 | Copy trading | [hl-copy-engine](repos/hl-copy-engine.md) | Mirrors leaders into follower accounts with agent keys | in progress |
 | Copy trading | [hl-copy-api](repos/hl-copy-api.md), [hl-copy-web](repos/hl-copy-web.md) | Wallet login, agent approval and follows; Bonsai frontend | in progress |
 | Data platform | [parquet](repos/parquet.md) | Pure OCaml Parquet writer | done |
@@ -188,6 +188,7 @@ graph LR
   copy_core --> market_data
   leaderboard --> hl_client
   leaderboard --> copy_core
+  leaderboard --> parquet
   copy_engine --> hl_client
   copy_engine --> copy_core
   copy_api --> copy_core
