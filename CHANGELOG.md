@@ -8,6 +8,15 @@ describes the change. The line is added in the same piece of work that updates t
 pages (see [CLAUDE.md](CLAUDE.md)). Bug fixes, tests and documentation-only changes do not
 belong here.
 
+## 2026-10-14
+
+- `money`, `ledger`, `risk-rules`, `striga-client`: new repositories for the neobank demo's
+  banking foundations and provider SDK. New dependency edges: `money` to `fixed-decimal`,
+  `ledger` to `money`, `risk-rules` to `money` and `payments-core`. See
+  [design/neobank.md](design/neobank.md) and the pages
+  [money](repos/money.md), [ledger](repos/ledger.md), [risk-rules](repos/risk-rules.md)
+  and [striga-client](repos/striga-client.md).
+
 ## 2026-10-13
 
 - `exchange-core`, `hl-sim`: trigger orders (`Exchange.place_trigger`, `Trigger_event`),
