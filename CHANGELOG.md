@@ -10,6 +10,11 @@ belong here.
 
 ## 2026-10-13
 
+- `hl-copy-api`: `scripts/e2e-stack.sh` and the `e2e-stack` CI job run the platform end
+  to end on `hl-sim` with `hl-leaderboard`, `hl-copy-engine` and hl-copy-web's live smoke
+  test; `/ws` frames are `Api_types.Ws_push` from `hl-copy-api-types`; `tools/dev_wallet`
+  signs like a browser wallet for scripts. See
+  [design/copytrading.md](design/copytrading.md).
 - `hl-copy-web`: Bonsai app with every page on mock data, and the `hl-copy-api-types`
   package (`Api_types`) defining the `hl-copy-api` endpoints and bodies; no org package
   dependency. See [repos/hl-copy-web.md](repos/hl-copy-web.md).
