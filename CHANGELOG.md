@@ -58,7 +58,8 @@ belong here.
   approvals, builder fee, follows written as engine configs, leaders proxy, `/me`,
   `/ws`, CORS, rate limits, `/metrics`); depends on `hl-copy-api-types` from
   `hl-copy-web`. `hl-copy-core`: new `Key_store`, the sealed agent key file format the
-  API writes and the engine reads (adds `cryptokit`). See [repos/hl-copy-api.md](repos/hl-copy-api.md) and
+  API writes and the engine reads (adds `cryptokit`).
+  See [repos/hl-copy-api.md](repos/hl-copy-api.md) and
   [design/copytrading.md](design/copytrading.md).
 
 ## 2026-10-12
