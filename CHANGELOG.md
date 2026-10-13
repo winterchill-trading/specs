@@ -18,6 +18,10 @@ belong here.
 - `price-anchor`: new public module `Eligible`, `Ref_book.mid_or_null` and
   `Scale.price_or_null`; `Queue_ahead` indexed by price. See
   [repos/price-anchor.md](repos/price-anchor.md).
+- `hl-copy-core`, `hl-leaderboard`, `hl-copy-engine`, `hl-copy-api`, `hl-copy-web`:
+  new repositories for the copy-trading platform (in progress), with ADR 0007 (agent
+  keys instead of custody) and ADR 0008 (Bonsai frontend). See
+  [design/copytrading.md](design/copytrading.md).
 
 ## 2026-10-12
 
