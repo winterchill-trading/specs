@@ -373,6 +373,30 @@ Bugs found in waves 2 and 3:
   - `market-maker` (done): reload through `Live.update_params`; `-action-rate-grace-ms`
     and `-action-rate-cooldown-ms` flags; fault run at the default action cap.
 
+### Copy-trading platform
+
+In progress; design in [design/copytrading.md](design/copytrading.md), decisions in
+[ADR 0007](adr/0007-agent-keys-not-custody.md) and
+[ADR 0008](adr/0008-bonsai-web-frontend.md).
+
+- `hl-protocol`: `approveAgent` and `approveBuilderFee` actions, user subscriptions for
+  any address, leaderboard rows, order `builder` field.
+- `hl-client`: user-signed EIP-712 actions, `Exchange.approve_agent` and
+  `approve_builder_fee`, `User_feed`, `Leaderboard.fetch`, `Info.user_fills_by_time`,
+  `Client.trading_with_agent`.
+- `hl-sim`: agent and builder fee approvals, agent-signed orders, user subscriptions
+  for any address, a `leaderboard` info request, `-leaders N` simulated leaders.
+- [hl-copy-core](repos/hl-copy-core.md): `Scale`, `Caps`, `Rounding`, `Mirror`,
+  `Score`, `Pnl`.
+- [hl-leaderboard](repos/hl-leaderboard.md): `collect`, `rank`, `serve`.
+- [hl-copy-engine](repos/hl-copy-engine.md): followers, resync, journals, metrics,
+  end-to-end script on `hl-sim`.
+- [hl-copy-api](repos/hl-copy-api.md): wallet login, agent keys, follows.
+- [hl-copy-web](repos/hl-copy-web.md): Bonsai frontend and `Api_types`.
+- `infra`: compose and Helm entries for the copy-trading services.
+- Open: verify on testnet that another address's user streams are readable and what
+  the 10-unique-users websocket limit counts.
+
 ## Next
 
 - **Native cloud sinks** when the conditions in
