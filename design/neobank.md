@@ -2,13 +2,13 @@
 
 Kind: explanation.
 
-Status: in progress (2026-10-14). `money`, `ledger`, `risk-rules` and `striga-client` are
-done; the other libraries in the table below are in progress and the demo apps are
-planned. The bank-side domain is split into provider-neutral libraries named for what they
-are (`money`, `ledger`, `kyc-core`, `payments-core`, `card-core`, `risk-rules`,
-`banking-provider`); only the demo apps (`neobank-api`, `neobank-web`) and the infra
-compose profile carry the neobank name. Everything below is the design; repository pages
-are added as the repositories land.
+Status: in progress (2026-10-14). `money`, `ledger`, `kyc-core`, `payments-core`, `card-core`,
+`risk-rules` and `striga-client` are done; the other libraries in the table below are in
+progress and the demo apps are planned. The bank-side domain is split into provider-neutral
+libraries named for what they are (`money`, `ledger`, `kyc-core`, `payments-core`,
+`card-core`, `risk-rules`, `banking-provider`); only the demo apps (`neobank-api`,
+`neobank-web`) and the infra compose profile carry the neobank name. Everything below is the
+design; repository pages are added as the repositories land.
 
 The demo is a small retail neobank in OxCaml: a customer signs up, passes KYC, gets a EUR
 IBAN and crypto wallets, funds the account by SEPA, holds and swaps BTC, ETH, USDC and
@@ -132,11 +132,11 @@ graph BT
 
   money --> fixed_decimal
   ledger --> money
-  kyc_core --> money
   payments_core --> money
   payments_core --> ledger
   card_core --> money
   card_core --> ledger
+  card_core --> payments_core
   risk_rules --> money
   risk_rules --> payments_core
   banking_provider --> kyc_core
@@ -287,9 +287,9 @@ caps from the tier.
 | --- | --- | --- | --- |
 | `money` | Currencies, minor units, exact amounts, FX rates, fees | [fixed-decimal](../repos/fixed-decimal.md) | done ([repo page](../repos/money.md)) |
 | `ledger` | Double-entry, append-only Bin_prot journal, replay; reusable by exchange-core's clearinghouse later | `money` | done ([repo page](../repos/ledger.md)) |
-| `kyc-core` | Customer identity and tier state machine, verification steps, PII minimization | `money` | in progress |
-| `payments-core` | Transfer state machines (SEPA, on-chain, Lightning, intraledger, swap), OTP/SCA step, standing orders | `money`, `ledger` | in progress |
-| `card-core` | Card lifecycle, authorizations and settlements, limits | `money`, `ledger` | in progress |
+| `kyc-core` | Customer identity and tier state machine, verification steps, PII minimization | (none) | done ([repo page](../repos/kyc-core.md)) |
+| `payments-core` | Transfer state machines (SEPA, on-chain, Lightning, intraledger, swap), OTP/SCA step, standing orders | `money`, `ledger` | done ([repo page](../repos/payments-core.md)) |
+| `card-core` | Card lifecycle, authorizations and settlements, limits | `money`, `ledger`, `payments-core` | done ([repo page](../repos/card-core.md)) |
 | `risk-rules` | Rule engine for transfers and card authorisations: caps, typologies, SCA exemptions, shadow mode, review queue | `money`, `payments-core` | done ([repo page](../repos/risk-rules.md)) |
 | `risk-models` | Machine-learned scores through `risk-rules`' `Model.S`; trained offline, scored in OCaml | `risk-rules` | in progress |
 | `pg-async` | Non-blocking PostgreSQL client for Async over libpq: pool, parameterized queries, transactions, migrations | (none) | in progress |
