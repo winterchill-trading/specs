@@ -386,8 +386,8 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
   `Client.trading_with_agent`.
 - `hl-sim`: agent and builder fee approvals, agent-signed orders, user subscriptions
   for any address, a `leaderboard` info request, `-leaders N` simulated leaders.
-- [hl-copy-core](repos/hl-copy-core.md): `Scale`, `Caps`, `Rounding`, `Mirror`,
-  `Score`, `Pnl`.
+- [hl-copy-core](repos/hl-copy-core.md) (done): `Scale`, `Caps`, `Rounding`, `Mirror`,
+  `Score`, `Pnl`, `Follower_config`.
 - [hl-leaderboard](repos/hl-leaderboard.md): `collect`, `rank`, `serve`.
 - [hl-copy-engine](repos/hl-copy-engine.md): followers, resync, journals, metrics,
   end-to-end script on `hl-sim`.
