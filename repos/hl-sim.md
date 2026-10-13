@@ -16,10 +16,15 @@ public API over `exchange-core-engine`, with the engine's market simulation.
 - `Adapt`: the Hyperliquid view of the engine: universe (BTC, ETH, SOL at asset indices
   0, 1, 2), price and size rules, asset index mapping, both endpoints in `hl-protocol`
   types, error wording, `User_fill` `dir` labels, `Trade`, `Order_update`,
-  `Clearinghouse_state`.
+  `Clearinghouse_state`; trigger orders onto the engine's trigger book, Hyperliquid's
+  mainnet margin tiers and `meta` margin tables, and liquidation through the book with
+  the liquidator `0x...ffff`.
 - `Active_asset_ctx`: the `activeAssetCtx` channel (funding, mark, oracle, mid, impact
-  prices, premium, open interest, day volumes) built from the engine; `oraclePx` equals
-  `markPx`, and day volumes cover the current UTC day of the exchange clock.
+  prices, premium, open interest, day volumes) built from the engine, also served by
+  `metaAndAssetCtxs`; `oraclePx` is the market simulation's reference published every
+  3 s (`-oracle-interval-ms`), `markPx` the engine's oracle-based median, `impactPxs`
+  the impact notional's average prices, and day volumes cover the current UTC day of the
+  exchange clock.
 - `Journal`: JSON-lines journal of accepted `/exchange` requests (`-journal FILE`);
   `Server.replay` applies one to a fresh exchange and reproduces responses, fills and
   account state when nothing else trades (`-noise-traders 0`).
@@ -72,7 +77,7 @@ its account (agent nonce checked), and anything else acts for the `X-Address` he
 else `vaultAddress`, else `0x...01`, its signature unchecked; `-strict-signatures`
 requires a valid signature on every request and ignores `X-Address`. Every address seen
 is credited `-initial-balance` USD. Copy-trading support (agents, builder fees,
-`maxBuilderFee`, `extraAgents`, `userFillsByTime`, `orderStatus`, the `leaderboard` info
+`maxBuilderFee`, `extraAgents`, `userFillsByTime`, `orderStatus`, `userRole`, the `leaderboard` info
 request and `GET /leaderboard`, `webData2`, `userEvents`, 10 users per websocket
 connection, leaders) is described in the hl-sim README; the parity with Hyperliquid is
 tracked in [research/hl-sim-parity.md](../research/hl-sim-parity.md). The JSON journal
@@ -82,9 +87,10 @@ leaders and builder fees bit for bit.
 ## Known gaps
 
 - `activeAssetCtx` is decoded by hl-sim's own module, not yet by `hl-protocol`.
-- Trigger orders are rejected; `nSigFigs` and `mantissa` on `l2Book` are ignored.
-- Fills carry no `builderFee` field (`User_fill` has none); `webData2` is a subset; only
-  fills are sent on `userEvents`.
+- Trigger orders have no TP/SL grouping; `nSigFigs` and `mantissa` on `l2Book` are
+  ignored.
+- Fills carry no `builderFee` field; backstop liquidations produce no fills; `webData2`
+  is a subset; `userEvents` sends fills and liquidations, not funding.
 - Rejected orders reach `orderUpdates` only when they come through `/exchange` (not from
   leaders or noise traders).
 - A scheduled cancel replayed from the JSON journal fires at the next journaled request
