@@ -127,6 +127,14 @@ than a rejected order) when the approval is missing or lower than the configured
 How a user revokes a builder approval is not described in the docs (unverified;
 presumably a new approval with a lower rate).
 
+Status (2026-10-13): the wire types are in hl-protocol (`User_signed_action`,
+`User_signed_request`, `Builder_fee`, `Order_action`) and signing and sending in
+hl-client (`Signing.sign_user_action` and `recover_user_action`,
+`Exchange.approve_agent` and `approve_builder_fee`, the same on `Client` owner handles,
+`place_orders ?builder`, and `Client.trading_with_agent` for orders signed by the agent).
+The approval signatures match `eth_account` on the SDK's payload; nothing has been sent
+to testnet yet. `maxBuilderFee` has no client call yet.
+
 ## Leader discovery and scoring
 
 `hl-leaderboard` builds the ranked list offline, read only, without keys:
@@ -155,6 +163,12 @@ presumably a new approval with a lower rate).
 The 10,000-fill cap means a very active trader's history covers days, not months; the
 score uses `portfolio` curves for long windows and fills only for the trade statistics,
 and flags leaders whose fill history is truncated.
+
+Status (2026-10-13): `Hl_protocol.Leaderboard` decodes the rows (checked on four testnet
+rows; amounts carry up to ten decimals, so they are floats), `Hl_client.Leaderboard`
+fetches and ranks them, and `Hl_client.Info.user_fills_by_time` with its pager
+`all_user_fills_since` covers step 3's fills. `portfolio` and `userRole` have no client
+calls yet.
 
 ## Mirroring model
 
@@ -196,6 +210,14 @@ The websocket documentation does not restrict subscribing to another address's
 `userFills`, `orderUpdates` or `clearinghouseState`; the public frontend does it for any
 address, and the design relies on it (unverified on mainnet; to be checked on
 testnet).
+
+Status (2026-10-13): `Hl_client.User_feed` carries leaders' `userFills` over one
+connection, one subscription per leader address shared by every follower of that leader,
+at most 10 addresses per connection; it drops fills repeated by reconnect snapshots and
+derives each touched coin's position from `startPosition` and the fill. `orderUpdates`
+frames name no user, so they cannot be shared across addresses on one connection;
+`userEvents` (channel `user`) is decoded by `Hl_protocol.User_event` but not yet part of
+the feed.
 
 ## State and persistence
 
