@@ -261,6 +261,19 @@ frames name no user, so they cannot be shared across addresses on one connection
 the feed. hl-sim serves `userFills`, `orderUpdates`, `webData2` (lite) and `userEvents`
 (fills) for any address, at most 10 distinct users per connection.
 
+Status (2026-10-13): [hl-copy-engine](../repos/hl-copy-engine.md) runs the model. Its
+`Leader_hub` shares one `User_feed` subscription per leader across followers and polls
+`clearinghouseState` (weight 2) for leaders past the tenth instead of `userFills`, since
+positions are what the mirror copies. Each update's mark is the price of the leader's
+latest fill in that coin. Orders are IOC through `Client.trading_with_agent`, and the
+order response is taken as the fill (fees reach the state through the next resync's
+equity). An insufficient-margin reject caps account leverage at what the follower holds
+(lifted by a resume, a new UTC day or a config change) instead of retrying; an agent
+reject pauses the follow. On hl-sim with strict signatures the follower ends within one
+lot of its capped target after every leader change, and the leader-fill-to-order lag is 1
+to 3 ms locally. The retry backoff and the "N cycles behind" alert are not implemented;
+the follower retries on the next leader update or resync.
+
 ## State and persistence
 
 - **Journal per follower.** Every input (leader fill, leader and follower snapshots,
@@ -268,6 +281,14 @@ the feed. hl-sim serves `userFills`, `orderUpdates`, `webData2` (lite) and `user
   Bin_prot frame with `Market_data.Event_log`-style framing, so a follower replays
   deterministically on a synthetic clock, like
   [exchange-core](../repos/exchange-core.md)'s `Journal`.
+
+  Status (2026-10-13): hl-copy-engine's `Journal` writes each
+  `Follower_core.Input.Stable.V1` (`Configure`, the `Mirror` events, `Order_rejected`,
+  `Pause`, `Resume`, `Stop`) followed by the output it produced, in `Market_data.Framed`
+  day files `<journal>/<follower>-<leader>/<YYYY-MM-DD>.journal` headed by the entry
+  type's digest. The core reads no clock (the UTC day boundary is a `Start_day` input), so
+  replay needs no clock at all; `hl-copy-engine replay` checks every recorded output, and
+  a restart replays the journal so client order ids continue, then resyncs before trading.
 - **Follower configs.** Plain sexp files of `Hl_copy_core.Follower_config.t` in a
   directory the engine watches; the API writes them, the engine hot-reloads on change.
 - **Agent keys.** Encrypted at rest with a master key from the `HL_COPY_MASTER_KEY`
@@ -282,7 +303,10 @@ the feed. hl-sim serves `userFills`, `orderUpdates`, `webData2` (lite) and `user
   mode, so keys are sealed with ChaCha20 and HMAC-SHA256 (encrypt-then-MAC, a 24-byte
   random nonce per key, account and agent address as associated data); moving to an
   AEAD is a TODO. The API writes follower configs as `<follower>-<leader>.sexp`, with
-  `paused true` while paused, and removes the file on stop.
+  `paused true` while paused, and removes the file on stop. hl-copy-engine reads the key
+  store from `-state-dir` (the API's state directory, mounted read-only) when a follower
+  starts; a missing, revoked or expired agent keeps the follow from starting, and a key
+  rotated while the follower runs is picked up when it restarts.
 - **Leaderboard data.** Raw lines plus `leaders.parquet` and `fills.parquet` written
   with [parquet](../repos/parquet.md), queryable with DuckDB like the rest of the
   [data platform](data-platform.md).
@@ -353,6 +377,10 @@ From [rate limits and user limits](https://hyperliquid.gitbook.io/hyperliquid-do
 | Websocket user subscriptions | At most 10 unique users across user-specific subscriptions per IP | The real ceiling: one engine IP follows at most 10 distinct leaders by websocket. Beyond that, leaders share subscriptions across followers (one subscription per leader, not per follower), then fall back to polling, or the engine shards across IPs |
 | Address-based | 1 request per 1 USDC traded since inception, 10,000 initial buffer; when exceeded, one request every 10 s | A new, small follower account has a limited order budget; the engine counts it and warns |
 
+Status (2026-10-13): hl-copy-engine paces every REST call of a process through one token
+bucket (1200 per minute); the 150-followers estimate is pinned in its tests. The
+address-based limit is not counted yet.
+
 ## Failure modes
 
 | Failure | Detection | Response |
@@ -365,6 +393,12 @@ From [rate limits and user limits](https://hyperliquid.gitbook.io/hyperliquid-do
 | Agent expired or deregistered | Reject naming the agent, or `userRole` check | Pause the follower, ask the user to re-approve |
 | Engine restart | Journal | Replay the journal, then resync from `clearinghouseState` before sending anything |
 | Leader trades faster than the follower can follow | Lag metric (leader fill to follower order) | Position-copying collapses intermediate changes; only the latest target matters |
+
+Status (2026-10-13): hl-copy-engine implements the margin, disconnect (a `Resync` from
+`User_feed` triggers a resync), agent, restart and lag rows; a transport failure while
+sending an order also triggers an immediate resync, since the order may have gone through.
+Liquidation flags, rate-limit back-off of the resync interval and the behind-for-N-cycles
+alert are not implemented.
 
 ## Safety
 
