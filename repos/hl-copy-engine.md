@@ -23,7 +23,7 @@ and serves `/metrics` and `/status`. Refuses mainnet URLs (hl-sim and testnet on
 | `Leader_hub` | One `Hl_client.User_feed` websocket with one `userFills` subscription per leader, fanned out to its followers; leaders past `max_ws_users` (10) polled with `clearinghouseState` |
 | `Rate_limit` | Token bucket for the 1200 weight per minute REST budget, shared by every call of the engine |
 | `Follower` | The actor: `meta` specs, journal replay on restart, resync of both accounts (`clearinghouseState`, `allMids`) before trading and every 30 s, IOC execution through `Client.trading_with_agent` (or a signing hook), order responses as fills and rejects, one sequencer per follow |
-| `Engine` | Follow files (`Hl_copy_core.Follower_config` sexps) rescanned every second: start, reconfigure in place, stop; HTTP `/metrics` (Prometheus), `/status` (JSON), `/healthz` |
+| `Engine` | Follow files (`Hl_copy_core.Follower_config` sexps) rescanned every second: start, reconfigure in place, stop; each scan pauses a follower whose agent was revoked and restarts one whose agent was rotated; HTTP `/metrics` (Prometheus), `/status` (JSON: per follower `follower`, `leader`, `state`, `pnl`, `positions` with `coin`, `size`, `entry_px`, `unrealized_pnl`, `leverage`, and `last_error`, as hl-copy-api's `/me` reads it), `/healthz` |
 | `Key_source` | Opens the follower's agent from `Hl_copy_core.Key_store` (`<state-dir>/agents/<account>.key`, the API's state directory mounted read-only) under `HL_COPY_MASTER_KEY` |
 | `Metrics`, `Reject`, `Safety` | Counters and summaries (orders, fills, rejects by reason, lag, slippage, pnl, resyncs); reject classification from the exchange's error text; the mainnet guard |
 
