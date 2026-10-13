@@ -10,9 +10,9 @@ files the API writes and the engine reads.
 | | |
 | --- | --- |
 | Repository | `winterchill-trading/hl-copy-core` |
-| opam package | `hl-copy-core` |
-| Library | `hl-copy-core` (module `Hl_copy_core`) |
-| Binary | none (`bench/main.exe` benchmarks `Mirror`) |
+| opam packages | `hl-copy-core`, `hl-copy-backtest` |
+| Libraries | `hl-copy-core` (module `Hl_copy_core`), `hl-copy-backtest` (module `Hl_copy_backtest`) |
+| Binaries | `hl-copy-backtest`; `bench/main.exe` benchmarks `Mirror` |
 | Status | done |
 
 ## Key modules
@@ -48,14 +48,45 @@ other caps only limit growth.
 symbol, 1.3 us with 20, 7.3 us with 100 when the plan is empty; placing an order adds
 about 300 ns and 102 words. `test/test_mirror_alloc.ml` pins the words.
 
+## Backtest (`hl-copy-backtest`)
+
+A second package in the repository (`backtest/`) estimates what a follower would have
+earned copying a leader from an [hl-leaderboard](hl-leaderboard.md) collection directory
+alone. It replays the leader's position changes through `Mirror` and fills each IOC order
+at the leader's price moved by a configurable slippage, inside the order's IOC limit,
+paying a 4.5 bp taker fee by default. Model, outputs and a mainnet run are in
+[design/copytrading.md](../design/copytrading.md#backtest) and the repository README.
+
+| Module | Purpose |
+| --- | --- |
+| `Leader_change` | Fills of one coin, side and millisecond grouped into one position change at their average price |
+| `Input` | One leader's perpetual fills (synthetic opens included) and equity curve, as `hl-leaderboard rank` scores them |
+| `Specs` | Lot and tick per coin from a saved `meta` response, else inferred from fill sizes |
+| `Collection` | Loads every leader, or one, from a collection directory |
+| `Backtest` | `Params.t` (follow, starting equity, slippage, fee, specs), `run`, `Result.t` (equity curve, pnl, drawdown, fees, turnover, orders, skipped changes by reason, the leader's marked pnl and curve over the same window) |
+| `Ranking` | Every leader by follower pnl under one configuration |
+| `Report` | `backtest.json`, `results.parquet`, `curves.parquet` and the text summary |
+
+`hl-copy-backtest -dir DIR (-leader ADDRESS | -leaders N) [-config FOLLOW] [-equity USD]
+[-slippage-bps F] [-fee-bps F] [-meta FILE] [-out DIR]`.
+
 ## Dependencies
 
-- Depends on: `fixed-decimal`, `exchange-core`, `hl-protocol`, `market-data`;
-  `cryptokit` and `core_unix` for `Key_store`.
+- `hl-copy-core` depends on: `fixed-decimal`, `exchange-core`, `hl-protocol`,
+  `market-data`; `cryptokit` and `core_unix` for `Key_store`.
+- `hl-copy-backtest` depends on: `hl-copy-core`, `hl-leaderboard`, `parquet`,
+  `market-data`, `hl-protocol`, `fixed-decimal`.
 - Used by (in progress): `hl-copy-engine`, `hl-leaderboard`, `hl-copy-api`.
 
 ## CI pin order
 
-`fixed-decimal`, `exchange-core`, `parquet`, `hl-protocol`, `market-data`.
+Two jobs, because `hl-copy-backtest` needs `hl-leaderboard`, which needs `hl-copy-core`
+(the same layout as exchange-core's engine job):
+
+- `build` (`hl-copy-core` only): `fixed-decimal`, `exchange-core`, `parquet`,
+  `hl-protocol`, `market-data`.
+- `backtest`: `fixed-decimal`, `exchange-core`, `parquet`, `market-data`,
+  `hl-protocol`, `venue-net`, `hl-client`, `hl-copy-core`, `hl-leaderboard`; then
+  `hl-copy-core` is re-pinned to the checkout and only `hl-copy-backtest` is built.
 
 See [design/copytrading.md](../design/copytrading.md) for the platform design.
