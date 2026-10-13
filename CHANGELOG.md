@@ -10,6 +10,11 @@ belong here.
 
 ## 2026-10-13
 
+- `hl-protocol`, `hl-client`, `hl-copy-engine`: `Max_builder_fee` and `User_fill.Detailed`
+  (`builderFee`, `liquidation`) in hl-protocol, `Info.max_builder_fee` and
+  `Info.user_fills_detailed` in hl-client, and `run -builder -builder-fee-tenths-bp` in the
+  engine, sending the builder field only for followers that approved the fee. See
+  [design/copytrading.md](design/copytrading.md).
 - `hl-copy-api`: `scripts/e2e-stack.sh` and the `e2e-stack` CI job run the platform end
   to end on `hl-sim` with `hl-leaderboard`, `hl-copy-engine` and hl-copy-web's live smoke
   test; `/ws` frames are `Api_types.Ws_push` from `hl-copy-api-types`; `tools/dev_wallet`
