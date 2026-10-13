@@ -25,8 +25,10 @@ Self-trade prevention is a per-book policy, `Order_book.Stp.t`, given to
 `create ?stp`: `Cancel_taker` (default; matching stops and the taker's remainder is
 cancelled), `Expire_maker` (the own resting order is removed and the taker keeps
 matching, as on Hyperliquid) or `Cancel_both`. Removed own orders are returned in
-`Result.expired_makers`, in the order reached. The matching loop uses OxCaml stack allocation (`local_`, `exclave_`,
-`global_` fields) for per-order temporaries.
+`Result.expired_makers`, in the order reached. `exchange-core` takes the policy in
+`Exchange.create ?self_trade`; `hl-sim` uses `Expire_maker`. The matching loop uses
+OxCaml stack allocation (`local_`, `exclave_`, `global_` fields) for per-order
+temporaries.
 
 The best level of each side is cached, so `best_bid`, `best_ask` and `mid` do not go
 through `Map.max_elt`; `best_bid_or_null`, `best_ask_or_null` and `mid_or_null` return
