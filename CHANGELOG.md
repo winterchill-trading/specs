@@ -10,6 +10,12 @@ belong here.
 
 ## 2026-10-13
 
+- `hl-copy-core`: second package `hl-copy-backtest` (library and binary) replaying an
+  `hl-leaderboard` collection through `Mirror` with slipped IOC fills and taker fees;
+  `backtest.json`, `results.parquet`, `curves.parquet`, and `-leaders N` ranks leaders
+  by follower pnl. New edges `hl-copy-backtest` to `hl-leaderboard` and `parquet`; CI
+  builds the two packages in separate jobs. See [repos/hl-copy-core.md](repos/hl-copy-core.md)
+  and [design/copytrading.md](design/copytrading.md#backtest).
 - `exchange-core`, `hl-sim`: self-trade policy per exchange (`Exchange.create
   ?self_trade`, an `Order_book.Stp.t`) with a `Self_trade` cancel event per expired own
   order; engine journals with a non-default policy start with `EXJRNL02` and a
