@@ -56,14 +56,28 @@ marks, id counters, a clock and an event log.
   taker. Market orders are IOC orders `slippage_bps` (default 5%)
   through the best opposite price.
 - **Margin**: cross margin, one-way positions. Initial margin `notional / leverage`
-  (resting orders reserve theirs); maintenance `notional / (2 * max_leverage)`.
-- **Mark price**: the last `set_mark`, else the last trade, else the book mid.
-- **Liquidation**: on `set_mark` and `step`, accounts below maintenance are closed at
-  mark and their orders cancelled; no backstop.
+  (resting orders reserve theirs); maintenance `notional / (2 * max_leverage)`, or by
+  margin tier when the instrument has tiers (Hyperliquid simulator), where `set_leverage`
+  also respects the tier of the current position.
+- **Mark price**: the last `set_mark`, else the last trade, else the book mid. An oracle
+  price (`set_oracle`, Hyperliquid simulator every 3 s) sets the mark to Hyperliquid's
+  median of the oracle plus the 150 s average premium of the mid, the median of best
+  bid, best ask and last trade, and its 30 s average.
+- **Liquidation**: on `set_mark`, `set_oracle` and `step`, accounts below maintenance are
+  closed at mark and their orders cancelled, with no backstop; or, with
+  `create ?book_liquidation` (Hyperliquid simulator), their orders are cancelled and
+  reduce-only market orders go to the book (20% slices above 100,000 USDC), and below two
+  thirds of maintenance a liquidator account takes positions and margin over.
 - **Funding**: charged at each funding boundary crossed by `step`, at a configured
-  per-instrument rate (`set_funding_rate`), not a premium index.
+  per-instrument rate (`set_funding_rate`), or for a symbol with an oracle price from the
+  premium of impact prices over the oracle sampled every 5 s, paid on oracle notional.
+- **Trigger orders**: `place_trigger` keeps take-profit and stop-loss orders off the book
+  until the mark reaches their trigger price, then places them under their own id.
 - **Events**: `drain_events` returns order accepted/rejected/filled/cancelled, fills,
-  liquidations and funding, which the adapters turn into websocket pushes.
+  liquidations and funding, which the adapters turn into websocket pushes; trigger
+  orders and book liquidations have logs of their own (`drain_trigger_events`,
+  `drain_liquidation_events`), ordered against it by sequence number, so adapters that
+  match every `Event.t` constructor are unaffected.
 - **Market simulation**: `Market_sim.tick` advances a seeded geometric random walk per
   instrument, sets the mark to it, and lets noise traders (accounts `0x` + 32 `f` +
   index, $10M each) post GTC orders up to 25 bps away, cancel old ones and send small
