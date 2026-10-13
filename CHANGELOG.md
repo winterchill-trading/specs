@@ -101,6 +101,10 @@ belong here.
   GraphQL API and a Grid banking API, with typed resources, webhook verification for both,
   and a host-name-checked TLS config; no org package dependency. See
   [repos/lightspark-client.md](repos/lightspark-client.md).
+- `money`, `ledger`, `kyc-core`, `payments-core`, `card-core`, `risk-rules`,
+  `banking-provider`, `striga-client`, `striga-provider`, `neobank-api`, `neobank-web`,
+  `infra`: neobank demo design, repository plan and dependency graph (planned). See
+  [design/neobank.md](design/neobank.md).
 
 ## 2026-10-12
 
