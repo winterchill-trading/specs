@@ -69,12 +69,13 @@ Rules enforced by the journal:
 
 - The journal is read whole into memory on open; opening from a snapshot avoids the full
   read only when one exists.
-- macOS `fsync` does not flush the drive cache, so the journal's durability on macOS is weaker than on Linux.
+- macOS `fsync` does not flush the drive cache, so durability on macOS is weaker than on
+  Linux.
 - Hold expiry needs a timer or a day close to run; nothing expires holds on its own.
 - Refused idempotency keys are kept forever, with no retention window.
 - Errors raised before an entry exists are not recorded as refusals, so a retry of such a
   request is processed again.
 - Matching against provider statements (breaks, ageing) is not built; `Clearing.open_items`
   lists open items only.
-- The journal chain head is not published, so truncation at the end is not detectable from
+- The journal chain head is not published, so truncation at the end cannot be detected from
   outside the journal.
