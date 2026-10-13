@@ -4,7 +4,8 @@ Pure copy-trading logic for the [copy-trading platform](../design/copytrading.md
 scaling, risk caps, rounding to Hyperliquid lots and ticks, the mirroring state machine
 that turns leader and follower state into order plans, leader scoring and per-leader pnl
 attribution. No network, no clock and no mutable state: every function maps a state and
-an event to a new state and a plan.
+an event to a new state and a plan. The one exception is `Key_store`, the agent key
+files the API writes and the engine reads.
 
 | | |
 | --- | --- |
@@ -26,6 +27,7 @@ an event to a new state and a plan.
 | `Score` | Leader score from fills and an equity curve: pnl, return, maximum drawdown, win rate and average hold over round trips, trade count, consistency across windows |
 | `Pnl` | Follower pnl per leader with average-entry books; `on_fill ~leader`, `summary ~marks` |
 | `Follower_config` | One follow (follower, leader, mode, caps, slippage, paused) as a sexp file, validated; `mirror_config ~specs` builds `Mirror.Config.t` |
+| `Key_store` | Agent keys at rest: `<state_dir>/agents/<account>.key` (mode 0600, sexp of agent address, name, created, valid until, ciphertext, nonce, tag), sealed under `HL_COPY_MASTER_KEY` with ChaCha20 and HMAC-SHA256 (encrypt-then-MAC; cryptokit 1.16 has no AEAD, TODO); `create ~state_dir`, `put`, `find`, `get ~account` (decrypted key as hex), `list`, `revoke` |
 | `Fill`, `Usd`, `Cloid`, `Address` | Shared fill record and binable wrappers of the `hl-protocol` and `exchange-core` types |
 
 Persisted types have a `Stable.V1` deriving `sexp` and `bin_io`, for journals and config
@@ -48,7 +50,8 @@ about 300 ns and 102 words. `test/test_mirror_alloc.ml` pins the words.
 
 ## Dependencies
 
-- Depends on: `fixed-decimal`, `exchange-core`, `hl-protocol`, `market-data`.
+- Depends on: `fixed-decimal`, `exchange-core`, `hl-protocol`, `market-data`;
+  `cryptokit` and `core_unix` for `Key_store`.
 - Used by (in progress): `hl-copy-engine`, `hl-leaderboard`, `hl-copy-api`.
 
 ## CI pin order
