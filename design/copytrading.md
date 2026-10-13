@@ -305,8 +305,9 @@ the follower retries on the next leader update or resync.
   AEAD is a TODO. The API writes follower configs as `<follower>-<leader>.sexp`, with
   `paused true` while paused, and removes the file on stop. hl-copy-engine reads the key
   store from `-state-dir` (the API's state directory, mounted read-only) when a follower
-  starts; a missing, revoked or expired agent keeps the follow from starting, and a key
-  rotated while the follower runs is picked up when it restarts.
+  starts, and checks the file on every scan of the follow files: a missing or expired
+  agent keeps the follow from starting, a revoked one (file deleted) pauses it and
+  cancels its orders, and a rotated one restarts the follower with the new key.
 - **Leaderboard data.** Raw lines plus `leaders.parquet` and `fills.parquet` written
   with [parquet](../repos/parquet.md), queryable with DuckDB like the rest of the
   [data platform](data-platform.md).
