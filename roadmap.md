@@ -387,7 +387,12 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
   end-to-end script on `hl-sim`.
 - [hl-copy-api](repos/hl-copy-api.md): wallet login, agent keys, follows.
 - [hl-copy-web](repos/hl-copy-web.md): Bonsai frontend and `Api_types`.
-- `infra`: compose and Helm entries for the copy-trading services.
+- `infra`: compose and Helm entries for the copy-trading services; the first real
+  `make up-copy` run passed on 2026-10-13 (wallet login, agent approval, follow, mirrored
+  position within seconds) after three first-run fixes.
+- `hl-copy-backtest` (done, in hl-copy-core): ranks a leaderboard collection by replaying
+  each leader's fills through `Mirror`, reports per leader.
+- `hl-sim`: `portfolio` info request (done), so the collector gets equity curves.
 - Open: verify on testnet that another address's user streams are readable and what
   the 10-unique-users websocket limit counts.
 
