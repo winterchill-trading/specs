@@ -22,6 +22,14 @@ belong here.
   new repositories for the copy-trading platform (in progress), with ADR 0007 (agent
   keys instead of custody) and ADR 0008 (Bonsai frontend). See
   [design/copytrading.md](design/copytrading.md).
+- `hl-protocol`: wire protocol additions for copy trading, `approveAgent` and
+  `approveBuilderFee` (`User_signed_action`, `User_signed_request`), the order `builder`
+  field (`Builder_fee`, `Order_action`, `Exchange_envelope`), `userFillsByTime`,
+  `userEvents` and the stats-host leaderboard. See [repos/hl-protocol.md](repos/hl-protocol.md).
+- `hl-client`: EIP-712 user-signed approvals, `Client.trading_with_agent`, builder-fee
+  orders, `User_feed` (shared leader fill feeds), `Leaderboard` and `userFillsByTime`.
+  See [repos/hl-client.md](repos/hl-client.md) and
+  [design/copytrading.md](design/copytrading.md).
 
 ## 2026-10-12
 
