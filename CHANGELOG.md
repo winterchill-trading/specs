@@ -43,9 +43,9 @@ belong here.
   [repos/hl-sim.md](repos/hl-sim.md).
 - `hl-copy-api`: the API server and binary (wallet login, agent key offers and
   approvals, builder fee, follows written as engine configs, leaders proxy, `/me`,
-  `/ws`, CORS, rate limits, `/metrics`) and the `hl-copy-keystore` package with the
-  sealed agent key file format the engine reads; depends on `hl-copy-api-types` from
-  `hl-copy-web`. See [repos/hl-copy-api.md](repos/hl-copy-api.md) and
+  `/ws`, CORS, rate limits, `/metrics`); depends on `hl-copy-api-types` from
+  `hl-copy-web`. `hl-copy-core`: new `Key_store`, the sealed agent key file format the
+  API writes and the engine reads (adds `cryptokit`). See [repos/hl-copy-api.md](repos/hl-copy-api.md) and
   [design/copytrading.md](design/copytrading.md).
 
 ## 2026-10-12
