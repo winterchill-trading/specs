@@ -156,8 +156,8 @@ to testnet yet. `Info.max_builder_fee` reads `maxBuilderFee`; hl-copy-engine run
 resyncs, sends `builder {b, f}` only while approved (counting skipped orders in
 `hl_copy_builder_fee_skipped_total`, with a `builder.note` in `/status`), and drops the
 field as soon as an order is refused over the fee; on hl-sim the builder is credited 1 bp
-of the notional at `N = 10`, and an `approveBuilderFee` of `0%` revokes. hl-copy-api serves the flow above
-against hl-sim with signature checks on: `/agent/new` offers the named agent
+of the notional at `N = 10`, and an `approveBuilderFee` of `0%` revokes. hl-copy-api
+serves the flow above against hl-sim with signature checks on: `/agent/new` offers the named agent
 `hl-copy valid_until <ms>` (179 days) with its typed data, `/agent/approved` and
 `/builder-fee` accept only the pending action (the browser may change
 `signatureChainId`) signed by the session's wallet, and an unapproved offer is reused for
