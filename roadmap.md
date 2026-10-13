@@ -547,8 +547,9 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
     an `on_message` callback (0 words); see the README performance table.
 13. clients and feeds: consume `Ws_client` through `on_message` or `Pipe.iter'` instead of
     reading `messages` one frame at a time (about 13 words per frame each).
-14. `market-data` `lib/parquet_sink.ml` and day-close: write through `Parquet.Writer.Direct`
-    with `add_float_u` for prices and sizes, and pin 0 words per row once warm.
+14. `market-data` `lib/parquet_sink.ml` and day-close (done): `Parquet_schemas.Direct` writers,
+    byte-identical output; the chunked event-log reader took day close from 1.07 M to
+    2.9 M rows/s (334 to 27 words per row).
 
 [market-recorder-fd4b1c2]: https://github.com/winterchill-trading/market-recorder/commit/fd4b1c2
 [market-recorder-e01f00e]: https://github.com/winterchill-trading/market-recorder/commit/e01f00e
