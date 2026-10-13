@@ -198,6 +198,14 @@ calls yet. hl-sim serves `userFillsByTime` and the leaderboard (`POST /info
 {"type": "leaderboard"}` and `GET /leaderboard`, `/Mainnet/leaderboard`,
 `/Testnet/leaderboard`) computed from its accounts, and `-leaders N` runs named leader
 accounts (`trend-0`, `mean-reversion-1`, `random-2`, ...) to rank and copy.
+`hl-leaderboard` implements steps 1 to 4 except the `userRole` filter: candidates are the
+top N by pnl per window above a minimum account value; fills are walked forward under a
+1200-weight-per-minute token bucket; `portfolio` is decoded locally and its `month`
+window (account value at the start plus cumulative pnl, so transfers are not gains) is
+the equity curve given to `Hl_copy_core.Score`; leaders whose fills do not reach back to
+the curve's start are flagged `truncated`. A mainnet pull on 2026-10-13 (34 candidates,
+155k fills, 10.4k weight, 10.6 minutes) found 17 truncated histories, and only 5
+candidates with 5 or more closed round trips: the largest accounts rarely go flat.
 
 ## Mirroring model
 
