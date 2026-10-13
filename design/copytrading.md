@@ -47,7 +47,7 @@ action involved.
    wallets display it readably.
 2. The browser asks the wallet for `personal_sign` over that message (EIP-191,
    `"\x19Ethereum Signed Message:\n" ++ len ++ message`, then Keccak-256).
-3. `POST /auth/verify {address, signature}`: the API recovers the signer with secp256k1
+3. `POST /auth/verify {address, nonce, signature}`: the API recovers the signer with secp256k1
    public key recovery (the same Keccak and recovery code `hl-client` uses for its
    signer check), compares it to `address`, burns the nonce, and issues a session token:
    address, issue time and expiry, HMAC-signed with a server key. Every later request
@@ -55,6 +55,10 @@ action involved.
 
 Planned: the challenge nonces live in memory with a TTL, so a restart forces a new
 challenge, which is harmless.
+
+Status (2026-10-13): [hl-copy-web](../repos/hl-copy-web.md) implements the browser side
+(`eth_requestAccounts`, `personal_sign` of the hex-encoded message, `/auth/verify`) and
+defines the bodies in `Api_types.Auth`; the server side is in progress.
 
 ## Agent approval
 
@@ -134,6 +138,12 @@ hl-client (`Signing.sign_user_action` and `recover_user_action`,
 `place_orders ?builder`, and `Client.trading_with_agent` for orders signed by the agent).
 The approval signatures match `eth_account` on the SDK's payload; nothing has been sent
 to testnet yet. `maxBuilderFee` has no client call yet.
+In the browser, hl-copy-web builds the same typed data from `Api_types.Approve_agent` and
+`Approve_builder_fee`, shows it in full before signing, replaces `signatureChainId` with
+the wallet's `eth_chainId` (wallets refuse typed data for another chain), and posts the
+action as signed to `/agent/approved` and `/builder-fee`. Following asks for a new
+approval only when `GET /me` reports the agent missing, unapproved or past its
+`valid_until`.
 
 ## Leader discovery and scoring
 
@@ -282,7 +292,8 @@ landed `dune-project` edges): `hl-copy-core` on `fixed-decimal`, `hl-protocol`,
 `market-data`; `hl-leaderboard` on `hl-client`, `market-data`, `parquet`,
 `hl-copy-core`; `hl-copy-engine` on `hl-copy-core`, `hl-client`, `market-data`,
 `venue-net`; `hl-copy-api` on `hl-copy-core`, `hl-client`, `hl-copy-web` (for
-`Api_types`), `hl-leaderboard`; `hl-copy-web` on `hl-protocol` and `bonsai_web`. All
+`Api_types`), `hl-leaderboard`; `hl-copy-web` on `bonsai_web` and no org package (`Api_types` is
+its own opam package, `hl-copy-api-types`, so the API does not link the web stack). All
 three services run against [hl-sim](../repos/hl-sim.md), which gains `approveAgent`,
 `approveBuilderFee`, user subscriptions for any address, a `leaderboard` info request
 and `-leaders N` simulated leader accounts.
