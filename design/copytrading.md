@@ -10,6 +10,14 @@ built, together with copy-trading support in [hl-protocol](../repos/hl-protocol.
 the design; the repository pages say what has landed. [hl-copy-core](../repos/hl-copy-core.md)
 is done: the scaling, caps, rounding, mirroring, scoring and pnl below are in code.
 
+Status: end to end on hl-sim (2026-10-13). hl-copy-api's `scripts/e2e-stack.sh` runs
+hl-sim, hl-leaderboard, hl-copy-api and hl-copy-engine together: a wallet logs in,
+approves an agent and a builder fee, follows a simulated leader with `Equity_ratio`, and
+its position in `/me` ends within one lot of the scaled leader position; pause stops
+orders, stop removes the follower config, `/ws` pushes follow and fill events, the
+journal replays identically, and hl-copy-web's live smoke test passes against the real
+API. Nothing has been sent to testnet yet.
+
 A user logs in with a browser wallet, approves an agent key the platform generated for
 them (and optionally a builder fee), picks a leader trader from a ranked list, and the
 platform mirrors the leader's position changes into the user's Hyperliquid account,
