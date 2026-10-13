@@ -208,7 +208,20 @@ Bugs found in waves 2 and 3:
 - `infra`: the switch cache key missed the runner image, so an Ubuntu release change
   could restore an incompatible switch [`b97643b`][infra-b97643b].
 
+### Wave 4
+
+- Hardening: `mm-core` hot parameter updates (`Strategy.update_params`, `Live.connect_and_start`
+  returns the loop handle) and a rolling action-rate window with grace and cooldown;
+  `market-recorder` parse-error and reconnect counters on `/metrics` with Prometheus alert
+  rules; `market-maker` reloads through `Live.update_params`; every repository's CI uses the
+  `ox-setup` action (warm runs 1.5 to 2.5 minutes). See
+  [design/deployment.md](design/deployment.md#ci).
+
 ### Wave 5
+
+- Replay: `market-replay` HTTP raw replay and native websocket replay for Hyperliquid,
+  Binance and Bybit, paced by `-speed`; `market-data` rebuild gains the L2 snapshot index.
+  See [repos/market-replay.md](repos/market-replay.md).
 
 - **Hyperliquid trading** in `market-maker`: `-venue hyperliquid` signs through
   `Hl_venue.Trading` when `HL_PRIVATE_KEY` is set and stays unsigned otherwise; signing
@@ -217,6 +230,39 @@ Bugs found in waves 2 and 3:
   [`6b767a8`][market-maker-6b767a8]; `SIGNED=1 scripts/e2e.sh hl` checks the simulator's
   journal [`1ae81da`][market-maker-1ae81da]. No order has been placed on testnet with a
   funded account yet. [Page](repos/market-maker.md).
+
+### Wave 6
+
+- Replication, gaps and hardening. `market-recorder`: `merge` identifies frames by venue
+  sequence ([`fd4b1c2`][market-recorder-fd4b1c2]), lists exact gaps
+  ([`e01f00e`][market-recorder-e01f00e]), reports suspected gaps from silence
+  ([`d5b6f56`][market-recorder-d5b6f56]), takes `-clock-error`
+  ([`d6f5653`][market-recorder-d6f5653]), matches across midnight
+  ([`5e2681b`][market-recorder-5e2681b]); collector ids honoured by `merge` and
+  `rebuild-norm` ([`dfc1ac9`][market-recorder-dfc1ac9],
+  [`b31caf8`][market-recorder-b31caf8], [`c7f2317`][market-recorder-c7f2317]); client gaps
+  write disconnect lines and `gaps_total` ([`6eb774e`][market-recorder-6eb774e]); clock
+  error, exchange lag, long cycle and `max_fds` gauges
+  ([`af7e618`][market-recorder-af7e618], [`a119187`][market-recorder-a119187],
+  [`788836b`][market-recorder-788836b], [`d62cff1`][market-recorder-d62cff1]); subscribe
+  and stalled event log tests ([`8312421`][market-recorder-8312421],
+  [`9539251`][market-recorder-9539251]); `check-config` venue index
+  ([`9e96f3e`][market-recorder-9e96f3e]); `e2e-sims.sh` in CI
+  ([`968c1a4`][market-recorder-968c1a4]); `MEMTRACE` ([`f15e611`][market-recorder-f15e611]).
+  `market-replay`: websocket replay for OKX, Coinbase, Kraken, Deribit and Bitget, tested
+  with each feed's `Live_feed`; speed 0 Binance replays hold at a recorded depth snapshot's
+  join point. `market-data`: `Funding.Stable.V2` with an optional `exch_ts`
+  ([`64381d1`][market-data-64381d1], [`a61ead7`][market-data-a61ead7]), the daily
+  `instruments` table ([`3c978c7`][market-data-3c978c7]), 64k row groups
+  ([`cc0fd95`][market-data-cc0fd95]), candles checked against DuckDB
+  ([`1431404`][market-data-1431404]), a pyarrow type test in CI
+  ([`194c72b`][market-data-194c72b]), `scripts/daycheck-diff.sh`
+  ([`5c654e9`][market-data-5c654e9], [`cda1a10`][market-data-cda1a10]) and
+  `queries/lead_lag.sql` ([`3f4cef2`][market-data-3f4cef2]): Binance leads Bybit, OKX and
+  Bitget by 17 to 33 ms on 85 s of mainnet BTC perpetuals. See
+  [repos/market-recorder.md](repos/market-recorder.md),
+  [repos/market-replay.md](repos/market-replay.md) and
+  [repos/market-data.md](repos/market-data.md).
 
 [market-data-a7fdae0]: https://github.com/winterchill-trading/market-data/commit/a7fdae0
 [hl-client-e91dc3e]: https://github.com/winterchill-trading/hl-client/commit/e91dc3e
@@ -320,58 +366,6 @@ Bugs found in waves 2 and 3:
 [market-maker-1ae81da]: https://github.com/winterchill-trading/market-maker/commit/1ae81da
 
 ## In progress
-
-- Wave 5: `market-replay` (done): HTTP raw replay and native websocket replay for
-  Hyperliquid, Binance and Bybit, paced by `-speed`; see
-  [repos/market-replay.md](repos/market-replay.md). `market-data` rebuild gains the L2 snapshot index.
-- Wave 6: `market-replay` (done): websocket replay for OKX, Coinbase, Kraken, Deribit
-  and Bitget, tested with each feed's own `Live_feed`; speed 0 Binance replays hold at a
-  recorded depth snapshot's join point so binance-client reports deltas. See
-  [repos/market-replay.md](repos/market-replay.md).
-- Wave 6: `market-data` (done): `Funding.Stable.V2` with an optional `exch_ts`, written
-  to event logs as an appended `Funding_v2` constructor when `exch_ts = recv_ts`
-  (digest `cdf98830...`, fixture from before) [`64381d1`][market-data-64381d1]
-  [`a61ead7`][market-data-a61ead7]; a daily `instruments` table, the point-in-time
-  universe [`3c978c7`][market-data-3c978c7]; 64k-row row groups (`-row-group`), a
-  five-minute range query 12 ms to 2 ms [`cc0fd95`][market-data-cc0fd95]; candles
-  checked against DuckDB row for row [`1431404`][market-data-1431404]; a pyarrow type
-  test in CI [`194c72b`][market-data-194c72b]; `scripts/daycheck-diff.sh` and a cram
-  test [`5c654e9`][market-data-5c654e9] [`cda1a10`][market-data-cda1a10];
-  `queries/lead_lag.sql` [`3f4cef2`][market-data-3f4cef2]: on 85 s of mainnet BTC
-  perpetuals Binance leads Bybit, OKX and Bitget by 17 to 33 ms. See
-  [repos/market-data.md](repos/market-data.md).
-- Wave 6: `market-recorder` (done): `merge` identifies frames by venue sequence
-  (Binance `u`/`a`, Bybit book `u`) [`fd4b1c2`][market-recorder-fd4b1c2], lists exact
-  sequence gaps per series [`e01f00e`][market-recorder-e01f00e], reports suspected gaps
-  from silence [`d5b6f56`][market-recorder-d5b6f56], takes a `-clock-error` bound
-  [`d6f5653`][market-recorder-d6f5653], matches across midnight
-  [`5e2681b`][market-recorder-5e2681b]; collector ids in raw file names honoured by
-  `merge` and `rebuild-norm` [`dfc1ac9`][market-recorder-dfc1ac9]
-  [`b31caf8`][market-recorder-b31caf8] [`c7f2317`][market-recorder-c7f2317]; client gaps
-  write disconnect lines and `gaps_total` [`6eb774e`][market-recorder-6eb774e]; clock
-  error, exchange lag, long cycle and `max_fds` gauges
-  [`af7e618`][market-recorder-af7e618] [`a119187`][market-recorder-a119187]
-  [`788836b`][market-recorder-788836b] [`d62cff1`][market-recorder-d62cff1]; subscribe
-  and stalled event log tests [`8312421`][market-recorder-8312421]
-  [`9539251`][market-recorder-9539251]; `check-config` venue index
-  [`9e96f3e`][market-recorder-9e96f3e]; `e2e-sims.sh` in CI
-  [`968c1a4`][market-recorder-968c1a4]; `MEMTRACE` starts memtrace
-  [`f15e611`][market-recorder-f15e611]. See
-  [repos/market-recorder.md](repos/market-recorder.md).
-
-- `specs`: this repository.
-- Wave 4 from research:
-  - `mm-core` (done): `Strategy.update_params`, `Live.connect_and_start` returning the
-    loop handle with `update_params`; rolling action-rate window with
-    `action_rate_grace_ms` and `action_rate_cooldown_ms`. `market-maker`'s reload path
-    still restarts the loop; moving it to `Live.update_params` is next.
-  - `market-recorder` (done): per-venue parse errors and reconnects on `/metrics` from
-    the clients' `stats`, with Prometheus alert rules under `deploy/prometheus/`.
-  - CI cache rollout (done): every repository's workflow uses `infra`'s `ox-setup`
-    action; warm runs take 1.5 to 2.5 minutes, cold 9 to 21
-    (see [design/deployment.md](design/deployment.md#ci)).
-  - `market-maker` (done): reload through `Live.update_params`; `-action-rate-grace-ms`
-    and `-action-rate-cooldown-ms` flags; fault run at the default action cap.
 
 ### Copy-trading platform
 
