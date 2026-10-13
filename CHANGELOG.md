@@ -93,6 +93,10 @@ belong here.
   API writes and the engine reads (adds `cryptokit`).
   See [repos/hl-copy-api.md](repos/hl-copy-api.md) and
   [design/copytrading.md](design/copytrading.md).
+- `griffin-client` (new): Async client and CLI (`griffin`) for a UK banking API, with
+  typed resources, hypermedia navigation, RFC 9421 request signing, webhook verification
+  and a host-name-checked TLS config; no org package dependency. See
+  [repos/griffin-client.md](repos/griffin-client.md).
 
 ## 2026-10-12
 
