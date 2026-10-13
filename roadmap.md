@@ -405,8 +405,9 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
   live, GraphQL covered by fixtures. Open: GraphQL side verified with a Lightning token.
 - `venue-net` TLS host-name verification (in progress).
 - Neobank demo (in progress; design in [design/neobank.md](design/neobank.md)):
-  `money`, `ledger`, `risk-rules` and `striga-client` are done (2026-10-14). In progress:
-  `kyc-core`, `payments-core`, `card-core`, `banking-provider`, `risk-models` and `pg-async`.
+  `money`, `ledger`, `kyc-core`, `payments-core`, `card-core`, `risk-rules` and
+  `striga-client` are done (2026-10-14). In progress: `banking-provider`, `risk-models` and
+  `pg-async`.
   Then `striga-provider`, `neobank-api`, `neobank-web`, the infra compose profile `neobank`
   and an end-to-end run on the fake provider and the sandbox.
 
