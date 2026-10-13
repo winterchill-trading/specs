@@ -62,7 +62,8 @@ sub-account skipped).
 
 - Depends on: `hl-client`, `hl-protocol`, `market-data`, `parquet`, `venue-net`,
   `hl-copy-core`.
-- Used by (planned): `hl-copy-api`.
+- Used by: `hl-copy-backtest` (in [hl-copy-core](hl-copy-core.md)), which reads
+  collection directories through `Dataset` and `Rank`; planned: `hl-copy-api`.
 
 ## CI pin order
 
