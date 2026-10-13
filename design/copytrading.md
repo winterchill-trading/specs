@@ -7,7 +7,8 @@ Status: in progress. The five repositories ([hl-copy-core](../repos/hl-copy-core
 [hl-copy-api](../repos/hl-copy-api.md), [hl-copy-web](../repos/hl-copy-web.md)) are being
 built, together with copy-trading support in [hl-protocol](../repos/hl-protocol.md),
 [hl-client](../repos/hl-client.md) and [hl-sim](../repos/hl-sim.md). Everything below is
-the design; the repository pages say what has landed.
+the design; the repository pages say what has landed. [hl-copy-core](../repos/hl-copy-core.md)
+is done: the scaling, caps, rounding, mirroring, scoring and pnl below are in code.
 
 A user logs in with a browser wallet, approves an agent key the platform generated for
 them (and optionally a builder fee), picks a leader trader from a ranked list, and the
@@ -212,13 +213,17 @@ matters, so the follower never chases orders that do not fill.
   - `Fixed_notional n`: each open leader position maps to `n` USD of notional on the
     same side, whatever its size.
 - **Caps** (`Hl_copy_core.Caps`), applied after scaling, in order: symbol allowlist,
-  maximum notional per symbol, maximum account leverage, maximum daily loss (when hit,
-  targets go to zero and the follower pauses until the next UTC day or a manual
-  resume), minimum order notional. Each clamp is reported with a reason, like
-  `Mm_core`'s unquoted reasons.
+  maximum daily loss (when hit, targets go to zero and the follower stays flat until
+  `Mirror.start_day`, called at the next UTC day or on a manual resume), maximum
+  notional per symbol, maximum account leverage, minimum order notional. Apart from the
+  daily loss, caps only limit growth and never force a reduction, so mark moves alone do
+  not trade. Each clamp is reported with a reason in the plan's notes, like `Mm_core`'s
+  unquoted reasons.
 - **Rounding.** Sizes round toward zero to the instrument's `szDecimals`; prices to five
   significant figures and the tick, as `hl-mm` does.
-- **Reconciliation.** `delta = target - follower_position - pending`; a non-zero delta
+- **Reconciliation.** `delta = target - follower_position - pending`, where `pending`
+  counts the in-flight orders still moving toward the target; in-flight orders pointing
+  the other way or past it are cancelled. A non-zero delta
   becomes one IOC order at the current best price plus a slippage bound (default 20 bps)
   on the aggressive side. A partial fill leaves a smaller delta for the next cycle. A
   reject retries with exponential backoff and a cap; an insufficient-margin reject
