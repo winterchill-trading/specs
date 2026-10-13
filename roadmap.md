@@ -465,7 +465,8 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
 5. `bybit-client` `lib/live_feed.ml`, `hl-client` `lib/normalizer.ml`, `okx-feed`
    `lib/normalizer.ml`: the scanner from item 1 per venue; cache the Bybit topic string and
    one `Instrument.t` per subscription. okx-feed done: trades 431 to 25 words, l2 snapshot
-   115k to 5k, index ticker sort dropped.
+   115k to 5k, index ticker sort dropped. bybit-client done: trades 806 to 54 words, bbo
+   577 to 77, l2 1327 to 536, scanner wired through an `?intercept` hook.
 6. `infra` release images: build the hot binaries with `OCAMLPARAM='_,O3=1'` once the
    order-book and normalizer benches confirm it, and record the comparison.
 7. `mm-core` `lib/market_state.ml`, `lib/quoter.ml` (done): flat `Float_u.t` state with
