@@ -41,6 +41,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Data platform | [market-data](repos/market-data.md) | Normalized types, event logs, Parquet sink, day close, DuckDB views, replay | done |
 | Data platform | [market-recorder](repos/market-recorder.md) | Live recorder: raw minute files, event logs, uploader, metrics | done |
 | Data platform | [market-replay](repos/market-replay.md) | Replay server: raw lines over HTTP, venue-native websockets for the eight crypto venues | done |
+| Fiat rails | [griffin-client](repos/griffin-client.md) | Async client and CLI for a UK banking API: legal persons, accounts, payments, payees, Confirmation of Payee, webhooks; sandbox by default | done |
 | Tooling | [infra](repos/infra.md) | Container images, compose stack, Helm chart, deployment notes | done |
 | Tooling | [oxcaml-claude-skills](repos/oxcaml-claude-skills.md) | Agent skills and the gotchas log | done |
 | Tooling | specs | This repository | in progress |
@@ -109,6 +110,9 @@ graph LR
     market_data["market-data"]
     market_recorder["market-recorder"]
     market_replay["market-replay"]
+  end
+  subgraph fiat["Fiat rails"]
+    griffin_client["griffin-client"]
   end
   subgraph tooling["Tooling"]
     infra["infra"]
