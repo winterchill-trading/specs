@@ -9,8 +9,8 @@ the server refuses any exchange URL under `hyperliquid.xyz` and builds approvals
 | | |
 | --- | --- |
 | Repository | `winterchill-trading/hl-copy-api` |
-| opam packages | `hl-copy-api`, `hl-copy-keystore` |
-| Libraries | `hl-copy-api` (module `Hl_copy_api`), `hl-copy-keystore` (module `Hl_copy_keystore`) |
+| opam package | `hl-copy-api` |
+| Library | `hl-copy-api` (module `Hl_copy_api`) |
 | Binary | `hl-copy-api -port P -exchange-url URL [-leaderboard-url URL] [-engine-url URL] [-state-dir DIR] [-config-dir DIR] [-allow-origin O] [-builder ADDR -builder-fee N]`; master key from `HL_COPY_MASTER_KEY` |
 | Status | in progress: every route below works against `hl-sim`; nothing sent to testnet yet |
 
@@ -19,7 +19,7 @@ the server refuses any exchange URL under `hyperliquid.xyz` and builds approvals
 | Route | Behaviour |
 | --- | --- |
 | `POST /auth/challenge`, `POST /auth/verify` | Sign-In with Ethereum style message with a single-use five-minute nonce (in memory); EIP-191 recovery; stateless session token `<address>.<issued_ms>.<expires_ms>.<HMAC-SHA256>` |
-| `POST /agent/new`, `POST /agent/approved`, `POST /agent/revoke` | Fresh secp256k1 key per offer, sealed at rest; `approveAgent` for the named agent `hl-copy valid_until <ms>` (179 days) with its EIP-712 typed data; the signed action must match the pending offer (only `signatureChainId` may change) and recover to the session's wallet before it is posted |
+| `POST /agent/new`, `POST /agent/approved`, `POST /agent/revoke` | Fresh secp256k1 key per offer, in memory until approved, then sealed into `Hl_copy_core.Key_store` (revoke deletes it); `approveAgent` for the named agent `hl-copy valid_until <ms>` (179 days) with its EIP-712 typed data; the signed action must match the pending offer (only `signatureChainId` may change) and recover to the session's wallet before it is posted |
 | `POST /builder-fee` | The wallet's `approveBuilderFee` for the configured builder |
 | `POST /follows`, `GET`/`PATCH`/`DELETE /follows/:id`, `POST /follows/:id/pause`, `/resume`, `/stop` | Follow records plus `Follower_config` files the engine watches; needs an approved agent |
 | `GET /leaders`, `GET /leaders/:address` | `hl-leaderboard serve` over HTTP, reshaped into `Api_types`, cached 10 s |
@@ -34,8 +34,6 @@ preflights); requests are rate limited per client IP with token buckets (600 per
 
 | Module | Purpose |
 | --- | --- |
-| `Hl_copy_keystore.Sealed` | Encrypt-then-MAC: ChaCha20 under a key derived from a 24-byte random salt, HMAC-SHA256 tag over version, salt and associated data; cryptokit 1.16 on the switch has no AEAD (TODO: AEAD once available) |
-| `Hl_copy_keystore.Agent_keys` | `<state>/agents/<owner>.sexp`, mode 0600, every agent of a user newest first with `Pending`, `Active` or `Revoked`; `active` and `secret` are the engine's entry points |
 | `Wallet_signature` | `personal_sign` digest, 65-byte signature parsing, recovery |
 | `Session`, `Challenge` | Login tokens and challenges |
 | `Venue`, `Approvals`, `Agents` | Mainnet guard, approval offers and signer checks, submission, rotation |
@@ -49,8 +47,8 @@ preflights); requests are rate limited per client IP with token buckets (600 per
   `hl-copy-web` repository), `market-data`; `cryptokit`, `cohttp-async`,
   `async_websocket`.
 - Test-only: `hl-sim`, `hl-leaderboard`, `exchange-core-engine`, `venue-net`.
-- Used by: `hl-copy-engine` (planned: `hl-copy-keystore` to open agent keys), `infra`
-  (planned).
+- Used by: `infra` (planned). The engine shares only files with it: agent keys
+  through `Hl_copy_core.Key_store` and follower configs.
 
 ## CI pin order
 
