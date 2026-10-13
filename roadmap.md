@@ -477,7 +477,10 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
     items 4 and 9.
 11. `parquet` `lib/writer.ml`: typed column builders without a per-cell closure, compress
     without the `Buffer.contents` copy.
-12. `venue-net` `src/ws_client.ml`: deliver frames from the first pipe to the consumer.
+12. `venue-net` `src/ws_client.ml` (done): batched delivery (26 to 13 words per frame) and
+    an `on_message` callback (0 words); see the README performance table.
+13. clients and feeds: consume `Ws_client` through `on_message` or `Pipe.iter'` instead of
+    reading `messages` one frame at a time (about 13 words per frame each).
 
 [market-recorder-fd4b1c2]: https://github.com/winterchill-trading/market-recorder/commit/fd4b1c2
 [market-recorder-e01f00e]: https://github.com/winterchill-trading/market-recorder/commit/e01f00e
