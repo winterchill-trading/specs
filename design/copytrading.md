@@ -266,13 +266,15 @@ the feed. hl-sim serves `userFills`, `orderUpdates`, `webData2` (lite) and `user
   environment variable, an authenticated cipher with a random nonce per key; never
   logged, never returned by the API. The engine decrypts in memory at follower start.
 
-  Status (2026-10-13): `hl-copy-keystore` (in the hl-copy-api repository) writes
-  `<state>/agents/<owner>.sexp`, mode 0600, every agent of a user with its state
-  (`Pending`, `Active`, `Revoked`). The switch's cryptokit 1.16 has no AEAD mode, so keys
-  are sealed with ChaCha20 and HMAC-SHA256 (encrypt-then-MAC, a 24-byte random salt per
-  key, owner and agent address as associated data); moving to an AEAD is a TODO. The API
-  writes follower configs as `<follower>-<leader>.sexp`, with `paused true` while paused,
-  and removes the file on stop.
+  Status (2026-10-13): `Hl_copy_core.Key_store` holds the account's current agent in
+  `<state>/agents/<account>.key`, mode 0600 (address, name, created, valid until,
+  ciphertext, nonce, tag); hl-copy-api writes it once the exchange accepts the
+  approval (offers stay in memory until then) and deletes it on revoke, and the engine
+  reads it with the same `HL_COPY_MASTER_KEY`. The switch's cryptokit 1.16 has no AEAD
+  mode, so keys are sealed with ChaCha20 and HMAC-SHA256 (encrypt-then-MAC, a 24-byte
+  random nonce per key, account and agent address as associated data); moving to an
+  AEAD is a TODO. The API writes follower configs as `<follower>-<leader>.sexp`, with
+  `paused true` while paused, and removes the file on stop.
 - **Leaderboard data.** Raw lines plus `leaders.parquet` and `fills.parquet` written
   with [parquet](../repos/parquet.md), queryable with DuckDB like the rest of the
   [data platform](data-platform.md).
