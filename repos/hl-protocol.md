@@ -36,7 +36,8 @@ websocket API. Types and codecs only, no I/O.
   `f` in tenths of a basis point, and `maxFeeRate` percent strings), `Order_action` (an
   `order` action with the builder, keys in the SDK's order), `Exchange_envelope` (an
   `/exchange` body around raw action JSON, with `expiresAfter`), `User_fills_by_time`
-  (`userFillsByTime`), `User_event` (`userEvents` of any address, channel `user`, read
+  (`userFillsByTime`), `Max_builder_fee` (`maxBuilderFee`, the approved cap in tenths of
+  a basis point), `User_event` (`userEvents` of any address, channel `user`, read
   from `Ws_message.Unknown`) and `Leaderboard` (rows of the stats host's leaderboard).
 - `Clearinghouse_state`: `liquidationPx` is an option, `None` when absent, `null` or
   outside the fixed-point range (about 4.6e10).
@@ -72,6 +73,8 @@ builder field and `userEvents` follow the documentation's examples;
 - `Subscription` and `Ws_message` have no `activeAssetCtx` constructor; it is reached
   through `Asset_ctx` and `Unknown`. The spot shape of `activeAssetCtx` comes from a
   sample only.
-- `User_fill` drops the `builderFee` and `liquidation` fields of fills. A server that
+- `User_fill.t` drops the `builderFee` and `liquidation` fields of fills, so code that
+  builds fill records keeps compiling; `User_fill.Detailed` decodes the same object with
+  both (`Liquidation`: `liquidatedUser`, `markPx` as a number or a string, `method`). A server that
   decodes `/exchange` with `Exchange_request` accepts a builder order but loses the
   builder.
