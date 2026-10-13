@@ -396,7 +396,9 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
 - [griffin-client](repos/griffin-client.md) (done): sandbox client and `griffin` CLI, with
   the live sandbox walk passing. Open: signed requests accepted end to end, real webhook
   deliveries.
-- `lightspark-client` (in progress).
+- [lightspark-client](repos/lightspark-client.md) (done): Grid sandbox reads and writes pass
+  live, GraphQL covered by fixtures. Open: GraphQL side verified with a Lightning token.
+- `venue-net` TLS host-name verification (in progress).
 
 ## Next
 
