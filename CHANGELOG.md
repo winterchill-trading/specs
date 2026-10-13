@@ -97,6 +97,10 @@ belong here.
   typed resources, hypermedia navigation, RFC 9421 request signing, webhook verification
   and a host-name-checked TLS config; no org package dependency. See
   [repos/griffin-client.md](repos/griffin-client.md).
+- `lightspark-client` (new): Async client and CLI (`lightspark`) for a Lightning and UMA
+  GraphQL API and a Grid banking API, with typed resources, webhook verification for both,
+  and a host-name-checked TLS config; no org package dependency. See
+  [repos/lightspark-client.md](repos/lightspark-client.md).
 
 ## 2026-10-12
 
