@@ -15,6 +15,10 @@ into concrete proposals for our repositories.
 - **[OxCaml performance](oxcaml-performance/README.md)** has one verified note per language
   or compiler technique (stack allocation, unboxed types, `[@zero_alloc]`, Flambda 2 and
   more) and an audit of our hot paths against them.
+- **[Banking infrastructure](banking-infrastructure/README.md)** has one note per banking
+  topic (ledger, payment schemes, SCA, KYC and AML, fraud models, cards, treasury,
+  reliability) with the fields, codes and thresholds to adopt, and a per-repository
+  [implications](banking-infrastructure/implications.md) checklist for the neobank libraries.
 - **Insights for us** lists every actionable insight found in the notes, one line each,
   grouped by theme and ordered by value, with a link to the source note and the
   repositories it affects. Several insights from different sources often point at the
