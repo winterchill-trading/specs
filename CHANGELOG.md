@@ -38,6 +38,12 @@ belong here.
   `-mainnet-signatures`, `-taker-fee-bps`, `-maker-fee-bps` and `-l2-interval-ms` flags
   (fees now 4.5 / 1.5 bps, `l2Book` pushes 500 ms apart). See
   [repos/hl-sim.md](repos/hl-sim.md).
+- `hl-copy-api`: the API server and binary (wallet login, agent key offers and
+  approvals, builder fee, follows written as engine configs, leaders proxy, `/me`,
+  `/ws`, CORS, rate limits, `/metrics`) and the `hl-copy-keystore` package with the
+  sealed agent key file format the engine reads; depends on `hl-copy-api-types` from
+  `hl-copy-web`. See [repos/hl-copy-api.md](repos/hl-copy-api.md) and
+  [design/copytrading.md](design/copytrading.md).
 
 ## 2026-10-12
 
