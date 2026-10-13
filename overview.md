@@ -192,13 +192,14 @@ graph LR
   copy_api --> copy_core
   copy_api --> hl_client
   copy_api --> copy_web
-  copy_api --> leaderboard
+  copy_api -.-> leaderboard
 
   hl_mm -.-> hl_sim
   market_maker -.-> hl_sim
   binance_client -.-> binance_sim
   bybit_client -.-> bybit_sim
   market_replay -.-> hl_client
+  copy_api -.-> hl_sim
   market_replay -.-> binance_client
   market_replay -.-> bybit_client
   infra -.-> hl_sim
@@ -210,7 +211,9 @@ graph LR
 ```
 
 The copy-trading edges are planned from the design and are confirmed as each
-repository's `dune-project` lands; see [design/copytrading.md](design/copytrading.md).
+repository's `dune-project` lands; hl-copy-api's are landed (`hl-copy-web` stands for
+its `hl-copy-api-types` package, and the API reaches `hl-leaderboard` over HTTP, linking
+it only in tests). See [design/copytrading.md](design/copytrading.md).
 
 The `*-feed` repositories also list `exchange-core` (Coinbase, Kraken, Deribit) and
 `fixed-decimal` (Kraken) directly. `fixed-decimal`, `venue-net` and `parquet` depend on no
