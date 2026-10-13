@@ -15,7 +15,7 @@ CI workflow and README at the time of writing.
 | --- | --- |
 | [overview.md](overview.md) | The ecosystem on one page: layers, dependency graph, runtime data flow |
 | [repos/](repos/) | One page per repository: purpose, libraries and binaries, key modules, dependencies, CI pin order, status, known gaps |
-| [design/](design/) | Cross-repository designs: data platform, example queries, market making, simulators, price anchor, cloud sinks and replication, deployment |
+| [design/](design/) | Cross-repository designs: data platform, example queries, market making, simulators, price anchor, cloud sinks and replication, deployment, copy trading |
 | [adr/](adr/) | Architecture decision records, numbered |
 | [postmortems/](postmortems/) | Blameless incident write-ups, from [TEMPLATE.md](postmortems/TEMPLATE.md) |
 | [CHANGELOG.md](CHANGELOG.md) | One line per architecture change, by day |
