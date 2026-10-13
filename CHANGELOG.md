@@ -10,6 +10,12 @@ belong here.
 
 ## 2026-10-13
 
+- `hl-copy-engine`: the engine library and binary (`run`, `approve-agent`, `replay`):
+  per-follow Bin_prot journal (`<journal>/<follower>-<leader>/<date>.journal`), shared
+  leader subscriptions with `clearinghouseState` polling past ten leaders, agent keys from
+  `Hl_copy_core.Key_store` under `-state-dir`, `/metrics` and `/status`; depends on
+  `hl-copy-core`, `hl-client`, `market-data`, tests on `hl-sim`. See
+  [repos/hl-copy-engine.md](repos/hl-copy-engine.md).
 - `hl-leaderboard`: `collect`, `rank` and `serve` (raw `<recv_ts> <body>` logs,
   `leaders.parquet`, `fills.parquet`, `/leaders` JSON), scored with `hl-copy-core`'s
   `Score` on the `portfolio` month curve; depends on `parquet` directly. See
