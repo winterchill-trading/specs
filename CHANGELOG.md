@@ -10,6 +10,10 @@ belong here.
 
 ## 2026-10-13
 
+- `hl-leaderboard`: `collect`, `rank` and `serve` (raw `<recv_ts> <body>` logs,
+  `leaders.parquet`, `fills.parquet`, `/leaders` JSON), scored with `hl-copy-core`'s
+  `Score` on the `portfolio` month curve; depends on `parquet` directly. See
+  [repos/hl-leaderboard.md](repos/hl-leaderboard.md).
 - `hl-copy-core`: library done (`Scale`, `Caps`, `Rounding`, `Plan`, `Mirror`, `Score`,
   `Pnl`, `Follower_config`), depending on `fixed-decimal`, `exchange-core`,
   `hl-protocol` and `market-data`. See [repos/hl-copy-core.md](repos/hl-copy-core.md).
