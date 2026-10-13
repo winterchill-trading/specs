@@ -29,9 +29,9 @@ except reading a policy file, and fails closed.
 | `Model` | `Model.S` interface; `Score`, a `logistic` model and a `constant` model |
 | `Limits` | Per-currency caps |
 | `Rules` | The built-in rules; `Thresholds` for their numbers; `Tra` for the PSD2 transaction risk analysis bands |
-| `Sca_outcome` | Whether strong customer authentication is needed, exempt, or refused |
+| `Sca_outcome` | Maps a decision to payments-core terms: start a challenge or record an exemption, so the liability trail stays on the transfer |
 | `Policy` | Maps customer tiers to rule sets; loads from a sexp file (`Policy.load`) |
-| `Shadow` | Shadow mode: rules run and are logged but do not change the decision |
+| `Shadow` | Shadow mode: a rule's result is recorded without changing the decision |
 | `Review_queue` | Immutable queue of decisions that need an operator |
 | `Tier`, `Country`, `Mcc` | Customer tier, sanctions-relevant country lists, merchant category codes |
 
@@ -68,4 +68,4 @@ GitHub, then runs `dune build` and `dune test`, and the shared `obj-magic` workf
 - Card spend is not counted in transfer caps, and transfer spend is not counted in card
   limits.
 - `risk-models` must adopt the `Model.S` interface before its scores reach a decision; the
-  bundled models are shadow-mode only.
+  bundled models were started in shadow mode.
