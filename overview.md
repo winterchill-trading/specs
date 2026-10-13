@@ -193,7 +193,6 @@ graph LR
   copy_api --> hl_client
   copy_api --> copy_web
   copy_api --> leaderboard
-  copy_web --> hl_protocol
 
   hl_mm -.-> hl_sim
   market_maker -.-> hl_sim
