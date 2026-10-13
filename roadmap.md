@@ -466,9 +466,10 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
    one `Instrument.t` per subscription; drop the per-message sort in OKX `index_ticker`.
 6. `infra` release images: build the hot binaries with `OCAMLPARAM='_,O3=1'` once the
    order-book and normalizer benches confirm it, and record the comparison.
-7. `mm-core` `lib/market_state.ml`, `lib/quoter.ml`: mutable state with `Float_u.t` fields
-   and `Price.t or_null`, rungs built into arrays; keep the pure strategy as the reference
-   in a bisimulation test.
+7. `mm-core` `lib/market_state.ml`, `lib/quoter.ml` (done): flat `Float_u.t` state with
+   `or_null` accessors, `Strategy.tick_u`, `Risk.check_or_null`; quote 354 to 48 words,
+   idle tick 45 to 0; 300-script bisimulation against the pure reference. Next:
+   `Reconciler.reconcile` (3050 of a requote tick's words).
 8. `market-data` `lib/merge.ml`, `lib/raw_minute.ml` (done): batched merge, int-keyed heap,
    index-split lines; raw reader 0.6 M to 2.7 M lines/s, 332 to 39 words per line.
 9. `exchange-core` `engine/exchange.ml`, `engine/clearinghouse.ml`: add a step and submit

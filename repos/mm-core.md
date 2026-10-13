@@ -32,6 +32,11 @@ any venue implementing it.
 New parameters, defaulting when absent from a sexp: `max_actions_per_sec` (100; more
 cancels and places in the last second trip the kill switch), `soft_max_position` and
 `bump_budget` (past the soft limit only the side that would grow the position is pulled).
+`Market_state` is a flat record with `Float_u.t` fields and `or_null` accessors;
+`Strategy.tick_u` returns an unboxed pair and allocates nothing on an idle tick; `Fx` has
+`float#` conversions. A bisimulation test runs 300 random event scripts against the pure
+reference modules in `test/ref_*.ml`.
+
 `Params.validate` names every field and rejects NaN and infinity in every float. The five
 `_ms` duration fields are `Time_ns.Span.t`; their sexp accepts a span (`1s`) or an integer
 of milliseconds and prints a span.
