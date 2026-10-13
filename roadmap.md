@@ -417,6 +417,41 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
   (see [CLAUDE.md](CLAUDE.md)); refresh the `oxcaml-claude-skills` ecosystem map from
   [overview.md](overview.md).
 
+### hl-sim parity
+
+Gaps between `hl-sim` and the real Hyperliquid API, ranked by value per effort in
+[research/hl-sim-parity.md](research/hl-sim-parity.md#ranked-gaps) (S under a day, M one to
+three days, L a week or more). The copy-trading items (agents, builder fees, `userFillsByTime`,
+`portfolio`, `userRole`) are listed under [Copy-trading platform](#copy-trading-platform).
+
+1. `order-book`, `exchange-core`, `hl-sim`: self-trade prevention as "expire maker" (cancel
+   the resting order, keep matching the taker) (M).
+2. `hl-sim`: fees at the base tier, 4.5 bp taker and 1.5 bp maker, with a tier flag (S).
+3. `hl-sim`: `orderUpdates` for rejected orders and `liquidatedCanceled` for liquidation
+   cancels (S).
+4. `hl-protocol`, `hl-sim`: `orderStatus` by oid and cloid (S-M).
+5. `hl-protocol`, `hl-sim`, `hl-client`: `scheduleCancel` dead man's switch (S).
+6. `hl-protocol`, `hl-sim`: `updateLeverage` and `activeAssetData` (S).
+7. `hl-sim`: optional signature and nonce checking (M).
+8. `hl-protocol`, `hl-sim`: `batchModify` and modify's `always_place` flag (S).
+9. `hl-sim`: 60 s websocket idle timeout and a periodic-disconnect fault option (S).
+10. `hl-sim`, `order-book`: mainnet `l2Book` cadence and `nSigFigs`/`mantissa`
+    aggregation (S-M).
+11. `hl-protocol`, `hl-sim`: `clearinghouseState`, `openOrders`, `userEvents` and
+    `userFundings` subscriptions (M).
+12. `hl-sim`: rate limits behind a flag (IP weights and 429, address budget, open order
+    cap, websocket limits) (M).
+13. `exchange-core`, `price-anchor`, `hl-sim`: separate oracle and mark, premium-based
+    funding paid on oracle notional (M-L).
+14. `exchange-core`, `hl-sim`: liquidations through the book with slices, backstop and the
+    fill `liquidation` field (L).
+15. `exchange-core`, `hl-sim`: trigger orders and TP/SL grouping (L).
+16. `hl-protocol`, `hl-sim`: `metaAndAssetCtxs`, `fundingHistory`, `predictedFundings`,
+    `candleSnapshot`, `bbo` (M).
+17. `hl-protocol`, `exchange-core`, `hl-sim`: margin tables and tiers (M).
+18. `hl-sim`, `hl-client`: websocket `post` requests (M).
+19. `hl-protocol`, `hl-sim`: wire cosmetics (`"x.0"` prices, websocket error text, 422) (S).
+
 ### From research
 
 Proposed actions from the [research notes](research/README.md), one line each, deduplicated
