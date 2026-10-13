@@ -478,8 +478,10 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
    index-split lines; raw reader 0.6 M to 2.7 M lines/s, 332 to 39 words per line.
 9. `exchange-core` `engine/exchange.ml`, `engine/clearinghouse.ml`: add a step and submit
    bench, then replace the per-step account sort and pass the fill context `local_`.
-10. `price-anchor` `lib/anchor.ml`: `or_null` marks and mid, incremental queue-ahead after
-    items 4 and 9.
+10. `price-anchor` `lib/anchor.ml`, `lib/queue_ahead.ml` (done): `or_null` marks and mid,
+    queue-ahead indexed by price with a cursor refresh skipped while no exchange event
+    happened, one-walk `Eligible.size`; 34.8 to 7.0 us per event at 500 resting orders
+    (42.9 to 17.4 with client churn), trade words 80 to 23.
 11. `parquet` `lib/writer.ml` (done): `Writer.Direct` typed builders and `Zstd_bytes`;
     1.1 to 1.5x rows/s, 6 to 1.1 words per row, peak RSS 220 to 128 MB on 10M rows.
 12. `venue-net` `src/ws_client.ml` (done): batched delivery (26 to 13 words per frame) and

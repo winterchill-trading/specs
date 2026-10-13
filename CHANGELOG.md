@@ -15,6 +15,9 @@ belong here.
   [repos/market-recorder.md](repos/market-recorder.md).
 - `market-maker`: order lifecycle log, Async cycle monitor, nightly workflow and the
   `market-maker-status` viewer. See [repos/market-maker.md](repos/market-maker.md).
+- `price-anchor`: new public module `Eligible`, `Ref_book.mid_or_null` and
+  `Scale.price_or_null`; `Queue_ahead` indexed by price. See
+  [repos/price-anchor.md](repos/price-anchor.md).
 
 ## 2026-10-12
 
