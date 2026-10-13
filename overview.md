@@ -33,6 +33,10 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Market making | [mm-core](repos/mm-core.md) | Pure quoter, reconciler, risk, `Venue.S`, `Live.Make` loop | done |
 | Market making | [hl-mm](repos/hl-mm.md) | Hyperliquid `Venue.S` adapter and `hl-mm` binary | done |
 | Market making | [market-maker](repos/market-maker.md) | One `market-maker` binary for all three venues | done |
+| Copy trading | [hl-copy-core](repos/hl-copy-core.md) | Pure mirroring, scaling, caps and leader scoring | in progress |
+| Copy trading | [hl-leaderboard](repos/hl-leaderboard.md) | Leader collection, scoring and `/leaders` JSON | in progress |
+| Copy trading | [hl-copy-engine](repos/hl-copy-engine.md) | Mirrors leaders into follower accounts with agent keys | in progress |
+| Copy trading | [hl-copy-api](repos/hl-copy-api.md), [hl-copy-web](repos/hl-copy-web.md) | Wallet login, agent approval and follows; Bonsai frontend | in progress |
 | Data platform | [parquet](repos/parquet.md) | Pure OCaml Parquet writer | done |
 | Data platform | [market-data](repos/market-data.md) | Normalized types, event logs, Parquet sink, day close, DuckDB views, replay | done |
 | Data platform | [market-recorder](repos/market-recorder.md) | Live recorder: raw minute files, event logs, uploader, metrics | done |
@@ -91,6 +95,13 @@ graph LR
     mm_core["mm-core"]
     hl_mm["hl-mm"]
     market_maker["market-maker"]
+  end
+  subgraph copy["Copy trading"]
+    copy_core["hl-copy-core"]
+    leaderboard["hl-leaderboard"]
+    copy_engine["hl-copy-engine"]
+    copy_api["hl-copy-api"]
+    copy_web["hl-copy-web"]
   end
   subgraph data["Data platform"]
     parquet["parquet"]
@@ -172,6 +183,18 @@ graph LR
   market_replay --> binance_protocol
   market_replay --> bybit_protocol
 
+  copy_core --> hl_protocol
+  copy_core --> market_data
+  leaderboard --> hl_client
+  leaderboard --> copy_core
+  copy_engine --> hl_client
+  copy_engine --> copy_core
+  copy_api --> copy_core
+  copy_api --> hl_client
+  copy_api --> copy_web
+  copy_api --> leaderboard
+  copy_web --> hl_protocol
+
   hl_mm -.-> hl_sim
   market_maker -.-> hl_sim
   binance_client -.-> binance_sim
@@ -186,6 +209,9 @@ graph LR
   infra -.-> market_recorder
   infra -.-> market_data
 ```
+
+The copy-trading edges are planned from the design and are confirmed as each
+repository's `dune-project` lands; see [design/copytrading.md](design/copytrading.md).
 
 The `*-feed` repositories also list `exchange-core` (Coinbase, Kraken, Deribit) and
 `fixed-decimal` (Kraken) directly. `fixed-decimal`, `venue-net` and `parquet` depend on no
@@ -268,6 +294,9 @@ graph LR
   See [design/deployment.md](design/deployment.md).
 - `market-maker` drives a simulator or a real venue through `Mm_core.Live.Make`. See
   [design/market-making.md](design/market-making.md).
+- The copy-trading platform (in progress) mirrors a Hyperliquid leader's positions
+  into followers' accounts through agent keys the followers approve, against `hl-sim`
+  or testnet. See [design/copytrading.md](design/copytrading.md).
 - The TradFi simulators have no real data source: noise traders move their books, and
   their order entry and market data are binary over TCP, with the feed repeated as JSON
   on `/ws`. Nothing in the data platform consumes them yet. See
