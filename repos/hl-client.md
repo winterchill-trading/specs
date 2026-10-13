@@ -17,7 +17,8 @@ plus a normalized `Live_feed` for the data platform.
   `mainnet`, `testnet`.
 - `Info`: `POST /info` (`l2_book`, `all_mids`, `open_orders`, `user_fills`,
   `clearinghouse_state`, `meta`, `user_fills_by_time` and its pager
-  `all_user_fills_since`, which drops repeated fills by `tid`).
+  `all_user_fills_since`, which drops repeated fills by `tid`, `user_fills_detailed`
+  with `builderFee` and `liquidation`, and `max_builder_fee ~user ~builder`).
 - `Exchange`: `POST /exchange` (`place_orders`, `cancel`, `cancel_by_cloid`, `modify`);
   nonce strictly increasing per process; `X-Address` header when an address is set;
   optional `~sign` hook. `place_orders ?builder` adds the builder fee field;
