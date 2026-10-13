@@ -453,9 +453,9 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
 1. `binance-client` `lib/feed_normalizer.ml`: `[@zero_alloc]` hand scanner for aggTrade,
    bookTicker and depth-diff frames, Yojson as fallback, fixture test comparing both paths
    (measured on a trade frame: 2417 ns and 298 words to 261 ns and 0 words).
-2. `fixed-decimal` `lib/fixed_decimal.ml`: single-pass `[@zero_alloc]`
-   `of_substring_exn s ~pos ~len` and `to_string` into a caller's `Bytes`; `[@zero_alloc]`
-   on `mul`, `div` and comparisons in the `.mli`.
+2. `fixed-decimal` `lib/fixed_decimal.ml` (done): `of_substring_exn` (85 ns/14 words to
+   18 ns/0), `blit_to_bytes` (126 ns/48 words to 15 ns/0), `[@@zero_alloc]` on all
+   arithmetic and comparisons, old parser kept as `Reference` for property tests.
 3. `market-recorder` `lib/recorder.ml`, `lib/metrics.ml`, `lib/raw_writer.ml`: resolve the
    counters and output file once per subscription, `last_frame` without an option, reused
    timestamp buffer, blit instead of `String.concat`.

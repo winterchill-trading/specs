@@ -28,6 +28,9 @@ units, so arithmetic is exact and allocation-free.
 `S.t` is declared `[@@immediate]`, so values are unboxed `int`s and can cross modes.
 `of_float` rounds to the nearest unit, raises on NaN, infinities and out-of-range values,
 maps `-0.0` to zero and carries a `lossy` alert; wire values go through `of_string`.
+- `of_substring_exn s ~pos ~len` and `blit_to_bytes t buf ~pos` parse and print without
+  allocation; every arithmetic and comparison function carries `[@@zero_alloc]`, and
+  `Fixed_decimal.Reference` keeps the old parser and printer for property tests.
 
 ## Tests and performance
 
