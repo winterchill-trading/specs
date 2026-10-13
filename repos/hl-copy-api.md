@@ -12,7 +12,8 @@ the server refuses any exchange URL under `hyperliquid.xyz` and builds approvals
 | opam package | `hl-copy-api` |
 | Library | `hl-copy-api` (module `Hl_copy_api`) |
 | Binary | `hl-copy-api -port P -exchange-url URL [-leaderboard-url URL] [-engine-url URL] [-state-dir DIR] [-config-dir DIR] [-allow-origin O] [-builder ADDR -builder-fee N]`; master key from `HL_COPY_MASTER_KEY` |
-| Status | in progress: every route below works against `hl-sim`; nothing sent to testnet yet |
+| Status | in progress: end to end on `hl-sim` (`scripts/e2e-stack.sh`, CI job `e2e-stack`); nothing sent to testnet yet |
+| Tool | `tools/dev_wallet.exe` (not installed): `address`, `personal-sign`, `sign-typed-data` with a throwaway key from `HL_COPY_WALLET_KEY`; refuses Mainnet typed data |
 
 ## Endpoints
 
@@ -23,7 +24,7 @@ the server refuses any exchange URL under `hyperliquid.xyz` and builds approvals
 | `POST /builder-fee` | The wallet's `approveBuilderFee` for the configured builder |
 | `POST /follows`, `GET`/`PATCH`/`DELETE /follows/:id`, `POST /follows/:id/pause`, `/resume`, `/stop` | Follow records plus `Follower_config` files the engine watches; needs an approved agent |
 | `GET /leaders`, `GET /leaders/:address` | `hl-leaderboard serve` over HTTP, reshaped into `Api_types`, cached 10 s |
-| `GET /me`, `GET /ws?token=` | Account value from `clearinghouseState`, per-follow pnl and positions from the engine's `/status` (decoded leniently); the websocket pushes `me`, `follow` changes and the account's fills (`Hl_client.User_feed`) |
+| `GET /me`, `GET /ws?token=` | Account value from `clearinghouseState`, per-follow pnl and positions from the engine's `/status` (decoded leniently); the websocket pushes `Api_types.Ws_push` frames: `me`, `follow` changes and the account's fills (`Hl_client.User_feed`) |
 | `GET /healthz`, `GET /metrics` | Health and Prometheus metrics (requests by route pattern, method and status) |
 
 Every reply carries CORS headers for the configured origins (`OPTIONS` answers
@@ -34,12 +35,23 @@ preflights); requests are rate limited per client IP with token buckets (600 per
 
 | Module | Purpose |
 | --- | --- |
-| `Wallet_signature` | `personal_sign` digest, 65-byte signature parsing, recovery |
+| `Wallet_signature` | `personal_sign` digest, 65-byte signature parsing, recovery; `eth_signTypedData_v4` digest and signing of the approval typed data (scripts and tests) |
 | `Session`, `Challenge` | Login tokens and challenges |
 | `Venue`, `Approvals`, `Agents` | Mainnet guard, approval offers and signer checks, submission, rotation |
 | `Follows` | `<state>/follows/<id>.sexp` records and `<configs>/<follower>-<leader>.sexp` engine configs (removed on stop) |
 | `Leaders`, `Engine_status` | Leaderboard proxy and engine status reader |
-| `Rate_limiter`, `Metrics`, `Ws_push`, `Server` | Serving |
+| `Rate_limiter`, `Metrics`, `Server` | Serving |
+
+## End to end
+
+`scripts/e2e-stack.sh` starts `hl-sim` (3 leaders, 40 noise traders, strict signatures),
+`hl-leaderboard` (collect, rank, serve against the simulator), the API and
+`hl-copy-engine` (key store signer), walks login, agent and builder fee approval and an
+`Equity_ratio` follow with a throwaway wallet, then checks `/me` positions against the
+leader (one lot plus the $10 minimum order), `/ws` follow and fill pushes, pause (no
+orders), stop (config removed), hl-copy-web's `smoke/live.js` against the API, and the
+journal replay. The CI job `e2e-stack` checks out hl-copy-api, hl-copy-engine, hl-sim,
+hl-leaderboard and hl-copy-web into one dune workspace and runs it.
 
 ## Dependencies
 
