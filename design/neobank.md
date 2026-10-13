@@ -2,9 +2,10 @@
 
 Kind: explanation.
 
-Status: planned (2026-10-13). `striga-client` (the provider SDK) is in progress. The
-bank-side domain is split into provider-neutral libraries named for what they are
-(`money`, `ledger`, `kyc-core`, `payments-core`, `card-core`, `risk-rules`,
+Status: in progress (2026-10-14). `money`, `ledger`, `risk-rules` and `striga-client` are
+done; the other libraries in the table below are in progress and the demo apps are
+planned. The bank-side domain is split into provider-neutral libraries named for what they
+are (`money`, `ledger`, `kyc-core`, `payments-core`, `card-core`, `risk-rules`,
 `banking-provider`); only the demo apps (`neobank-api`, `neobank-web`) and the infra
 compose profile carry the neobank name. Everything below is the design; repository pages
 are added as the repositories land.
@@ -284,15 +285,17 @@ caps from the tier.
 
 | Repository | Role | Depends on (org) | Status |
 | --- | --- | --- | --- |
-| `money` | Currencies, minor units, fixed-decimal crypto amounts, FX quotes | [fixed-decimal](../repos/fixed-decimal.md) | planned |
-| `ledger` | Double-entry, append-only Bin_prot journal, replay; reusable by exchange-core's clearinghouse later | `money` | planned |
-| `kyc-core` | Customer identity and tier state machine, verification steps, PII minimization | `money` | planned |
-| `payments-core` | Transfer state machines (SEPA, on-chain, Lightning, intraledger, swap), OTP/SCA step, standing orders | `money`, `ledger` | planned |
-| `card-core` | Card lifecycle, authorizations and settlements, limits | `money`, `ledger` | planned |
-| `risk-rules` | Per-transfer and daily caps, velocity, beneficiary cooldown, block lists | `money`, `payments-core` | planned |
-| `banking-provider` | `Provider` module type over the domain libraries, deterministic fake provider | `kyc-core`, `payments-core`, `card-core` | planned |
-| `striga-client` | Striga SDK and `striga` CLI: HMAC transport, typed resources, simulator, webhook verification | (none) | in progress |
-| `striga-provider` | `Provider` over `striga-client`, endpoint and webhook mapping table | `banking-provider`, `striga-client` | planned |
+| `money` | Currencies, minor units, exact amounts, FX rates, fees | [fixed-decimal](../repos/fixed-decimal.md) | done ([repo page](../repos/money.md)) |
+| `ledger` | Double-entry, append-only Bin_prot journal, replay; reusable by exchange-core's clearinghouse later | `money` | done ([repo page](../repos/ledger.md)) |
+| `kyc-core` | Customer identity and tier state machine, verification steps, PII minimization | `money` | in progress |
+| `payments-core` | Transfer state machines (SEPA, on-chain, Lightning, intraledger, swap), OTP/SCA step, standing orders | `money`, `ledger` | in progress |
+| `card-core` | Card lifecycle, authorizations and settlements, limits | `money`, `ledger` | in progress |
+| `risk-rules` | Rule engine for transfers and card authorisations: caps, typologies, SCA exemptions, shadow mode, review queue | `money`, `payments-core` | done ([repo page](../repos/risk-rules.md)) |
+| `risk-models` | Machine-learned scores through `risk-rules`' `Model.S`; trained offline, scored in OCaml | `risk-rules` | in progress |
+| `pg-async` | Non-blocking PostgreSQL client for Async over libpq: pool, parameterized queries, transactions, migrations | (none) | in progress |
+| `banking-provider` | `Provider` module type over the domain libraries, deterministic fake provider | `kyc-core`, `payments-core`, `card-core` | in progress |
+| `striga-client` | Striga SDK and `striga` CLI: HMAC transport, typed resources, simulator, webhook verification | (none) | done ([repo page](../repos/striga-client.md)) |
+| `striga-provider` | `Provider` over `striga-client`, endpoint and webhook mapping table | `banking-provider`, `striga-client` | in progress |
 | `neobank-api` | Async HTTP API, sessions, webhooks, `/ws`; the demo server | `banking-provider`, `risk-rules`, `striga-provider` | planned |
 | `neobank-web` | Bonsai frontend, mock mode on the fake provider | `neobank-api` types | planned |
 | `infra` | Compose profile `neobank`: API, web, fake or sandbox provider | the images above | planned |
