@@ -81,6 +81,9 @@ bearer token and body of each request above.
 ## CI pin order
 
 No sibling pins. `bonsai_web` is an opam dependency, installed and cached by `ox-setup`;
-node comes from `actions/setup-node` for the smoke tests.
+node comes from `actions/setup-node` for the smoke tests. The opam file keeps `dune`
+below 3.23, because `bonsai_web` does not build under upstream dune 3.24 (its CSS inliner
+gets `./`-prefixed paths) and a fresh switch would otherwise pick it. Cold CI run: 24 min
+50 s, of which 23 min 44 s is `ox-setup`.
 
 See [design/copytrading.md](../design/copytrading.md) for the platform design.
