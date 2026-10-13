@@ -521,8 +521,10 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
    115k to 5k, index ticker sort dropped. bybit-client done: trades 806 to 54 words, bbo
    577 to 77, l2 1327 to 536, scanner wired through an `?intercept` hook. hl-client done:
    trades 603 to 41 words, full l2Book 3883 to 274, bbo-only 22. Item complete.
-6. `infra` release images: build the hot binaries with `OCAMLPARAM='_,O3=1'` once the
-   order-book and normalizer benches confirm it, and record the comparison.
+6. `infra` release images (done): O3 is the default tag for hl-sim, binance-sim, bybit-sim
+   and market-maker (order-book fill 95 to 57 ns, mm-core quote 2x on amd64); recorder and
+   replay stay on default flags (zstd and the raw reader unchanged, binance-client scanner
+   4 to 9% slower). See infra/docs/images.md.
 7. `mm-core` `lib/market_state.ml`, `lib/quoter.ml` (done): flat `Float_u.t` state with
    `or_null` accessors, `Strategy.tick_u`, `Risk.check_or_null`; quote 354 to 48 words,
    idle tick 45 to 0; 300-script bisimulation against the pure reference. Next:
