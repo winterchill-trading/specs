@@ -151,7 +151,12 @@ hl-client (`Signing.sign_user_action` and `recover_user_action`,
 `Exchange.approve_agent` and `approve_builder_fee`, the same on `Client` owner handles,
 `place_orders ?builder`, and `Client.trading_with_agent` for orders signed by the agent).
 The approval signatures match `eth_account` on the SDK's payload; nothing has been sent
-to testnet yet. `maxBuilderFee` has no client call yet. hl-copy-api serves the flow above
+to testnet yet. `Info.max_builder_fee` reads `maxBuilderFee`; hl-copy-engine run with
+`-builder ADDRESS -builder-fee-tenths-bp N` checks it per follower at start and on
+resyncs, sends `builder {b, f}` only while approved (counting skipped orders in
+`hl_copy_builder_fee_skipped_total`, with a `builder.note` in `/status`), and drops the
+field as soon as an order is refused over the fee; on hl-sim the builder is credited 1 bp
+of the notional at `N = 10`, and an `approveBuilderFee` of `0%` revokes. hl-copy-api serves the flow above
 against hl-sim with signature checks on: `/agent/new` offers the named agent
 `hl-copy valid_until <ms>` (179 days) with its typed data, `/agent/approved` and
 `/builder-fee` accept only the pending action (the browser may change
