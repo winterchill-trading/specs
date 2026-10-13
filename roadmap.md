@@ -459,8 +459,8 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
 3. `market-recorder` `lib/recorder.ml`, `lib/metrics.ml`, `lib/raw_writer.ml`: resolve the
    counters and output file once per subscription, `last_frame` without an option, reused
    timestamp buffer, blit instead of `String.concat`.
-4. `order-book` `lib/order_book.ml`: `best_bid_or_null`, `best_ask_or_null`, `mid_or_null`
-   returning `Price.t or_null`; O(1) cancel with per-level linked nodes.
+4. `order-book` `lib/order_book.ml` (done): `best_bid_or_null`, `best_ask_or_null` and
+   `mid_or_null` at 0 words; O(1) cancel (24.8 us to 0.26 us behind 1000 orders).
 5. `bybit-client` `lib/live_feed.ml`, `hl-client` `lib/normalizer.ml`, `okx-feed`
    `lib/normalizer.ml`: the scanner from item 1 per venue; cache the Bybit topic string and
    one `Instrument.t` per subscription; drop the per-message sort in OKX `index_ticker`.

@@ -26,7 +26,10 @@ taker's remainder. The matching loop uses OxCaml stack allocation (`local_`, `ex
 `global_` fields) for per-order temporaries.
 
 The best level of each side is cached, so `best_bid`, `best_ask` and `mid` do not go
-through `Map.max_elt`.
+through `Map.max_elt`; `best_bid_or_null`, `best_ask_or_null` and `mid_or_null` return
+`Price.t or_null` and allocate nothing. Each level keeps its orders in a linked list and
+the id index points at the node, so cancel is O(1): behind 1000 orders it went from
+24.8 us and about 2100 words to 0.26 us and 40 words.
 
 ## Tests
 
@@ -73,5 +76,5 @@ unboxing; none is changed yet.
 - One instrument per book; the engine keeps one book per instrument.
 - Trade ids come from a caller-supplied `next_tid`; the book never reads a clock.
 - Only "cancel taker remainder" self-trade prevention.
-- `best_bid` still allocates its `Some`. A `local_` variant built with `exclave_` is
-  possible now that `fixed-decimal` declares `t` immediate, but is not added.
+- `mid_or_null` carries no `[@@zero_alloc]` annotation because the checker fails through
+  `Price.of_units` until `fixed-decimal` annotates its own functions.
