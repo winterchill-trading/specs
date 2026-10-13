@@ -21,8 +21,11 @@ mutable: no I/O, no margin or account checks.
   order ids, accounts and client ids.
 
 Each side is a `Map` from price to a FIFO `Queue`. Fills execute at the maker's price.
-Self-trade prevention stops matching at the taker's own resting order and cancels the
-taker's remainder. The matching loop uses OxCaml stack allocation (`local_`, `exclave_`,
+Self-trade prevention is a per-book policy, `Order_book.Stp.t`, given to
+`create ?stp`: `Cancel_taker` (default; matching stops and the taker's remainder is
+cancelled), `Expire_maker` (the own resting order is removed and the taker keeps
+matching, as on Hyperliquid) or `Cancel_both`. Removed own orders are returned in
+`Result.expired_makers`, in the order reached. The matching loop uses OxCaml stack allocation (`local_`, `exclave_`,
 `global_` fields) for per-order temporaries.
 
 The best level of each side is cached, so `best_bid`, `best_ask` and `mid` do not go
@@ -75,6 +78,5 @@ unboxing; none is changed yet.
 
 - One instrument per book; the engine keeps one book per instrument.
 - Trade ids come from a caller-supplied `next_tid`; the book never reads a clock.
-- Only "cancel taker remainder" self-trade prevention.
 - `mid_or_null` carries no `[@@zero_alloc]` annotation because the checker fails through
   `Price.of_units` until `fixed-decimal` annotates its own functions.
