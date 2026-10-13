@@ -43,6 +43,13 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Data platform | [market-replay](repos/market-replay.md) | Replay server: raw lines over HTTP, venue-native websockets for the eight crypto venues | done |
 | Fiat rails | [griffin-client](repos/griffin-client.md) | Async client and CLI for a UK banking API: legal persons, accounts, payments, payees, Confirmation of Payee, webhooks; sandbox by default | done |
 | Fiat rails | [lightspark-client](repos/lightspark-client.md) | Async client and CLI for a Lightning and UMA GraphQL API and a Grid banking API: nodes, invoices, customers, transfers, quotes; sandbox writes only, webhook verification | done |
+| Fiat rails | [striga-client](repos/striga-client.md) | Async client and CLI for the Striga v1 API: consumers and KYC, wallets, payments, cards, standing orders, webhooks; sandbox by default | done |
+| Banking libraries | [money](repos/money.md) | Currencies, exact minor-unit amounts, FX rates, fees; the base of the banking libraries | done |
+| Banking libraries | [ledger](repos/ledger.md) | Double-entry ledger over an append-only Bin_prot journal: holds, idempotency, trial balance, statements | done |
+| Banking libraries | [risk-rules](repos/risk-rules.md) | Rule engine for transfers and card authorisations: reason codes, typologies, SCA exemptions, shadow mode, review queue | done |
+| Banking libraries | risk-models | Machine-learned scores behind `risk-rules`' `Model.S` | in progress |
+| Banking libraries | pg-async | Non-blocking PostgreSQL client for Async over libpq | in progress |
+| Banking libraries | kyc-core, payments-core, card-core, banking-provider | Customer, transfer and card state machines and the provider interface for the neobank demo | in progress |
 | Tooling | [infra](repos/infra.md) | Container images, compose stack, Helm chart, deployment notes | done |
 | Tooling | [oxcaml-claude-skills](repos/oxcaml-claude-skills.md) | Agent skills and the gotchas log | done |
 | Tooling | specs | This repository | in progress |
@@ -115,6 +122,18 @@ graph LR
   subgraph fiat["Fiat rails"]
     griffin_client["griffin-client"]
     lightspark_client["lightspark-client"]
+    striga_client["striga-client"]
+  end
+  subgraph banking["Banking libraries"]
+    money["money"]
+    ledger["ledger"]
+    kyc_core["kyc-core"]
+    payments_core["payments-core"]
+    card_core["card-core"]
+    risk_rules["risk-rules"]
+    risk_models["risk-models"]
+    banking_provider["banking-provider"]
+    pg_async["pg-async"]
   end
   subgraph tooling["Tooling"]
     infra["infra"]
@@ -189,6 +208,19 @@ graph LR
   market_replay --> hl_protocol
   market_replay --> binance_protocol
   market_replay --> bybit_protocol
+  money --> fixed_decimal
+  ledger --> money
+  kyc_core --> money
+  payments_core --> money
+  payments_core --> ledger
+  card_core --> money
+  card_core --> ledger
+  risk_rules --> money
+  risk_rules --> payments_core
+  risk_models --> risk_rules
+  banking_provider --> kyc_core
+  banking_provider --> payments_core
+  banking_provider --> card_core
 
   copy_core --> exchange_core
   copy_core --> hl_protocol
