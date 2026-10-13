@@ -80,13 +80,12 @@ paying a 4.5 bp taker fee by default. Model, outputs and a mainnet run are in
 
 ## CI pin order
 
-Two jobs, because `hl-copy-backtest` needs `hl-leaderboard`, which needs `hl-copy-core`
-(the same layout as exchange-core's engine job):
+Two jobs, because `hl-copy-backtest` needs `hl-leaderboard`, which needs `hl-copy-core`:
 
 - `build` (`hl-copy-core` only): `fixed-decimal`, `exchange-core`, `parquet`,
   `hl-protocol`, `market-data`.
 - `backtest`: `fixed-decimal`, `exchange-core`, `parquet`, `market-data`,
-  `hl-protocol`, `venue-net`, `hl-client`, `hl-copy-core`, `hl-leaderboard`; then
-  `hl-copy-core` is re-pinned to the checkout and only `hl-copy-backtest` is built.
+  `hl-protocol`, `venue-net`, `hl-client`, `hl-copy-core` (at the commit under test),
+  `hl-leaderboard`; only `hl-copy-backtest` is built.
 
 See [design/copytrading.md](../design/copytrading.md) for the platform design.
