@@ -16,6 +16,12 @@ belong here.
   [design/neobank.md](design/neobank.md) and the pages
   [money](repos/money.md), [ledger](repos/ledger.md), [risk-rules](repos/risk-rules.md)
   and [striga-client](repos/striga-client.md).
+- `kyc-core`, `payments-core`, `card-core`: new repositories for the neobank demo's
+  customer, transfer and card state machines. New dependency edges: `payments-core` to
+  `money` and `ledger`, `card-core` to `money`, `ledger` and `payments-core`; `kyc-core`
+  has none. See [design/neobank.md](design/neobank.md) and the pages
+  [kyc-core](repos/kyc-core.md), [payments-core](repos/payments-core.md) and
+  [card-core](repos/card-core.md).
 
 ## 2026-10-13
 
