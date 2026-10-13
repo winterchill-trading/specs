@@ -186,7 +186,7 @@ approval only when `GET /me` reports the agent missing, unapproved or past its
    not in the API documentation (unverified as a stable interface); the collector
    stores every pull raw so a shape change is visible.
 2. **Filter.** Top N per window by pnl and roi, minimum account value and volume, and
-   only addresses whose `userRole` is `user` (not vaults or sub-accounts).
+   only addresses whose `userRole` is `user` (not vaults, sub-accounts or agents).
 3. **History.** For each candidate, `userFillsByTime` paged forward by time (at most
    2000 fills per response, and "only the 10000 most recent fills are available"),
    `clearinghouseState` for open positions and account value, and `portfolio` for the
@@ -206,13 +206,18 @@ and flags leaders whose fill history is truncated.
 Status (2026-10-13): `Hl_protocol.Leaderboard` decodes the rows (checked on four testnet
 rows; amounts carry up to ten decimals, so they are floats), `Hl_client.Leaderboard`
 fetches and ranks them, and `Hl_client.Info.user_fills_by_time` with its pager
-`all_user_fills_since` covers step 3's fills. `portfolio` and `userRole` have no client
-calls yet. hl-sim serves `userFillsByTime` and the leaderboard (`POST /info
+`all_user_fills_since` covers step 3's fills. `Hl_protocol.User_role` decodes the five
+`userRole` answers (`user`, `agent` with its user, `vault`, `subAccount` with its
+master, `missing`; each checked on mainnet) and `Hl_client.Info.user_role` sends it;
+`portfolio` has no client call yet. hl-sim serves `userFillsByTime` and the leaderboard (`POST /info
 {"type": "leaderboard"}` and `GET /leaderboard`, `/Mainnet/leaderboard`,
 `/Testnet/leaderboard`) computed from its accounts, and `-leaders N` runs named leader
 accounts (`trend-0`, `mean-reversion-1`, `random-2`, ...) to rank and copy.
-`hl-leaderboard` implements steps 1 to 4 except the `userRole` filter: candidates are the
-top N by pnl per window above a minimum account value; fills are walked forward under a
+`hl-leaderboard` implements steps 1 to 4: candidates are the top N by pnl per window
+above a minimum account value whose `userRole` is accepted (`-include-roles`, default
+`user`; a skipped vault, sub-account or agent makes room for the next row, and HLP,
+8th by all-time pnl on mainnet, is skipped), with the role kept in `leaders.parquet`
+and `/leaders`; fills are walked forward under a
 1200-weight-per-minute token bucket; `portfolio` is decoded locally and its `month`
 window (account value at the start plus cumulative pnl, so transfers are not gains) is
 the equity curve given to `Hl_copy_core.Score`; leaders whose fills do not reach back to
