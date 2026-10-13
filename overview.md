@@ -49,7 +49,10 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Banking libraries | [risk-rules](repos/risk-rules.md) | Rule engine for transfers and card authorisations: reason codes, typologies, SCA exemptions, shadow mode, review queue | done |
 | Banking libraries | risk-models | Machine-learned scores behind `risk-rules`' `Model.S` | in progress |
 | Banking libraries | pg-async | Non-blocking PostgreSQL client for Async over libpq | in progress |
-| Banking libraries | kyc-core, payments-core, card-core, banking-provider | Customer, transfer and card state machines and the provider interface for the neobank demo | in progress |
+| Banking libraries | [kyc-core](repos/kyc-core.md) | Customer due diligence: verification tiers, risk rating, screening, monitoring, retention, audit trail; standalone | done |
+| Banking libraries | [payments-core](repos/payments-core.md) | Payment rails and transfer state machines (SEPA, on-chain, Lightning, intraledger), SCA, standing orders, swaps, reconciliation | done |
+| Banking libraries | [card-core](repos/card-core.md) | Card lifecycle, authorization decision, clearing and settlement, disputes, statements | done |
+| Banking libraries | banking-provider | `Provider` interface over the domain libraries and a deterministic fake provider for the neobank demo | in progress |
 | Tooling | [infra](repos/infra.md) | Container images, compose stack, Helm chart, deployment notes | done |
 | Tooling | [oxcaml-claude-skills](repos/oxcaml-claude-skills.md) | Agent skills and the gotchas log | done |
 | Tooling | specs | This repository | in progress |
@@ -210,11 +213,11 @@ graph LR
   market_replay --> bybit_protocol
   money --> fixed_decimal
   ledger --> money
-  kyc_core --> money
   payments_core --> money
   payments_core --> ledger
   card_core --> money
   card_core --> ledger
+  card_core --> payments_core
   risk_rules --> money
   risk_rules --> payments_core
   risk_models --> risk_rules
