@@ -418,11 +418,13 @@ Gaps between `hl-sim` and the real Hyperliquid API, ranked by value per effort i
 three days, L a week or more). The copy-trading items (agents, builder fees, `userFillsByTime`,
 `portfolio`, `userRole`) are listed under [Copy-trading platform](#copy-trading-platform).
 
-1. `order-book`, `exchange-core`, `hl-sim`: self-trade prevention as "expire maker" (cancel
-   the resting order, keep matching the taker) (M). `order-book` part done: per-book
-   `Stp.t` (`Cancel_taker` default, `Expire_maker`, `Cancel_both`) with the removed orders
-   in `Result.expired_makers`; `exchange-core` (policy per instrument, cancel events) and
-   `hl-sim` (`selfTradeCanceled`, drop the invented error) pending.
+1. `order-book`, `exchange-core`, `hl-sim` (done): self-trade prevention as "expire maker"
+   (cancel the resting order, keep matching the taker) (M). `order-book`: per-book `Stp.t`
+   (`Cancel_taker` default, `Expire_maker`, `Cancel_both`) with the removed orders in
+   `Result.expired_makers`; `exchange-core`: `Exchange.create ?self_trade`, a
+   `Self_trade` cancel event per expired order, the policy in the journal header;
+   `hl-sim`: `Expire_maker`, `selfTradeCanceled`, the invented error dropped; `hl-mm`
+   treats `selfTradeCanceled` as a cancel.
 2. `hl-sim`: fees at the base tier, 4.5 bp taker and 1.5 bp maker, with a tier flag (S).
 3. `hl-sim`: `orderUpdates` for rejected orders and `liquidatedCanceled` for liquidation
    cancels (S).
