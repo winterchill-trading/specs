@@ -11,7 +11,7 @@ owner of `Api_types`, the wire types of the HTTP API that
 | opam packages | `hl-copy-api-types` (library only), `hl-copy-web` (the app) |
 | Library | `hl-copy-api-types` (module `Api_types`) |
 | Binary | `bin/main.bc.js`, installed as `share/hl-copy-web/{index.html,main.js}` |
-| Status | in progress: every page runs on mock data and against a fake API in tests; not yet run against `hl-copy-api` |
+| Status | in progress: every page runs on mock data and against a fake API in tests; `smoke/live.js` passes against a real `hl-copy-api` on `hl-sim` (hl-copy-api's `scripts/e2e-stack.sh`) |
 
 ## Api_types
 
@@ -32,6 +32,7 @@ without the web stack.
 | `POST /follows` | `Follow_request` (`leader`, `Scale_mode`, `Caps`) | `Follow` |
 | `PATCH /follows/<id>` | `Follow_update` (`running` or `paused`) | `Follow` |
 | `DELETE /follows/<id>` | | `Follow` (stopped) |
+| `GET /ws?token=<token>` | | `Ws_push` frames: `{"type": "me" \| "follow" \| "fill" \| "error", ...}` |
 
 Errors carry `Api_error` (`{"error": "..."}`); everything after login sends
 `Authorization: Bearer <token>`. Conventions: timestamps and nonces are `Time_ms.t`, a
@@ -70,7 +71,10 @@ Expect tests cover `Api_types` (JSON shapes, typed data, every `dev/` fixture) a
 model. Two node smoke tests run the compiled app with a minimal fake DOM: `smoke/run.js`
 walks every page on mock data with a fake wallet (12 steps), and `smoke/live.js` runs it
 with `?api=` against an in-memory fake of `hl-copy-api` and checks the method, path,
-bearer token and body of each request above.
+bearer token and body of each request above. Given a base URL as a third argument,
+`smoke/live.js` runs against a real `hl-copy-api` instead, with a wallet that signs
+through hl-copy-api's `tools/dev_wallet.exe`: login, agent and builder fee approval, a
+follow, pause and stop, failing on any non-2xx reply.
 
 ## Dependencies
 
