@@ -28,6 +28,16 @@ websocket API. Types and codecs only, no I/O.
   `Asset_ctx.Request` builds its (un)subscribe requests and `Asset_ctx.of_ws_message`
   reads it from `Ws_message.Unknown`, so the exhaustively matched variants stay as they
   are. `subscriptionResponse` echoes of unmodelled subscriptions also stay `Unknown`.
+- Copy trading, each in its own module so the exhaustively matched `Exchange_action`,
+  `Info_request` and `Subscription` keep their constructors:
+  `User_signed_action` (`approveAgent`, `approveBuilderFee`, with the EIP-712 primary
+  type and typed fields), `User_signed_request` (their `/exchange` body and
+  `is_user_signed_body` for servers), `Builder_fee` (the order `builder: {b, f}` field,
+  `f` in tenths of a basis point, and `maxFeeRate` percent strings), `Order_action` (an
+  `order` action with the builder, keys in the SDK's order), `Exchange_envelope` (an
+  `/exchange` body around raw action JSON, with `expiresAfter`), `User_fills_by_time`
+  (`userFillsByTime`), `User_event` (`userEvents` of any address, channel `user`, read
+  from `Ws_message.Unknown`) and `Leaderboard` (rows of the stats host's leaderboard).
 - `Clearinghouse_state`: `liquidationPx` is an option, `None` when absent, `null` or
   outside the fixed-point range (about 4.6e10).
 
@@ -39,12 +49,15 @@ minute) are decoded and re-encoded by tests. Verified against these mainnet samp
 six info responses (including large and `null` `liquidationPx`), the websocket requests,
 `subscriptionResponse`, `trades`, `l2Book`, `allMids`, `userFills`, `orderUpdates`,
 `activeAssetCtx` (perps), `pong` and `error`. The exchange requests and responses are
-checked against hand-written samples and the simulator only.
+checked against hand-written samples and the simulator only. The approval actions, the
+builder field and `userEvents` follow the documentation's examples;
+`test/fixtures/testnet-leaderboard-2026-10-13` holds four rows of the testnet leaderboard.
 
 ## Dependencies
 
 - Depends on: `fixed-decimal`, `exchange-core`.
-- Used by: `hl-sim`, `hl-client`, `hl-mm`, `market-maker`.
+- Used by: `hl-sim`, `hl-client`, `hl-mm`, `market-maker`; planned: the five `hl-copy-*`
+  and `hl-leaderboard` repositories.
 
 ## CI pin order
 
@@ -59,3 +72,6 @@ checked against hand-written samples and the simulator only.
 - `Subscription` and `Ws_message` have no `activeAssetCtx` constructor; it is reached
   through `Asset_ctx` and `Unknown`. The spot shape of `activeAssetCtx` comes from a
   sample only.
+- `User_fill` drops the `builderFee` and `liquidation` fields of fills. A server that
+  decodes `/exchange` with `Exchange_request` accepts a builder order but loses the
+  builder.
