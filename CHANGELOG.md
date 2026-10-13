@@ -10,6 +10,9 @@ belong here.
 
 ## 2026-10-13
 
+- `hl-copy-web`: Bonsai app with every page on mock data, and the `hl-copy-api-types`
+  package (`Api_types`) defining the `hl-copy-api` endpoints and bodies; no org package
+  dependency. See [repos/hl-copy-web.md](repos/hl-copy-web.md).
 - `hl-copy-engine`: the engine library and binary (`run`, `approve-agent`, `replay`):
   per-follow Bin_prot journal (`<journal>/<follower>-<leader>/<date>.journal`), shared
   leader subscriptions with `clearinghouseState` polling past ten leaders, agent keys from
