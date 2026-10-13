@@ -49,8 +49,11 @@ marks, id counters, a clock and an event log.
 - **Validation order**: known symbol; price positive, on tick, within the
   significant-figure limit; size a positive multiple of the lot; no duplicate client id
   among resting orders; reduce-only clipped to the position; minimum notional; margin.
-- **Matching**: price-time priority, maker-price fills, self-trade prevention that
-  cancels the taker's remainder. Market orders are IOC orders `slippage_bps` (default 5%)
+- **Matching**: price-time priority, maker-price fills, self-trade prevention chosen per
+  exchange (`Exchange.create ?self_trade`): `Cancel_taker` (the default; Binance and Bybit
+  simulators) cancels the taker's remainder, `Expire_maker` (Hyperliquid simulator)
+  cancels the resting own order with a `Self_trade` cancel event and keeps matching the
+  taker. Market orders are IOC orders `slippage_bps` (default 5%)
   through the best opposite price.
 - **Margin**: cross margin, one-way positions. Initial margin `notional / leverage`
   (resting orders reserve theirs); maintenance `notional / (2 * max_leverage)`.
@@ -106,7 +109,7 @@ these:
 | IOC remainder | cancelled; status `Filled` for the filled part | `EXPIRED` with the executed quantity | cancelled after the fills |
 | Market orders | not on the wire: clients send an `Ioc` limit priced through the book, as the SDKs do; `Adapt.market_order` exposes the engine's market order for tests | `MARKET`: engine market order, 5% through the best opposite price; `MARKET_LOT_SIZE` bounds the size | `Market`: engine market order, 5% through the best opposite price |
 | Amend or modify | cancel, then place the replacement with a new oid (same TIF) | not served | the replacement rests as `Gtc` (or `Alo` for `PostOnly`), whatever the original TIF |
-| Self-trade (engine cancels the taker remainder) | nothing filled: error "Order would have matched against own resting order." | nothing filled: `-2010`; a cancelled remainder: `EXPIRED_IN_MATCH` on the user stream | accepted, then cancelled with `EC_BySelfMatch` |
+| Self-trade | `Expire_maker`: the resting own order is cancelled (`selfTradeCanceled` in `orderUpdates`) and the taker keeps matching; never an error | nothing filled: `-2010`; a cancelled remainder: `EXPIRED_IN_MATCH` on the user stream | accepted, then cancelled with `EC_BySelfMatch` |
 
 A FOK order is checked and then sent as IOC in two steps on the scheduler thread, so
 nothing runs between them; self-trade prevention can still cut it short when the depth
