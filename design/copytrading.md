@@ -53,8 +53,13 @@ action involved.
    address, issue time and expiry, HMAC-signed with a server key. Every later request
    carries it; the API checks the HMAC and the expiry and never stores sessions.
 
-Planned: the challenge nonces live in memory with a TTL, so a restart forces a new
-challenge, which is harmless.
+The challenge nonces live in memory with a TTL, so a restart forces a new challenge,
+which is harmless.
+
+Status (2026-10-13): implemented in hl-copy-api (`Challenge`, `Session`,
+`Wallet_signature`); the token is `<address>.<issued_ms>.<expires_ms>.<mac>`, keyed by a
+key derived from the master key, and `personal_sign` signatures are pinned against
+`eth_account` in its tests.
 
 Status (2026-10-13): [hl-copy-web](../repos/hl-copy-web.md) implements the browser side
 (`eth_requestAccounts`, `personal_sign` of the hex-encoded message, `/auth/verify`) and
@@ -137,7 +142,12 @@ hl-client (`Signing.sign_user_action` and `recover_user_action`,
 `Exchange.approve_agent` and `approve_builder_fee`, the same on `Client` owner handles,
 `place_orders ?builder`, and `Client.trading_with_agent` for orders signed by the agent).
 The approval signatures match `eth_account` on the SDK's payload; nothing has been sent
-to testnet yet. `maxBuilderFee` has no client call yet.
+to testnet yet. `maxBuilderFee` has no client call yet. hl-copy-api serves the flow above
+against hl-sim with signature checks on: `/agent/new` offers the named agent
+`hl-copy valid_until <ms>` (179 days) with its typed data, `/agent/approved` and
+`/builder-fee` accept only the pending action (the browser may change
+`signatureChainId`) signed by the session's wallet, and an unapproved offer is reused for
+an hour instead of minting another key.
 hl-sim (2026-10-13) verifies both approvals (EIP-712 recovery), maps agents to
 accounts with the documented limits (one unnamed and three named agents, `valid_until`
 expiry, per-signer nonces), accepts agent-signed orders for the account, checks and
@@ -250,6 +260,14 @@ the feed. hl-sim serves `userFills`, `orderUpdates`, `webData2` (lite) and `user
 - **Agent keys.** Encrypted at rest with a master key from the `HL_COPY_MASTER_KEY`
   environment variable, an authenticated cipher with a random nonce per key; never
   logged, never returned by the API. The engine decrypts in memory at follower start.
+
+  Status (2026-10-13): `hl-copy-keystore` (in the hl-copy-api repository) writes
+  `<state>/agents/<owner>.sexp`, mode 0600, every agent of a user with its state
+  (`Pending`, `Active`, `Revoked`). The switch's cryptokit 1.16 has no AEAD mode, so keys
+  are sealed with ChaCha20 and HMAC-SHA256 (encrypt-then-MAC, a 24-byte random salt per
+  key, owner and agent address as associated data); moving to an AEAD is a TODO. The API
+  writes follower configs as `<follower>-<leader>.sexp`, with `paused true` while paused,
+  and removes the file on stop.
 - **Leaderboard data.** Raw lines plus `leaders.parquet` and `fills.parquet` written
   with [parquet](../repos/parquet.md), queryable with DuckDB like the rest of the
   [data platform](data-platform.md).
