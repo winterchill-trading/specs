@@ -545,8 +545,9 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
     1.1 to 1.5x rows/s, 6 to 1.1 words per row, peak RSS 220 to 128 MB on 10M rows.
 12. `venue-net` `src/ws_client.ml` (done): batched delivery (26 to 13 words per frame) and
     an `on_message` callback (0 words); see the README performance table.
-13. clients and feeds: consume `Ws_client` through `on_message` or `Pipe.iter'` instead of
-    reading `messages` one frame at a time (about 13 words per frame each).
+13. clients and feeds (done): every `Live_feed` takes frames through `Ws_client ~on_message`,
+    13 fewer words per frame; binance `User_ws` still reads `messages` (low rate, listen-key
+    swaps). Time moves only where decoding is cheap (OKX about 10%).
 14. `market-data` `lib/parquet_sink.ml` and day-close (done): `Parquet_schemas.Direct` writers,
     byte-identical output; the chunked event-log reader took day close from 1.07 M to
     2.9 M rows/s (334 to 27 words per row).
