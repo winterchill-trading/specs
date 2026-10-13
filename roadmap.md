@@ -475,8 +475,8 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
    bench, then replace the per-step account sort and pass the fill context `local_`.
 10. `price-anchor` `lib/anchor.ml`: `or_null` marks and mid, incremental queue-ahead after
     items 4 and 9.
-11. `parquet` `lib/writer.ml`: typed column builders without a per-cell closure, compress
-    without the `Buffer.contents` copy.
+11. `parquet` `lib/writer.ml` (done): `Writer.Direct` typed builders and `Zstd_bytes`;
+    1.1 to 1.5x rows/s, 6 to 1.1 words per row, peak RSS 220 to 128 MB on 10M rows.
 12. `venue-net` `src/ws_client.ml` (done): batched delivery (26 to 13 words per frame) and
     an `on_message` callback (0 words); see the README performance table.
 13. clients and feeds: consume `Ws_client` through `on_message` or `Pipe.iter'` instead of

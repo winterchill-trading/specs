@@ -27,6 +27,12 @@ Each column chunk is one v1 data page with `null_count` and min/max statistics.
 About 9.4 M rows/s with zstd on an Apple M-series laptop; a row group is buffered in
 memory.
 
+- `Writer.Direct`: per-column `add_int`, `add_float`, `add_float_u`, `add_string`,
+  `add_bool` and `end_row` without a per-cell closure (0 minor words per row once warm);
+  `Byte_buf` and `Zstd_bytes` (a C stub over `ZSTD_compress` reading and writing bytes
+  directly) avoid the `Buffer.contents` and ctypes copies. `test/reference_writer.ml` is
+  a frozen copy of the old writer; a quickcheck test keeps the output byte-equal.
+
 ## Dependencies
 
 - Depends on: no org package (core, zstd; core_unix for tests).
