@@ -450,9 +450,10 @@ Concrete actions from the [OxCaml performance notes](research/oxcaml-performance
 and their [hot-path audit](research/oxcaml-performance/audit.md), ordered by expected win per
 effort. Each starts by adding or rerunning the repository's bench and pinning words per call.
 
-1. `binance-client` `lib/feed_normalizer.ml`: `[@zero_alloc]` hand scanner for aggTrade,
-   bookTicker and depth-diff frames, Yojson as fallback, fixture test comparing both paths
-   (measured on a trade frame: 2417 ns and 298 words to 261 ns and 0 words).
+1. `binance-client` `lib/feed_normalizer.ml` (done): `Frame_scan`, a strict `[@zero_alloc]`
+   scanner with Yojson fallback and `frame_reference`; trades 2.48 us/440 words to
+   0.49 us/24, bbo 420 to 21 words, checked against Yojson on every fixture and 27k
+   corrupted frames.
 2. `fixed-decimal` `lib/fixed_decimal.ml` (done): `of_substring_exn` (85 ns/14 words to
    18 ns/0), `blit_to_bytes` (126 ns/48 words to 15 ns/0), `[@@zero_alloc]` on all
    arithmetic and comparisons, old parser kept as `Reference` for property tests.
