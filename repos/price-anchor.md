@@ -27,7 +27,8 @@ bit from its `Journal`. Design: [design/price-anchor.md](../design/price-anchor.
 | `Ref_book`, `Scale` | The reference book (best prices cached, `mid_or_null`); price and size factors with tick and lot rounding (`price_or_null`) |
 
 Trade-replay IOCs come from a second account, `anchor-taker:<venue>:<symbol>`, because
-self-trade prevention would stop them at the anchor's own shadow orders.
+self-trade prevention would stop them at the anchor's own shadow orders (or, on the
+Hyperliquid simulator, cancel those orders).
 
 ## Tests
 
