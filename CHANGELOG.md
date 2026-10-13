@@ -10,6 +10,9 @@ belong here.
 
 ## 2026-10-13
 
+- `hl-copy-core`: library done (`Scale`, `Caps`, `Rounding`, `Plan`, `Mirror`, `Score`,
+  `Pnl`, `Follower_config`), depending on `fixed-decimal`, `exchange-core`,
+  `hl-protocol` and `market-data`. See [repos/hl-copy-core.md](repos/hl-copy-core.md).
 - `market-recorder`: consumes `feed_with_gaps` of the OKX, Coinbase, Kraken, Deribit and
   Bitget feeds, so every venue's reconnects and book resyncs write disconnect lines. See
   [repos/market-recorder.md](repos/market-recorder.md).
