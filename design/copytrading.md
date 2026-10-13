@@ -138,6 +138,11 @@ hl-client (`Signing.sign_user_action` and `recover_user_action`,
 `place_orders ?builder`, and `Client.trading_with_agent` for orders signed by the agent).
 The approval signatures match `eth_account` on the SDK's payload; nothing has been sent
 to testnet yet. `maxBuilderFee` has no client call yet.
+hl-sim (2026-10-13) verifies both approvals (EIP-712 recovery), maps agents to
+accounts with the documented limits (one unnamed and three named agents, `valid_until`
+expiry, per-signer nonces), accepts agent-signed orders for the account, checks and
+charges builder codes on every fill, and answers `maxBuilderFee` and `extraAgents`;
+hl-client's owner and agent handles pass against it with `-strict-signatures`.
 In the browser, hl-copy-web builds the same typed data from `Api_types.Approve_agent` and
 `Approve_builder_fee`, shows it in full before signing, replaces `signatureChainId` with
 the wallet's `eth_chainId` (wallets refuse typed data for another chain), and posts the
@@ -178,7 +183,10 @@ Status (2026-10-13): `Hl_protocol.Leaderboard` decodes the rows (checked on four
 rows; amounts carry up to ten decimals, so they are floats), `Hl_client.Leaderboard`
 fetches and ranks them, and `Hl_client.Info.user_fills_by_time` with its pager
 `all_user_fills_since` covers step 3's fills. `portfolio` and `userRole` have no client
-calls yet.
+calls yet. hl-sim serves `userFillsByTime` and the leaderboard (`POST /info
+{"type": "leaderboard"}` and `GET /leaderboard`, `/Mainnet/leaderboard`,
+`/Testnet/leaderboard`) computed from its accounts, and `-leaders N` runs named leader
+accounts (`trend-0`, `mean-reversion-1`, `random-2`, ...) to rank and copy.
 
 ## Mirroring model
 
@@ -227,7 +235,8 @@ at most 10 addresses per connection; it drops fills repeated by reconnect snapsh
 derives each touched coin's position from `startPosition` and the fill. `orderUpdates`
 frames name no user, so they cannot be shared across addresses on one connection;
 `userEvents` (channel `user`) is decoded by `Hl_protocol.User_event` but not yet part of
-the feed.
+the feed. hl-sim serves `userFills`, `orderUpdates`, `webData2` (lite) and `userEvents`
+(fills) for any address, at most 10 distinct users per connection.
 
 ## State and persistence
 
@@ -294,9 +303,9 @@ landed `dune-project` edges): `hl-copy-core` on `fixed-decimal`, `hl-protocol`,
 `venue-net`; `hl-copy-api` on `hl-copy-core`, `hl-client`, `hl-copy-web` (for
 `Api_types`), `hl-leaderboard`; `hl-copy-web` on `bonsai_web` and no org package (`Api_types` is
 its own opam package, `hl-copy-api-types`, so the API does not link the web stack). All
-three services run against [hl-sim](../repos/hl-sim.md), which gains `approveAgent`,
+three services run against [hl-sim](../repos/hl-sim.md), which has `approveAgent`,
 `approveBuilderFee`, user subscriptions for any address, a `leaderboard` info request
-and `-leaders N` simulated leader accounts.
+and `-leaders N` simulated leader accounts (done 2026-10-13).
 
 ## Rate limits
 
