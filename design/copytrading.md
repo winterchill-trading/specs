@@ -225,6 +225,47 @@ the curve's start are flagged `truncated`. A mainnet pull on 2026-10-13 (34 cand
 155k fills, 10.4k weight, 10.6 minutes) found 17 truncated histories, and only 5
 candidates with 5 or more closed round trips: the largest accounts rarely go flat.
 
+## Backtest
+
+The leader score rates a leader's own trading. A follower does not get that trading: it
+gets the leader's position changes scaled to its capital, cut by its caps, the lot and
+the 10 USD minimum order, and paid for with taker fees and slippage. `hl-copy-backtest`
+(a second package in [hl-copy-core](../repos/hl-copy-core.md)) estimates that outcome
+from recorded data only, so leaders can also be ranked by what one follower
+configuration would have earned copying them.
+
+It reads an `hl-leaderboard` collection directory through that package's `Dataset` and
+`Rank`, so its inputs are the score's inputs: perpetual fills with a synthetic opening
+fill for positions held when the history starts, and the `portfolio` month curve as the
+leader's equity. The leader's fills of one coin, side and millisecond become one
+position change at their average price. For each change, oldest first, the change's
+price becomes the mark, both equities go to `Mirror`, and `on_leader_position_change`
+plans the follower's IOC orders exactly as the engine would; each order then fills in
+full at the leader's price moved by a slippage against the follower (5 bp by default),
+or not at all when that price is beyond the order's IOC limit, and pays 4.5 bp of
+notional (the base-tier taker fee). Daily-loss windows restart at UTC midnight.
+
+What it leaves out, on purpose: funding, liquidations, partial fills and the copy delay.
+Positions are marked to the leader's own fill prices, so a mark moves only when the
+leader trades that coin. Exact lots need a saved `meta` response; without one the lot
+is inferred from fill sizes, which can be coarser than the venue's.
+
+Each run reports the follower's equity curve, pnl, maximum drawdown, fees, turnover,
+orders and unfilled orders, the share of leader changes skipped (by reason), and two
+leader references over the same window: its fills booked on the same average-entry
+books and final marks (`leader_mtm_return`, what a perfect copy tracks before scaling
+and costs) and its `portfolio` curve. Results go to `backtest.json`, `results.parquet`
+and `curves.parquet`.
+
+Status (2026-10-13): done. On the mainnet collection of the same day (19 leaders with
+fills in the 30-day lookback, 73k changes, 2 s), a 10,000 USD equity-ratio follower
+skips a median 91% of leader changes (below the minimum order or one lot: the leaders
+hold 1.7 to 157 million USD); at 100,000 USD the median is 68%. Where little is
+skipped, the follower tracks the leader's marked return minus costs (5.3% against 7.7%
+over 21 days for the one leader with no skips). Four of 19 leaders would have made the
+follower money over their windows, which for the busiest accounts are hours long because
+of the 10,000-fill cap. Not yet exposed through `hl-leaderboard serve` or the API.
+
 ## Mirroring model
 
 The engine copies positions, not orders. A leader's resting orders, cancels and
@@ -334,7 +375,7 @@ the follower retries on the next leader update or resync.
 
 | Repository | Kind | Role |
 | --- | --- | --- |
-| [hl-copy-core](../repos/hl-copy-core.md) | Library | Pure logic: `Scale`, `Caps`, `Rounding`, `Mirror`, `Score`, `Pnl`, stable types for journals and configs |
+| [hl-copy-core](../repos/hl-copy-core.md) | Library, binary | Pure logic: `Scale`, `Caps`, `Rounding`, `Mirror`, `Score`, `Pnl`, stable types for journals and configs; the `hl-copy-backtest` package replays recorded leaders through `Mirror` |
 | [hl-leaderboard](../repos/hl-leaderboard.md) | Binary | `collect`, `rank`, `serve`: candidates, history, scores, `/leaders` JSON |
 | [hl-copy-engine](../repos/hl-copy-engine.md) | Binary | Supervises followers: feeds, mirroring, IOC execution with the agent key, journals, `/metrics`, `/status` |
 | [hl-copy-api](../repos/hl-copy-api.md) | Binary | Login, agent keys and approvals, follows, leader proxy, `/me`, `/ws` |
