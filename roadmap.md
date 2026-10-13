@@ -404,11 +404,11 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
 - [lightspark-client](repos/lightspark-client.md) (done): Grid sandbox reads and writes pass
   live, GraphQL covered by fixtures. Open: GraphQL side verified with a Lightning token.
 - `venue-net` TLS host-name verification (in progress).
-- Neobank demo (planned; design in [design/neobank.md](design/neobank.md)):
-  `striga-client` (in progress), then the provider-neutral libraries `money`, `ledger`,
-  `kyc-core`, `payments-core`, `card-core`, `risk-rules` and `banking-provider`, then
-  `striga-provider`, `neobank-api`, `neobank-web`, the infra compose profile `neobank` and
-  an end-to-end run on the fake provider and the sandbox.
+- Neobank demo (in progress; design in [design/neobank.md](design/neobank.md)):
+  `money`, `ledger`, `risk-rules` and `striga-client` are done (2026-10-14). In progress:
+  `kyc-core`, `payments-core`, `card-core`, `banking-provider`, `risk-models` and `pg-async`.
+  Then `striga-provider`, `neobank-api`, `neobank-web`, the infra compose profile `neobank`
+  and an end-to-end run on the fake provider and the sandbox.
 
 ## Next
 
