@@ -33,7 +33,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Market making | [mm-core](repos/mm-core.md) | Pure quoter, reconciler, risk, `Venue.S`, `Live.Make` loop | done |
 | Market making | [hl-mm](repos/hl-mm.md) | Hyperliquid `Venue.S` adapter and `hl-mm` binary | done |
 | Market making | [market-maker](repos/market-maker.md) | One `market-maker` binary for all three venues | done |
-| Copy trading | [hl-copy-core](repos/hl-copy-core.md) | Pure mirroring, scaling, caps and leader scoring | done |
+| Copy trading | [hl-copy-core](repos/hl-copy-core.md) | Pure mirroring, scaling, caps and leader scoring; `hl-copy-backtest` replays recorded leaders | done |
 | Copy trading | [hl-leaderboard](repos/hl-leaderboard.md) | Leader collection, scoring and `/leaders` JSON | done |
 | Copy trading | [hl-copy-engine](repos/hl-copy-engine.md) | Mirrors leaders into follower accounts with agent keys | done |
 | Copy trading | [hl-copy-api](repos/hl-copy-api.md), [hl-copy-web](repos/hl-copy-web.md) | Wallet login, agent approval and follows; Bonsai frontend | in progress |
@@ -98,6 +98,7 @@ graph LR
   end
   subgraph copy["Copy trading"]
     copy_core["hl-copy-core"]
+    copy_backtest["hl-copy-backtest"]
     leaderboard["hl-leaderboard"]
     copy_engine["hl-copy-engine"]
     copy_api["hl-copy-api"]
@@ -189,6 +190,9 @@ graph LR
   leaderboard --> hl_client
   leaderboard --> copy_core
   leaderboard --> parquet
+  copy_backtest --> leaderboard
+  copy_backtest --> copy_core
+  copy_backtest --> parquet
   copy_engine --> hl_client
   copy_engine --> copy_core
   copy_engine --> market_data
@@ -217,7 +221,9 @@ graph LR
 The copy-trading edges are planned from the design and are confirmed as each
 repository's `dune-project` lands; hl-copy-engine's and hl-copy-api's are landed
 (`hl-copy-web` stands for its `hl-copy-api-types` package, and the API reaches
-`hl-leaderboard` over HTTP, linking it only in tests). See [design/copytrading.md](design/copytrading.md).
+`hl-leaderboard` over HTTP, linking it only in tests). `hl-copy-backtest` is the second
+package of [hl-copy-core](repos/hl-copy-core.md); it needs `hl-leaderboard`, which needs
+`hl-copy-core`. See [design/copytrading.md](design/copytrading.md).
 
 The `*-feed` repositories also list `exchange-core` (Coinbase, Kraken, Deribit) and
 `fixed-decimal` (Kraken) directly. `fixed-decimal`, `venue-net` and `parquet` depend on no
