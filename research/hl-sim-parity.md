@@ -13,7 +13,9 @@ and claims backed by the recorded mainnet samples in `hl-protocol`
 Rows were updated for `hl-sim` `2d67986` (copy-trading support and the parity round of
 2026-10-13: fees, `orderUpdates` statuses, `orderStatus`, `scheduleCancel`,
 `updateLeverage`, `batchModify`, builder codes, modify `a`, `expiresAfter`, nonces and
-agent signatures, the websocket idle timeout and the `l2Book` cadence).
+agent signatures, the websocket idle timeout and the `l2Book` cadence). Rows were updated again for
+`hl-sim` `b199667` and `exchange-core` `9ba3b0f` (trigger orders, oracle and mark, premium
+funding, liquidation through the book, margin tiers, `metaAndAssetCtxs`, `userRole`).
 
 Status values:
 
@@ -35,7 +37,7 @@ planned consumer depends on it.
 | --- | --- | --- | --- |
 | `POST /info`, `POST /exchange`, websocket `/ws` | same | Same paths; the simulator also upgrades `/` to a websocket | None |
 | Unknown action, info or subscription type, malformed body | partial | Simulator: HTTP 400 `{"error": "<decoder message>"}`. Hyperliquid answers 422 with "Failed to deserialize the JSON body into the target type" ([ccxt #27081][ccxt-422], [SDK #55][sdk-55]; **unverified** for every case) | Clients that branch on the status code see a different one |
-| Unknown fields (`builder`, cancel `f`, modify `a`, `expiresAfter`, `dex`, `aggregateByTime`) | partial | `builder`, modify `a` and `expiresAfter` are honoured (rows below); cancel `f` is accepted and moot (no trigger orders); `dex` and `aggregateByTime` are ignored | None |
+| Unknown fields (`builder`, cancel `f`, modify `a`, `expiresAfter`, `dex`, `aggregateByTime`) | partial | `builder`, modify `a` and `expiresAfter` are honoured (rows below); cancel `f` is accepted and ignored (Hyperliquid rejects `f: true` on trigger orders); `dex` and `aggregateByTime` are ignored | None |
 | Number formatting | partial | Simulator prints `"100000"`; Hyperliquid prints `"100000.0"` for whole prices (**recorded**) | `market-recorder`: raw lines recorded from the simulator differ textually from mainnet; parsers accept both |
 | Signatures | partial | `approveAgent` and `approveBuilderFee` act for their EIP-712 signer; orders, cancels and modifies whose L1 signature recovers (testnet or mainnet domain) to an approved agent act for its account. Other requests keep the `X-Address` fallback unless `-strict-signatures`, which requires a valid signature on every request and ignores `X-Address` (error texts are the simulator's) | `hl-copy-engine` agent keys are exercised; `hl-mm` signed runs can opt into strict mode |
 | `X-Address` header, initial balance on first sight | sim-only | Any address is credited `-initial-balance` USD | All: no deposit flow is exercised |
@@ -53,19 +55,20 @@ planned consumer depends on it.
 | --- | --- | --- | --- |
 | `l2Book` | partial | 20 levels a side as on Hyperliquid ([info][info]); `nSigFigs` and `mantissa` are ignored; an unknown coin returns `null` (Hyperliquid **unverified**) | `market-recorder` aggregation runs untestable |
 | `allMids` | partial | Perps only, universe order; `dex` ignored; no spot mids | None |
-| `meta` | partial | Three coins (BTC, ETH, SOL at 0, 1, 2) with mainnet's tier-0 max leverage (40, 25, 20); no `marginTableId`, `marginTables`, `isDelisted`, `marginMode` ([perpetuals][perps]). On mainnet SOL is not index 2 (**recorded**) | Clients must look indices up from `meta` (all do) |
+| `meta` | partial | Three coins (BTC, ETH, SOL at 0, 1, 2) with mainnet's tier-0 max leverage (40, 25, 20), `marginTables` with mainnet's tiers and each asset's `marginTableId` (tiered tables numbered from 51 by the simulator; Hyperliquid's ids are not documented); no `isDelisted`, `marginMode` ([perpetuals][perps], [margin tiers][tiers]). On mainnet SOL is not index 2 (**recorded**) | Clients must look indices up from `meta` (all do) |
 | `clearinghouseState` | partial | No `cumFunding`, `returnOnEquity`; leverage always `cross`; `marginSummary` equals `crossMarginSummary` ([perpetuals][perps], **recorded**) | `hl-copy-engine` resync (leverage copying needs real leverage) |
 | `openOrders` | same | Fields match the recorded sample including `origSz` and `cloid` (**recorded**) | None |
-| `userFills` | partial | Every fill, newest first; Hyperliquid returns at most 2000 ([info][info]); `aggregateByTime` ignored; `hash` is a placeholder per trade (Hyperliquid: L1 transaction hash shared by a transaction's fills); no `twapId`, `builderFee`, `liquidation` | `hl-copy-engine` (liquidation detection) |
-| `orderStatus` (by oid or cloid) | partial | Any order the server reported, with its latest status; the order object has limit-order trigger fields fixed (`isTrigger` false, `tif` null); `unknownOid` otherwise ([info][info]) | None |
+| `userFills` | partial | Every fill, newest first; Hyperliquid returns at most 2000 ([info][info]); `aggregateByTime` ignored; `hash` is a placeholder per trade (Hyperliquid: L1 transaction hash shared by a transaction's fills); no `twapId`, `builderFee`; `liquidation` (`liquidatedUser`, `markPx`, `method: "market"`) on both sides of liquidation trades, none for backstop takeovers, which have no fills | `hl-copy-engine` (liquidation detection) |
+| `orderStatus` (by oid or cloid) | partial | Any order the server reported, with its latest status; trigger orders carry `orderType` (`Stop Market`, `Take Profit Limit`, ...), `isTrigger`, `triggerPx`, `triggerCondition` (`Price above X`, wording **unverified**) and `reduceOnly`; limit orders have the fixed fields (`isTrigger` false, `reduceOnly` false, `tif` null); `unknownOid` otherwise ([info][info]) | None |
 | `frontendOpenOrders`, `historicalOrders` | missing | Trigger and TP/SL fields, history | None today |
 | `userFillsByTime` | partial | Oldest first, at most 2000, both bounds inclusive; `aggregateByTime` ignored; no 10,000-fill cap ([info][info]) | None |
 | `userRateLimit` | missing | | `hl-copy-engine` |
 | `candleSnapshot` | missing | | None (candles come from `market-data`) |
-| `metaAndAssetCtxs`, `predictedFundings`, `fundingHistory`, `perpsAtOpenInterestCap` | missing | Context snapshot for all coins; the simulator has the data (see `activeAssetCtx`) | `market-recorder` funding snapshot at start |
+| `metaAndAssetCtxs` | partial | `[meta, [ctx, ...]]` with the `activeAssetCtx` contexts (`null` for a coin with no price yet) | `market-recorder` funding snapshot at start |
+| `predictedFundings`, `fundingHistory`, `perpsAtOpenInterestCap` | missing | The engine has the next rate (`Exchange.funding_rate`) and pays funding but keeps no history | None |
 | `userFunding`, `userNonFundingLedgerUpdates` | missing | The engine pays funding but does not expose per-user history | `hl-copy-engine` PnL accounting |
 | `activeAssetData` | missing | Leverage, `maxTradeSzs`, `availableToTrade` per user and coin ([perpetuals][perps]) | `hl-copy-engine` sizing |
-| `userFees`, `portfolio`, `userRole`, `maxBuilderFee`, `approvedBuilders`, `referral` | partial | `maxBuilderFee` returns the approved cap in tenths of a bp, and `extraAgents` the account's agents; the others are missing | `hl-leaderboard` (`portfolio`, `userRole`) |
+| `userFees`, `portfolio`, `userRole`, `maxBuilderFee`, `approvedBuilders`, `referral` | partial | `maxBuilderFee` returns the approved cap in tenths of a bp, `extraAgents` the account's agents, `userRole` `agent` (with its user) for an approved agent, `user` for an address the simulator has credited, else `missing` (no `vault`, `subAccount`); the others are missing | `hl-leaderboard` (`portfolio`) |
 | `subAccounts`, `vaultDetails`, `userVaultEquities` | missing | | None today |
 | `perpDexs`, `allPerpMetas`, `perpDexLimits`, `perpDexStatus` (HIP-3) | missing | Builder-deployed perps use asset `100000 + dex * 10000 + index` ([asset ids][assets]) | None |
 | `spotMeta`, `spotMetaAndAssetCtxs`, `spotClearinghouseState`, `tokenDetails` | missing | No spot market ([spot][spot]) | None |
@@ -76,7 +79,7 @@ planned consumer depends on it.
 | Action | Status | Difference | Impact |
 | --- | --- | --- | --- |
 | `order`, limit `Gtc`/`Ioc`/`Alo` | partial | Statuses `resting`, `filled`, `error` as documented ([exchange][exchange]); rule differences in [Order semantics](#order-semantics) | `hl-mm`, `hl-copy-engine` (IOC) |
-| `order`, trigger (`tp`/`sl`, `isMarket`) | missing | Rejected per order with "Trigger orders are not supported."; Hyperliquid triggers on the mark price ([order types][order-types]) | `hl-copy-engine` (leaders' TP/SL arrive only as fills, so low); protective stops in any strategy |
+| `order`, trigger (`tp`/`sl`, `isMarket`) | partial | Answers `resting` with the oid (as the Python SDK's TP/SL example reads it) and waits off the book, holding no margin, until the mark reaches `triggerPx` (sell stop-loss and buy take-profit at or below, the others at or above); then a GTC limit at `limitPx`, or with `isMarket` a market order with a 10% slippage tolerance measured from the best opposite price (Hyperliquid's reference for the 10% **unverified**), under the same oid and with every check done then. A trigger price the mark has already reached fires at once (Hyperliquid may answer `badTriggerPxRejected`, **unverified**) ([order types][order-types], [TP/SL][tpsl]) | Protective stops in any strategy |
 | `grouping` `normalTpsl`, `positionTpsl` | missing | Decoded and ignored; no parent-child orders, no `siblingFilledCanceled` | Same as trigger orders |
 | `builder` `{b, f}` on `order` | same | The approval must cover `f`, `f` at most 100 (0.1%), the builder at least $100 of account value; the fee moves from user to builder on every fill of those orders. Fills have no `builderFee` field ([exchange][exchange], [builder codes][builder]) | None |
 | `cancel` | same | `"success"` or "Order was never placed, already canceled, or filled." plus the `asset=N` suffix; `f` ignored (Hyperliquid: rejects `f: true` on trigger orders) | `hl-mm` |
@@ -84,7 +87,7 @@ planned consumer depends on it.
 | `modify` | partial | Replaces with a new order id (loses priority). With `a: false` a GTC replacement becomes ALO and an IOC one is refused, per the docs ([exchange][exchange]); a failed replacement leaves the target cancelled. Errors come back as `{"status": "err"}` (Hyperliquid **unverified**) | `hl-mm` requote path |
 | `batchModify` | same | Answers with `order` statuses, one per modify ([exchange][exchange]) | None |
 | `scheduleCancel` (dead man's switch) | same | At least 5 s ahead, no `time` unschedules, 10 triggers per UTC day; the cancelled orders' `orderUpdates` status is `scheduledCancel` (error texts are the simulator's) ([exchange][exchange]) | None |
-| `updateLeverage` | partial | Cross leverage 1 to `maxLeverage`, reported in `clearinghouseState`; `isCross: false` is refused (cross margin only) | `hl-copy-engine` mirrors cross leverage |
+| `updateLeverage` | partial | Cross leverage 1 to `maxLeverage`, and no more than the margin tier of the current position allows, reported in `clearinghouseState`; `isCross: false` is refused (cross margin only) | `hl-copy-engine` mirrors cross leverage |
 | `updateIsolatedMargin`, `topUpIsolatedOnlyMargin` | missing | The engine is cross margin only | None today |
 | `twapOrder`, `twapCancel` | missing | 30 s suborders, 3% slippage cap, 5 min to 7 days ([order types][order-types]) | None today |
 | `trailingStop` | missing | Mark-based retracement trigger ([exchange][exchange]) | None |
@@ -106,12 +109,12 @@ planned consumer depends on it.
 | `l2Book` | partial | Snapshot on subscribe, then pushes at least 500 ms apart (`-l2-interval-ms`), the first change after a quiet spell one 50 ms block later, as Hyperliquid's per-block pushes "at least 0.5" s apart ([subscriptions][subs]); `nSigFigs`, `mantissa`, `fast` (5 levels) ignored | None |
 | `trades` | partial | Shape matches, `users` is `[buyer, seller]` as documented; `tid` is a counter, Hyperliquid's is a 50-bit hash of the two order ids; `hash` per trade | `market-recorder` dedup keys behave differently on simulator data |
 | `allMids` | partial | Snapshot, then every 1 s; Hyperliquid's cadence is per block (**unverified**); `dex` ignored | None |
-| `orderUpdates` | partial | Emits `open`, `filled`, `canceled`, `selfTradeCanceled`, `liquidatedCanceled` (liquidation cancels), `scheduledCancel`, and for orders rejected through `/exchange` `badAloPxRejected`, `iocCancelRejected`, `minTradeNtlRejected`, `perpMarginRejected`, `reduceOnlyRejected`, `tickRejected` or `rejected`. Missing: `triggered`, `reduceOnlyCanceled`, `marginCanceled` for insufficient margin, and rejections of leader or noise-trader orders ([info][info]) | None |
-| `userFills` | partial | `isSnapshot: true` first, then streaming, as documented; snapshot holds every fill (Hyperliquid's snapshot size **unverified**); no `liquidation`, `builderFee`, `twapId`; `aggregateByTime` ignored | `hl-copy-engine` leader feed: liquidations look like ordinary closes |
-| `activeAssetCtx` | partial | Sent on subscribe and every 1 s; `oraclePx` equals `markPx`; day volumes cover the UTC day, not a rolling 24 h; `impactPxs` is the best bid and ask, not the impact notional's average fill price ([funding][funding]) | `market-recorder` funding stream against the simulator |
+| `orderUpdates` | partial | Emits `open`, `filled`, `canceled`, `triggered` (then the fired order's own updates), `selfTradeCanceled`, `liquidatedCanceled` (liquidation cancels, trigger orders included), `scheduledCancel`, and for orders rejected through `/exchange` `badAloPxRejected`, `iocCancelRejected`, `minTradeNtlRejected`, `perpMarginRejected`, `reduceOnlyRejected`, `tickRejected` or `rejected`. Missing: `reduceOnlyCanceled`, `siblingFilledCanceled`, `marginCanceled` for insufficient margin, and rejections of leader or noise-trader orders ([info][info]) | None |
+| `userFills` | partial | `isSnapshot: true` first, then streaming, as documented; snapshot holds every fill (Hyperliquid's snapshot size **unverified**); `liquidation` on liquidation trades as in the info request; no `builderFee`, `twapId`; `aggregateByTime` ignored | None |
+| `activeAssetCtx` | partial | Sent on subscribe and every 1 s; `oraclePx` is the market simulation's reference published every 3 s (the mark for anchored coins without the simulation), `markPx` Hyperliquid's median, `premium` the latest 5 s sample, `impactPxs` the average prices of the impact notional (20,000 USDC for BTC and ETH, 6,000 otherwise); day volumes cover the UTC day, not a rolling 24 h ([funding][funding], [price indices][indices]) | None |
 | User subscriptions for any address | same | `userFills`, `orderUpdates`, `webData2`, `userEvents` for any address; at most 10 distinct users per connection across them (Hyperliquid's limit is per IP), refused with an `error` message in the simulator's words ([rate limits][rate]) | None |
 | Connection limits (10 connections, 30 new per minute, 1000 subscriptions, 2000 messages per minute) | missing | ([rate limits][rate]) | `market-recorder` with many coins |
-| `userEvents` (channel `user`: fills, funding, liquidation, nonUserCancel) | partial | Fills only ([subscriptions][subs]) | `hl-copy-engine` liquidation and funding events |
+| `userEvents` (channel `user`: fills, funding, liquidation, nonUserCancel) | partial | Fills, and `liquidation` (`lid`, the simulator's liquidator, notional and account value) when the account is liquidated; no funding or `nonUserCancel` ([subscriptions][subs]) | `hl-copy-engine` funding events |
 | `clearinghouseState`, `openOrders`, `activeAssetData`, `webData3` | missing | Pushed account state ([subscriptions][subs]); the simulator has a `webData2` subset (`clearinghouseState`, `openOrders`, `serverTime`, `user`) every second | `hl-copy-engine` resync without polling (saves weight 2 per poll) |
 | `userFundings`, `userNonFundingLedgerUpdates` | missing | | `hl-copy-engine` PnL |
 | `bbo` | missing | Sent only when the BBO changes on a block | `market-recorder` (derives BBO from `l2Book` today) |
@@ -142,15 +145,15 @@ planned consumer depends on it.
 | Rule | Status | Difference | Impact |
 | --- | --- | --- | --- |
 | Initial margin | same | `size * mark / leverage`, leverage 1 to `maxLeverage` ([margining][margining]) | None |
-| Maintenance margin | partial | Half the initial margin at max leverage, as documented; no margin tiers (`maintenance_margin_rate - maintenance_deduction` per tier, for example BTC 40x to 150M then 20x, [margin tiers][tiers]) | None at simulator sizes |
+| Maintenance margin | same | Half the initial margin at max leverage, by margin tier with the tier deductions (mainnet tiers: BTC 40x to 150M then 20x, ETH 25x to 100M then 15x, SOL 20x to 70M then 10x) ([margining][margining], [margin tiers][tiers]) | None |
 | Isolated and strict-isolated margin | missing | Cross only, one-way ([margining][margining]) | `hl-copy-engine` when a leader trades isolated |
-| Mark price | partial | Last `set_mark` (market simulation reference or anchor), else last trade, else mid. Hyperliquid: median of oracle plus 150 s EMA of mid minus oracle, the median of BBO and last trade, and a weighted CEX perp mid; updated about every 3 s ([price indices][indices]) | Liquidation timing and unrealised PnL in `hl-mm` runs |
-| Oracle price | partial | Equals the mark; Hyperliquid: stake-weighted median of validators' weighted CEX spot medians, every 3 s ([oracle][oracle]) | `activeAssetCtx` consumers |
+| Mark price | partial | With the market simulation (default `-oracle-interval-ms 3000`), Hyperliquid's median of the oracle plus a 150 s EMA of mid minus oracle, the median of best bid, best ask and last trade, and (the external perp mids being absent) the 30 s EMA of that median, updated with each oracle price every 3 s; anchored coins without the simulation keep the anchor's mark ([price indices][indices]) | Liquidation timing and unrealised PnL in `hl-mm` runs |
+| Oracle price | partial | The market simulation's reference walk (or its anchor's price) published every 3 s; Hyperliquid: stake-weighted median of validators' weighted CEX spot medians ([oracle][oracle]) | None |
 | Funding interval | same | Hourly ([funding][funding]) | None |
-| Funding rate | partial | Per-instrument constant, default 0.00125% per hour (Hyperliquid's interest component), or the anchor's rate; Hyperliquid adds the premium (sampled every 5 s, impact notional 20,000 USDC for BTC and ETH, 6,000 otherwise), clamp, 4% per hour cap ([funding][funding], [contract specs][specs]) | `market-maker` funding PnL; `market-recorder` funding stream from the simulator |
-| Funding notional | partial | `size * mark * rate`; Hyperliquid uses the oracle price ([funding][funding]) | Differs only when mark and oracle differ, which they never do in the simulator |
+| Funding rate | same | For coins with an oracle: premium of the impact prices over the oracle sampled every 5 s, `P + clamp (0.01% - P, ±0.05%)` per 8 hours paid hourly, capped at 4% an hour; anchored coins keep the anchor's rate ([funding][funding], [contract specs][specs]) | None |
+| Funding notional | same | `size * oracle * rate` for coins with an oracle (`size * mark * rate` otherwise) ([funding][funding]) | None |
 | Liquidation trigger | same | Equity below maintenance margin at mark ([liquidations][liq]) | None |
-| Liquidation execution | partial | The engine closes every position at the mark with no order on the book and can leave a negative balance. Hyperliquid sends market orders to the book (20% slices above 100k USDC, 30 s cooldown), then a backstop by the liquidator vault below 2/3 of maintenance ([liquidations][liq]); fills carry `liquidation` | `hl-copy-engine` liquidation detection; book impact of liquidations absent |
+| Liquidation execution | partial | Orders cancelled, then a reduce-only market order per position from the account to the book (20% of positions above 100,000 USDC, the whole position within 30 s of a slice), the account keeps what remains; below 2/3 of maintenance the backstop moves positions and margin to the simulator's liquidator at the mark, with no fills; liquidation fills carry `liquidation` ([liquidations][liq]) | None |
 | Fees | same | Hyperliquid's base perps tier, taker 4.5 bp and maker 1.5 bp, configurable with `-taker-fee-bps` and `-maker-fee-bps`; no volume tiers, rebates, staking or referral discounts ([fees][fees]) | None |
 | Builder fees | same | See `builder` on `order` | None |
 
@@ -174,11 +177,11 @@ three days, L a week or more, for one agent including tests.
 | 11 | `l2Book` cadence option matching mainnet (0.5 s minimum between pushes) and `nSigFigs`/`mantissa` aggregation | `hl-sim`, `order-book` (aggregation) | S-M | Realistic message rates for `hl-mm` and the recorder |
 | 12 | Push account channels: `clearinghouseState`, `openOrders`, `userEvents`, `userFundings` | `hl-protocol`, `hl-sim` | M | `hl-copy-engine` resync without polling; liquidation and funding events |
 | 13 | Rate limits behind a flag: IP weights with 429, address budget, 1000 open orders, websocket limits including 10 unique users | `hl-sim` | M | `hl-copy-engine` back-off and leader-sharing paths |
-| 14 | Separate oracle and mark (oracle from the anchor's reference or the random walk, mark by the documented median), funding from premium with the clamp, paid on oracle notional | `exchange-core` (oracle input), `price-anchor`, `hl-sim` | M-L | Funding and liquidation realism; `activeAssetCtx` fields become meaningful |
-| 15 | Book liquidations: market orders through the book, 20% slices, backstop account, `liquidation` on fills | `exchange-core`, `hl-sim` | L | Liquidation flow visible to other traders and to `hl-copy-engine` |
-| 16 | Trigger orders (TP/SL, `normalTpsl`/`positionTpsl` grouping) on the mark price | `exchange-core` (trigger book), `hl-sim` | L | Protective stops for any strategy; copy of leaders' stops if wanted |
-| 17 | `metaAndAssetCtxs`, `fundingHistory`, `predictedFundings`, `candleSnapshot`, `bbo` channel | `hl-protocol`, `hl-sim` | M | Recorder and research tooling against the simulator |
-| 18 | `meta` margin tables and margin tiers | `hl-protocol`, `exchange-core`, `hl-sim` | M | Large-position realism only |
+| 14 | Done: separate oracle and mark (oracle from the reference walk, mark by the documented median), funding from premium with the clamp, paid on oracle notional | `exchange-core` (oracle input), `price-anchor`, `hl-sim` | M-L | Funding and liquidation realism; `activeAssetCtx` fields become meaningful |
+| 15 | Done: book liquidations: market orders through the book, 20% slices, backstop account, `liquidation` on fills; backstop fills remain | `exchange-core`, `hl-sim` | L | Liquidation flow visible to other traders and to `hl-copy-engine` |
+| 16 | Trigger orders on the mark price done; TP/SL grouping (`normalTpsl`/`positionTpsl`, `siblingFilledCanceled`) remains | `exchange-core` (trigger book), `hl-sim` | L | Protective stops for any strategy; copy of leaders' stops if wanted |
+| 17 | `metaAndAssetCtxs` done; `fundingHistory`, `predictedFundings`, `candleSnapshot`, `bbo` channel | `hl-protocol`, `hl-sim` | M | Recorder and research tooling against the simulator |
+| 18 | Done: `meta` margin tables and margin tiers | `hl-protocol`, `exchange-core`, `hl-sim` | M | Large-position realism only |
 | 19 | Websocket `post` method | `hl-sim`, then `hl-client` | M | Lower-latency order path for `hl-mm` |
 | 20 | Wire cosmetics: `"x.0"` prices, Hyperliquid's websocket error text, 422 on undecodable bodies, `twapId: null` in fills | `hl-protocol`, `hl-sim` | S | Textual fidelity of recorded simulator frames |
 | 21 | Isolated margin, spot, TWAP, trailing stops, transfers, subaccounts and vaults | `exchange-core`, `hl-protocol`, `hl-sim` | L each | No consumer needs them yet |
@@ -193,7 +196,7 @@ appending `.md`):
   [timeouts and heartbeats][hb], [error responses][errors],
   [rate limits and user limits][rate], [nonces and API wallets][nonces], [signing][signing],
   [tick and lot size][tick], [asset ids][assets].
-- Trading: [order types][order-types], [self-trade prevention][stp],
+- Trading: [order types][order-types], [TP/SL orders][tpsl], [self-trade prevention][stp],
   [margining][margining], [margin tiers][tiers], [liquidations][liq], [funding][funding],
   [fees][fees], [contract specifications][specs], [robust price indices][indices],
   [oracle][oracle].
@@ -218,6 +221,7 @@ appending `.md`):
 [stp]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/self-trade-prevention
 [margining]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/margining
 [tiers]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/margin-tiers
+[tpsl]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/take-profit-and-stop-loss-orders-tp-sl
 [liq]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/liquidations
 [funding]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/funding
 [fees]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees
