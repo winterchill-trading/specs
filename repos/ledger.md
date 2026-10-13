@@ -32,7 +32,7 @@ clearinghouse.
 | `Statement` | Paged account statement by sequence number, date or time |
 | `Camt053` | Account statements as values; no XML |
 | `Clearing` | `open_items` for matching postings still awaiting a counterpart |
-| `Safeguarding` | `reconcile` and `exposures` for customer money held against the bank's own |
+| `Safeguarding` | `reconcile` and `exposures` for safeguarded (customer) funds |
 | `Snapshot` | `verify` of a day-close snapshot against the journal |
 | `Journal` | `append`, `append_linked` (a group that commits or refuses as one), `replay`, `close_day`, `expire_holds`, and opening from a snapshot |
 
@@ -42,7 +42,7 @@ Rules enforced by the journal:
   a retried webhook returns the same answer and books nothing twice.
 - Time is assigned by the ledger, monotonically, not taken from the caller.
 - Each record carries the hash of the previous one; `verify` checks the chain.
-- Adjustments to a closed day need four-eyes approval.
+- Manual adjustments need a second approver (four-eyes).
 
 ## Tests
 
@@ -67,15 +67,14 @@ Rules enforced by the journal:
 
 ## Known gaps
 
-- The journal is read whole into memory on open. Large journals need the snapshot path
-  or a streaming reader before they fit a server.
-- macOS `fsync` does not flush the drive cache. Durability tests on macOS are not evidence
-  of durability on power loss; Linux is the target for that.
+- The journal is read whole into memory on open; opening from a snapshot avoids the full
+  read only when one exists.
+- macOS `fsync` does not flush the drive cache, so the journal's durability on macOS is weaker than on Linux.
 - Hold expiry needs a timer or a day close to run; nothing expires holds on its own.
 - Refused idempotency keys are kept forever, with no retention window.
 - Errors raised before an entry exists are not recorded as refusals, so a retry of such a
   request is processed again.
 - Matching against provider statements (breaks, ageing) is not built; `Clearing.open_items`
   lists open items only.
-- The journal chain head is not published anywhere, so a reader cannot check that the
-  journal has not been truncated at the end.
+- The journal chain head is not published, so truncation at the end is not detectable from
+  outside the journal.
