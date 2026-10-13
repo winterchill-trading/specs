@@ -8,7 +8,7 @@ public API over `exchange-core-engine`, with the engine's market simulation.
 | Repository | `winterchill-trading/hl-sim` |
 | opam package | `hl-sim` |
 | Library | `hl-sim` (module `Hl_sim`) |
-| Binary | `hl-sim` (`-port` 3000, `-seed`, `-vol-bps`, `-coins`, `-noise-traders`, `-initial-balance`, `-response-delay-ms`, `-journal`, `-input-journal`, `-log-level`; price anchor: `-anchor VENUE:SYMBOL=COIN` (repeatable), `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from`, `-anchor-to`, `-anchor-speed`, `-anchor-base-url`, `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-status-interval-s`; copy trading: `-leaders N`, `-leaders-seed`, `-leader-balance`, `-strict-signatures`, `-mainnet-signatures`; `-taker-fee-bps` 4.5, `-maker-fee-bps` 1.5, `-l2-interval-ms` 500) |
+| Binary | `hl-sim` (`-port` 3000, `-seed`, `-vol-bps`, `-coins`, `-noise-traders`, `-initial-balance`, `-response-delay-ms`, `-journal`, `-input-journal`, `-log-level`; price anchor: `-anchor VENUE:SYMBOL=COIN` (repeatable), `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from`, `-anchor-to`, `-anchor-speed`, `-anchor-base-url`, `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-status-interval-s`; copy trading: `-leaders N`, `-leaders-seed`, `-leader-balance`, `-leader-edge-s` 60, `-strict-signatures`, `-mainnet-signatures`; `-taker-fee-bps` 4.5, `-maker-fee-bps` 1.5, `-l2-interval-ms` 500) |
 | Status | done |
 
 ## Key modules
@@ -40,7 +40,10 @@ public API over `exchange-core-engine`, with the engine's market simulation.
 - `Rankings`: leaderboard rows (`day`, `week`, `month`, `allTime` pnl, roi, vlm) from
   sampled account values, deposits and volume.
 - `Leaders`: `-leaders N` accounts with trend, mean-reversion and random strategies,
-  reproducible from the seed.
+  reproducible from the seed. With an edge, trend and mean reversion trade on the
+  reference price seen ahead of the market and end positive after fees; random ones lose.
+- `Foresight`: the leaders' edge. Draws the market simulation's reference walk
+  `-leader-edge-s` ahead and pins the market to its current point (not on anchored coins).
 - `Server`: cohttp-async server for `POST /info`, `POST /exchange`, `GET /status` and the `/ws`
   websocket on the same port; owns the engine and its timers. `-response-delay-ms`
   delays every `/exchange` response while the order and its websocket events take effect
@@ -87,7 +90,8 @@ leaders and builder fees bit for bit.
 - A scheduled cancel replayed from the JSON journal fires at the next journaled request
   rather than on the periodic clock step; the engine input journal is exact.
 - Fill hashes are placeholders derived from the trade id.
-- Without `-anchor`, prices are the market simulation's random walk. Live references
+- Without `-anchor`, prices are the market simulation's random walk; with leaders and
+  `-leader-edge-s` above 0 that walk is drawn by `Foresight` instead of `Market_sim`. Live references
   exist for Hyperliquid and Binance only (the clients linked in); a Bybit or feed-repo
   reference needs its client added. `Server.replay` of the JSON `-journal` does not
   cover anchored runs; the binary `-input-journal` does.
