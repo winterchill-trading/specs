@@ -535,8 +535,9 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
    `Reconciler.reconcile` (3050 of a requote tick's words).
 8. `market-data` `lib/merge.ml`, `lib/raw_minute.ml` (done): batched merge, int-keyed heap,
    index-split lines; raw reader 0.6 M to 2.7 M lines/s, 332 to 39 words per line.
-9. `exchange-core` `engine/exchange.ml`, `engine/clearinghouse.ml`: add a step and submit
-   bench, then replace the per-step account sort and pass the fill context `local_`.
+9. `exchange-core` `engine/exchange.ml`, `engine/clearinghouse.ml` (done): step with 1000
+   accounts 388 us to 70 us (77k to 20 words), place with 500 open orders 44 us to 0.95 us
+   via a reserved-margin cache; bisimulation tests against the old paths.
 10. `price-anchor` `lib/anchor.ml`, `lib/queue_ahead.ml` (done): `or_null` marks and mid,
     queue-ahead indexed by price with a cursor refresh skipped while no exchange event
     happened, one-walk `Eligible.size`; 34.8 to 7.0 us per event at 500 resting orders
