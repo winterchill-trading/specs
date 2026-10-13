@@ -315,6 +315,11 @@ graph LR
 - The copy-trading platform (in progress) mirrors a Hyperliquid leader's positions
   into followers' accounts through agent keys the followers approve, against `hl-sim`
   or testnet. See [design/copytrading.md](design/copytrading.md).
+- The neobank demo (planned) runs onboarding with KYC, a EUR IBAN account, crypto wallets,
+  swaps, SEPA, on-chain and Lightning payments, virtual cards and standing orders over
+  provider-neutral libraries (`money`, `ledger`, `kyc-core`, `payments-core`, `card-core`,
+  `risk-rules`, `banking-provider`) and the Striga sandbox, or offline over a fake provider.
+  See [design/neobank.md](design/neobank.md).
 - The TradFi simulators have no real data source: noise traders move their books, and
   their order entry and market data are binary over TCP, with the feed repeated as JSON
   on `/ws`. Nothing in the data platform consumes them yet. See
