@@ -78,13 +78,13 @@ subscribers right after it. Each serves HTTP and websockets on one port (cohttp-
 | --- | --- | --- | --- |
 | Default port | 3000 | 3300 | 3400 |
 | Universe | BTC, ETH, SOL (asset 0, 1, 2) | BTCUSDT, ETHUSDT, SOLUSDT | BTCUSDT, ETHUSDT, SOLUSDT |
-| Account identity | `X-Address` header, else `vaultAddress`, else `0x...01` | `X-MBX-APIKEY` header | `X-BAPI-API-KEY` header; websocket `auth` op |
-| Signature | not verified | `signature`, `recvWindow` ignored; `timestamp` required | `X-BAPI-SIGN` ignored; `X-BAPI-TIMESTAMP` checked against recv window |
+| Account identity | approval signer; approved agent's account; else `X-Address` header, else `vaultAddress`, else `0x...01` | `X-MBX-APIKEY` header | `X-BAPI-API-KEY` header; websocket `auth` op |
+| Signature | approvals and agent-signed actions verified (EIP-712); others only with `-strict-signatures` | `signature`, `recvWindow` ignored; `timestamp` required | `X-BAPI-SIGN` ignored; `X-BAPI-TIMESTAMP` checked against recv window |
 | First use | credited `-initial-balance` USD | credited USDT | credited USDT |
 | REST | `POST /info`, `POST /exchange` | `/fapi/v1/...`, `/fapi/v2/account`, `positionRisk`, listen key | `/v5/market/...`, `/v5/order/...`, `/v5/execution/list`, `/v5/position/list`, wallet |
 | Websocket | `/ws`: `l2Book`, `trades`, `orderUpdates`, `userFills`, `allMids` | `/ws/<stream>`, `/stream?streams=`, `/ws/<listenKey>` | `/v5/public/linear`, `/v5/private` |
-| Book stream | full `l2Book` snapshots, at most every 50 ms | `depthUpdate` diffs every 100 ms with `U`/`u`/`pu` sequencing | snapshot then deltas, `u` +1 per message, coalesced 20 ms |
-| Fees | taker 3.5 bps, maker 1 bp | taker 5 bps, maker 2 bps | taker 5.5 bps, maker 2 bps |
+| Book stream | full `l2Book` snapshots, at most every 500 ms (one 50 ms block after a quiet spell) | `depthUpdate` diffs every 100 ms with `U`/`u`/`pu` sequencing | snapshot then deltas, `u` +1 per message, coalesced 20 ms |
+| Fees | taker 4.5 bps, maker 1.5 bps (base perps tier, configurable) | taker 5 bps, maker 2 bps | taker 5.5 bps, maker 2 bps |
 | Funding | engine default, hourly | every 8 h at 0.01% | every 8 h at 0.01% |
 
 ### Time in force and market orders
