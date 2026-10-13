@@ -10,6 +10,16 @@ belong here.
 
 ## 2026-10-13
 
+- `exchange-core`, `hl-sim`: trigger orders (`Exchange.place_trigger`, `Trigger_event`),
+  oracle prices with Hyperliquid's mark and premium funding (`Exchange.set_oracle`,
+  `Price_index`, `Premium_funding`, `Market_sim.Config.oracle_interval`), liquidation
+  through the book (`Exchange.create ?book_liquidation`, `Book_liquidation`, journal
+  header `EXJRNL03`) and margin tiers (`Margin_tier`, `Instrument.create
+  ?margin_tiers`); new journal inputs `Place_trigger`, `Modify_trigger`, `Set_oracle`.
+  `hl-sim` maps them (`-oracle-interval-ms`, `meta` margin tables, `metaAndAssetCtxs`,
+  `userRole`). See [repos/exchange-core.md](repos/exchange-core.md),
+  [design/simulators.md](design/simulators.md) and
+  [research/hl-sim-parity.md](research/hl-sim-parity.md).
 - `hl-copy-core`: second package `hl-copy-backtest` (library and binary) replaying an
   `hl-leaderboard` collection through `Mirror` with slipped IOC fills and taker fees;
   `backtest.json`, `results.parquet`, `curves.parquet`, and `-leaders N` ranks leaders
