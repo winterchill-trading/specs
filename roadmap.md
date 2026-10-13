@@ -440,14 +440,24 @@ three days, L a week or more). The copy-trading items (agents, builder fees, `us
     `userFundings` subscriptions (M).
 12. `hl-sim`: rate limits behind a flag (IP weights and 429, address budget, open order
     cap, websocket limits) (M).
-13. `exchange-core`, `price-anchor`, `hl-sim`: separate oracle and mark, premium-based
-    funding paid on oracle notional (M-L).
-14. `exchange-core`, `hl-sim`: liquidations through the book with slices, backstop and the
-    fill `liquidation` field (L).
-15. `exchange-core`, `hl-sim`: trigger orders and TP/SL grouping (L).
-16. `hl-protocol`, `hl-sim`: `metaAndAssetCtxs`, `fundingHistory`, `predictedFundings`,
-    `candleSnapshot`, `bbo` (M).
-17. `hl-protocol`, `exchange-core`, `hl-sim`: margin tables and tiers (M).
+13. `exchange-core`, `hl-sim` (done): separate oracle and mark, premium-based funding paid
+    on oracle notional (M-L). `exchange-core`: `Exchange.set_oracle` (journalled),
+    `Price_index` mark median, `Premium_funding` (5 s samples, clamp, 4% cap),
+    `Market_sim.Config.oracle_interval`; `hl-sim`: `-oracle-interval-ms` (3000), and
+    `activeAssetCtx` reports oracle, premium and impact prices.
+14. `exchange-core`, `hl-sim` (done): liquidations through the book with slices, backstop
+    and the fill `liquidation` field (L). `exchange-core`: `Exchange.create
+    ?book_liquidation`, `drain_liquidation_events`, `EXJRNL03` journal header; `hl-sim`:
+    liquidation fills and `userEvents` `liquidation`. Remaining: fills for backstop
+    takeovers.
+15. `exchange-core`, `hl-sim`: trigger orders (done: `Exchange.place_trigger`, a trigger
+    book on the mark, `Trigger_event` log, `triggered` updates and `orderStatus` trigger
+    fields) and TP/SL grouping (`normalTpsl`, `positionTpsl`; pending) (L).
+16. `hl-protocol`, `hl-sim`: `metaAndAssetCtxs` (done), `fundingHistory`,
+    `predictedFundings`, `candleSnapshot`, `bbo` (M).
+17. `exchange-core`, `hl-sim` (done): margin tables and tiers (M). `exchange-core`:
+    `Margin_tier`, `Instrument.create ?margin_tiers`, tiered maintenance and leverage
+    checks; `hl-sim`: mainnet tiers, `marginTables` in `meta`.
 18. `hl-sim`, `hl-client`: websocket `post` requests (M).
 19. `hl-protocol`, `hl-sim`: wire cosmetics (`"x.0"` prices, websocket error text, 422) (S).
 
