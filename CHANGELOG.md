@@ -10,6 +10,12 @@ belong here.
 
 ## 2026-10-13
 
+- `exchange-core`, `hl-sim`: self-trade policy per exchange (`Exchange.create
+  ?self_trade`, an `Order_book.Stp.t`) with a `Self_trade` cancel event per expired own
+  order; engine journals with a non-default policy start with `EXJRNL02` and a
+  `Journal.Header.t`. `hl-sim` runs `Expire_maker`, Hyperliquid's rule. See
+  [repos/exchange-core.md](repos/exchange-core.md) and
+  [design/simulators.md](design/simulators.md).
 - `hl-protocol`, `hl-client`, `hl-copy-engine`: `Max_builder_fee` and `User_fill.Detailed`
   (`builderFee`, `liquidation`) in hl-protocol, `Info.max_builder_fee` and
   `Info.user_fills_detailed` in hl-client, and `run -builder -builder-fee-tenths-bp` in the
