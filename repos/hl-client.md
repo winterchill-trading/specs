@@ -16,24 +16,42 @@ plus a normalized `Live_feed` for the data platform.
 - `Config`: `base_url`, `ws_url`, default `address`; `local` (`localhost:3000`),
   `mainnet`, `testnet`.
 - `Info`: `POST /info` (`l2_book`, `all_mids`, `open_orders`, `user_fills`,
-  `clearinghouse_state`, `meta`).
+  `clearinghouse_state`, `meta`, `user_fills_by_time` and its pager
+  `all_user_fills_since`, which drops repeated fills by `tid`).
 - `Exchange`: `POST /exchange` (`place_orders`, `cancel`, `cancel_by_cloid`, `modify`);
   nonce strictly increasing per process; `X-Address` header when an address is set;
-  optional `~sign` hook.
+  optional `~sign` hook. `place_orders ?builder` adds the builder fee field;
+  `approve_agent` (named agents, optional `valid_until` at most 180 days ahead) and
+  `approve_builder_fee` sign with the account's own key and check the recovered signer
+  before sending.
 - `Signing`: L1 action signing as the official Python SDK does it: a pure OCaml
   Keccak-256 and MessagePack encoder hash the action, nonce and vault; the phantom agent
   is hashed as EIP-712 typed data (domain `Exchange`, chain id 1337) and signed with
   secp256k1 (RFC 6979, low s). `Private_key.of_env` reads `HL_PRIVATE_KEY`;
   `sign_request` is an `Exchange.sign` hook. Tests reproduce every L1 vector of the SDK's
   signing tests; a testnet request with a fresh key was attributed to that key's address.
+  User-signed actions (`sign_user_action`, `recover_user_action`, `user_signed_digest`)
+  are EIP-712 in the `HyperliquidSignTransaction` domain with `chainId` =
+  `signatureChainId` (`0x66eee` by default, as the SDK); the SDK's `usdSend` vector
+  reproduces, and the approval signatures match `eth_account` on the SDK payload.
 - `Client`: typed handles, `read_only t` and `trading t`. Every `Info` helper takes any
   handle; `place_orders`, `cancel`, `cancel_by_cloid` and `modify` take only a
   `trading t`, which signs when it holds a key (`trading ?key`, `trading_of_env`) and
   sends unsigned requests otherwise (the simulator). `is_mainnet` defaults from the host.
+  `trading_with_agent ~agent_key ~account_address` signs L1 actions with an approved
+  agent for the account (no `vaultAddress`) and refuses approvals; `approve_agent` and
+  `approve_builder_fee` on owner handles.
+- `User_feed`: other accounts' fills over one websocket connection, one `userFills`
+  subscription per address shared by every consumer (at most 10 addresses, the
+  exchange's per-connection limit); fills de-duplicated by `tid` across reconnect
+  snapshots, a `Position` per touched coin after each batch, `Resync` on reconnect, and
+  known positions first for late consumers.
+- `Leaderboard`: `fetch ?network` from the stats host and `rank` by pnl, roi or volume
+  per window.
 - `Ws`: typed websocket over `Venue_net.Ws_client` with `{"method":"ping"}` keepalive,
   subscription set replayed on reconnect, `on_reconnect`, `?time_source`,
   `?backoff_jitter` and a `reconnects` count.
-- `Http`: JSON POST over `Venue_net.Http`.
+- `Http`: JSON POST and GET over `Venue_net.Http`.
 - `Live_feed`: `create ?on_raw config ~symbols ~streams` returning `Market_data.Feed.t`;
   instruments are `hyperliquid:<coin>`. `Trades` from `trades`, `L2` from `l2Book`
   (always a `Snapshot`), `Bbo` from `l2Book` when the top changes, `Funding` from
@@ -62,7 +80,8 @@ funding events).
 - Depends on: `hl-protocol`, `market-data`, `venue-net`, and the `secp256k1` opam
   binding (C library `libsecp256k1`; `digestif` does not build on OxCaml, hence the
   own Keccak).
-- Used by: `hl-mm`, `market-maker`, `market-recorder`.
+- Used by: `hl-mm`, `market-maker`, `market-recorder`, `hl-sim`; planned: `hl-copy-engine`,
+  `hl-copy-api`, `hl-leaderboard`.
 
 ## CI pin order
 
@@ -71,8 +90,11 @@ funding events).
 
 ## Known gaps
 
-- User-signed actions (transfers, withdrawals) are not implemented; only L1 actions are
-  signed. No order was placed on testnet yet (the test key was unfunded).
+- Of the user-signed actions only `approveAgent` and `approveBuilderFee` are
+  implemented (no transfers or withdrawals), and they have not been sent to testnet yet.
+  No order was placed on testnet yet (the test key was unfunded).
+- `User_feed` does not carry `orderUpdates` (its frames have no user address) or
+  `userEvents`.
 - `Funding` has no venue timestamp (`exch_ts` = `recv_ts`) and is not served by the
   simulator.
 - Updates during a reconnect gap are lost; callers resync with `on_reconnect`.
