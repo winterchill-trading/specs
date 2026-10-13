@@ -35,7 +35,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Market making | [market-maker](repos/market-maker.md) | One `market-maker` binary for all three venues | done |
 | Copy trading | [hl-copy-core](repos/hl-copy-core.md) | Pure mirroring, scaling, caps and leader scoring | done |
 | Copy trading | [hl-leaderboard](repos/hl-leaderboard.md) | Leader collection, scoring and `/leaders` JSON | done |
-| Copy trading | [hl-copy-engine](repos/hl-copy-engine.md) | Mirrors leaders into follower accounts with agent keys | in progress |
+| Copy trading | [hl-copy-engine](repos/hl-copy-engine.md) | Mirrors leaders into follower accounts with agent keys | done |
 | Copy trading | [hl-copy-api](repos/hl-copy-api.md), [hl-copy-web](repos/hl-copy-web.md) | Wallet login, agent approval and follows; Bonsai frontend | in progress |
 | Data platform | [parquet](repos/parquet.md) | Pure OCaml Parquet writer | done |
 | Data platform | [market-data](repos/market-data.md) | Normalized types, event logs, Parquet sink, day close, DuckDB views, replay | done |
@@ -191,6 +191,7 @@ graph LR
   leaderboard --> parquet
   copy_engine --> hl_client
   copy_engine --> copy_core
+  copy_engine --> market_data
   copy_api --> copy_core
   copy_api --> hl_client
   copy_api --> copy_web
@@ -202,6 +203,7 @@ graph LR
   bybit_client -.-> bybit_sim
   market_replay -.-> hl_client
   copy_api -.-> hl_sim
+  copy_engine -.-> hl_sim
   market_replay -.-> binance_client
   market_replay -.-> bybit_client
   infra -.-> hl_sim
@@ -213,9 +215,9 @@ graph LR
 ```
 
 The copy-trading edges are planned from the design and are confirmed as each
-repository's `dune-project` lands; hl-copy-api's are landed (`hl-copy-web` stands for
-its `hl-copy-api-types` package, and the API reaches `hl-leaderboard` over HTTP, linking
-it only in tests). See [design/copytrading.md](design/copytrading.md).
+repository's `dune-project` lands; hl-copy-engine's and hl-copy-api's are landed
+(`hl-copy-web` stands for its `hl-copy-api-types` package, and the API reaches
+`hl-leaderboard` over HTTP, linking it only in tests). See [design/copytrading.md](design/copytrading.md).
 
 The `*-feed` repositories also list `exchange-core` (Coinbase, Kraken, Deribit) and
 `fixed-decimal` (Kraken) directly. `fixed-decimal`, `venue-net` and `parquet` depend on no
