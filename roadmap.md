@@ -513,9 +513,9 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
 2. `fixed-decimal` `lib/fixed_decimal.ml` (done): `of_substring_exn` (85 ns/14 words to
    18 ns/0), `blit_to_bytes` (126 ns/48 words to 15 ns/0), `[@@zero_alloc]` on all
    arithmetic and comparisons, old parser kept as `Reference` for property tests.
-3. `market-recorder` `lib/recorder.ml`, `lib/metrics.ml`, `lib/raw_writer.ml`: resolve the
-   counters and output file once per subscription, `last_frame` without an option, reused
-   timestamp buffer, blit instead of `String.concat`.
+3. `market-recorder` `lib/recorder.ml`, `lib/metrics.ml`, `lib/raw_writer.ml` (done): counters
+   and output file resolved once per stream, reused timestamp buffer, blit into the file
+   buffer; `on_raw` 832 ns/186 words to 383 ns/0 words, about 600k frames/s per core.
 4. `order-book` `lib/order_book.ml` (done): `best_bid_or_null`, `best_ask_or_null` and
    `mid_or_null` at 0 words; O(1) cancel (24.8 us to 0.26 us behind 1000 orders).
 5. `bybit-client` `lib/live_feed.ml`, `hl-client` `lib/normalizer.ml`, `okx-feed`
