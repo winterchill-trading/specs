@@ -155,7 +155,9 @@ taker side `s` and size `q`:
    instead.
 3. Place an IOC limit order at `p` for the eligible size from a second anchor account
    (`anchor-taker:<venue>:<symbol>`). It must be a separate account: the engine's
-   self-trade prevention stops a taker at its own resting order and cancels the rest.
+   self-trade prevention would stop it at the anchor's own resting order
+   (`Cancel_taker`, Binance and Bybit simulators) or cancel that order (`Expire_maker`,
+   Hyperliquid simulator).
 4. Re-place the shadow levels from the current reference book.
 
 The four steps run in one go on the scheduler thread (or inside one `Stepped` step), so
