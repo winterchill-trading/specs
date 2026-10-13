@@ -124,7 +124,7 @@ planned consumer depends on it.
 | --- | --- | --- | --- |
 | Price tick and significant figures | same | 5 significant figures, at most `6 - szDecimals` decimals, integers always allowed ([tick and lot][tick]) | None |
 | Size step | same | `szDecimals` | None |
-| Tick error text | partial | Simulator: "Order has invalid price."; the documented string is "Price must be divisible by tick size." ([errors][errors]); Hyperliquid's text for sig-fig violations is **unverified** | `hl-mm` maps "Price must be divisible..." to `Unsupported` |
+| Tick error text | same | "Price must be divisible by tick size." as documented ([errors][errors]) for tick and significant-figure violations (since `hl-sim` `61a054d`); Hyperliquid's text for sig-fig violations is **unverified** | `hl-mm` maps it, and the older "Order has invalid price.", to `Invalid_price` |
 | Minimum order value | same | $10, reduce-only exempt; same text ([errors][errors]) | None |
 | `asset=N` suffix on order errors | partial | Appended to every order error; on Hyperliquid **unverified** (not in the docs' strings) | `hl-mm` strips it either way |
 | Self-trade prevention | partial | Simulator (order-book): matching stops at the taker's own resting order, the taker's remainder is cancelled, the resting order stays; with nothing filled the order fails with "Order would have matched against own resting order." Hyperliquid: the **resting** order is cancelled ("expire maker"), no fee, not in the trade feed, and the taker keeps matching behind it ([self-trade][stp]). The simulator's error text has no Hyperliquid equivalent | `hl-mm`, `market-maker`: a crossing requote behaves the opposite way; `hl-mm` maps a string that mainnet never sends |
