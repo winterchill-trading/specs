@@ -30,6 +30,14 @@ belong here.
   orders, `User_feed` (shared leader fill feeds), `Leaderboard` and `userFillsByTime`.
   See [repos/hl-client.md](repos/hl-client.md) and
   [design/copytrading.md](design/copytrading.md).
+- `hl-sim`: copy-trading wire support (`approveAgent`, `approveBuilderFee`, agent-signed
+  orders, builder codes, `maxBuilderFee`, `extraAgents`, `userFillsByTime`,
+  `orderStatus`, the `leaderboard` info request and `GET /leaderboard`, `webData2` and
+  `userEvents`), `updateLeverage`, `scheduleCancel` and `batchModify`, new JSON journal
+  record kinds (`userAction`, `l1Action`), and the `-leaders`, `-strict-signatures`,
+  `-mainnet-signatures`, `-taker-fee-bps`, `-maker-fee-bps` and `-l2-interval-ms` flags
+  (fees now 4.5 / 1.5 bps, `l2Book` pushes 500 ms apart). See
+  [repos/hl-sim.md](repos/hl-sim.md).
 
 ## 2026-10-12
 
