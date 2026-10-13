@@ -26,7 +26,7 @@ replay.
 | `Snapshot_index` | Periodic full L2 books in `norm/l2/_snapshots/<date>.bin`, looked up by time |
 | `Instrument_info` | Catalogue per venue and symbol from `data/instruments.sexp`: kind (`Spot \| Perp \| Future \| Option`), base, quote, size unit (`Base \| Quote \| Contracts m`), funding interval, tick, lot |
 | `Raw_minute` | Reads `market-recorder` minute files (path parsing, multi-frame zstd, `<recv_ts> <frame>` lines) |
-| `Raw_reader` | Streams one symbol's raw minute files over a time range, all streams merged by `recv_ts`, one decompressed minute per stream in memory; empty lines become `Gap` items; unreadable lines go to `on_error`. About 0.5 to 0.7 M lines/s |
+| `Raw_reader` | Streams one symbol's raw minute files over a time range, all streams merged by `recv_ts`, one decompressed minute per stream in memory; empty lines become `Gap` items; unreadable lines go to `on_error`. About 2.7 M lines/s at 39 words per line after the batched merge and index-split lines |
 | `Gap`, `Feed.With_gaps` | A gap record (`Disconnect`, `Resync`, `Damaged_log`) and a feed wrapper with a `gaps` pipe; `Feed.S` is unchanged, `of_feed`/`to_feed` convert |
 | `Replay_feed.of_raw` | Replays raw files through a `Normalizer.S`, one state per stream, each disconnect line reported as a gap |
 | `Normalizer`, `Rebuild_norm` | `Normalizer.S`, the raw-frame-to-events interface a feed library implements; `Rebuild_norm.run` and `command` rebuild a day of `norm/` from raw minutes through `Raw_reader` with the given normalizers; unparseable lines count as `frame_errors` instead of failing the run; `?snapshot_interval` (`-snapshot-interval`, one minute by default, `0s` off) writes the same `Snapshot_index` as the live writer |

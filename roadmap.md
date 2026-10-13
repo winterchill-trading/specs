@@ -469,8 +469,8 @@ effort. Each starts by adding or rerunning the repository's bench and pinning wo
 7. `mm-core` `lib/market_state.ml`, `lib/quoter.ml`: mutable state with `Float_u.t` fields
    and `Price.t or_null`, rungs built into arrays; keep the pure strategy as the reference
    in a bisimulation test.
-8. `market-data` `lib/merge.ml`, `lib/raw_minute.ml`: batch merge with `Pipe.read'`,
-   record heap entries keyed by an immediate timestamp, split lines by index.
+8. `market-data` `lib/merge.ml`, `lib/raw_minute.ml` (done): batched merge, int-keyed heap,
+   index-split lines; raw reader 0.6 M to 2.7 M lines/s, 332 to 39 words per line.
 9. `exchange-core` `engine/exchange.ml`, `engine/clearinghouse.ml`: add a step and submit
    bench, then replace the per-step account sort and pass the fill context `local_`.
 10. `price-anchor` `lib/anchor.ml`: `or_null` marks and mid, incremental queue-ahead after
