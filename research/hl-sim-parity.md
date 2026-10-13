@@ -127,7 +127,7 @@ planned consumer depends on it.
 | Tick error text | same | "Price must be divisible by tick size." as documented ([errors][errors]) for tick and significant-figure violations (since `hl-sim` `61a054d`); Hyperliquid's text for sig-fig violations is **unverified** | `hl-mm` maps it, and the older "Order has invalid price.", to `Invalid_price` |
 | Minimum order value | same | $10, reduce-only exempt; same text ([errors][errors]) | None |
 | `asset=N` suffix on order errors | partial | Appended to every order error; on Hyperliquid **unverified** (not in the docs' strings) | `hl-mm` strips it either way |
-| Self-trade prevention | partial | Simulator (order-book): matching stops at the taker's own resting order, the taker's remainder is cancelled, the resting order stays; with nothing filled the order fails with "Order would have matched against own resting order." Hyperliquid: the **resting** order is cancelled ("expire maker"), no fee, not in the trade feed, and the taker keeps matching behind it ([self-trade][stp]). The simulator's error text has no Hyperliquid equivalent | `hl-mm`, `market-maker`: a crossing requote behaves the opposite way; `hl-mm` maps a string that mainnet never sends |
+| Self-trade prevention | same | Hyperliquid's "expire maker" ([self-trade][stp]) since `hl-sim` `c292f9e`: the **resting** own order is cancelled (`selfTradeCanceled` in `orderUpdates`), with no fill, no fee and nothing in the trade feed, and the taker keeps matching behind it; the order is never rejected for self-trade (engine `Exchange.create ~self_trade:Expire_maker`, order-book `Stp.Expire_maker`) | None; `hl-mm` treats `selfTradeCanceled` as a cancel |
 | ALO crossing | same | "Post only order would have immediately matched, bbo was {bbo}." ([errors][errors]) | None |
 | IOC with no match | same | "Order could not immediately match against any resting orders." ([errors][errors]) | None |
 | Market orders | same | Hyperliquid has no market type on the API; SDKs send IOC 5% through, as the simulator's `market_order` does | None |
@@ -161,7 +161,7 @@ three days, L a week or more, for one agent including tests.
 
 | # | Gap | Repos | Effort | Why |
 | ---: | --- | --- | --- | --- |
-| 1 | Self-trade prevention as "expire maker": cancel the resting order (`selfTradeCanceled` on its owner), keep matching the taker, drop the invented error | `order-book` (policy option), `exchange-core`, `hl-sim` | M | The one rule where the simulator does the opposite of Hyperliquid; it changes every crossing requote of `hl-mm` and `market-maker` |
+| 1 | Done: self-trade prevention as "expire maker": cancel the resting order (`selfTradeCanceled` on its owner), keep matching the taker, drop the invented error | `order-book` (policy option), `exchange-core`, `hl-sim` | M | The one rule where the simulator did the opposite of Hyperliquid; it changed every crossing requote of `hl-mm` and `market-maker` |
 | 2 | Fees at the base tier (4.5 / 1.5 bp), with a flag for other tiers | `hl-sim` `Adapt.instrument` | S | Every PnL number from simulator runs is optimistic |
 | 3 | `orderUpdates` for rejected orders (`badAloPxRejected`, `iocCancelRejected`, ...) and `liquidatedCanceled` instead of `marginCanceled` for liquidation cancels | `hl-sim` `Adapt.order_update` | S | Recorded mainnet behaviour; `hl-mm` already maps these statuses |
 | 4 | `orderStatus` info request by oid and cloid | `hl-protocol`, `hl-sim` (engine keeps orders' final states) | S-M | Reconciliation after a lost ack in `hl-mm` and `hl-copy-engine` |
