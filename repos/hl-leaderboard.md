@@ -26,7 +26,7 @@ as JSON.
 | Module | Purpose |
 | --- | --- |
 | `Board` | Candidate selection over `Hl_protocol.Leaderboard` rows |
-| `Roles` | `userRole` filter over the candidate walk; a server without `userRole` (hl-sim) keeps every row |
+| `Roles` | `userRole` filter over the candidate walk; an address whose role request fails after retries is excluded on mainnet and testnet and kept only with `-network local`, until hl-sim serves `userRole` |
 | `Api` | Read-only client returning raw bodies, through one `Rate_limit` bucket, retrying 429/5xx with backoff |
 | `Rate_limit` | Token bucket (1200 weight per minute) and the documented request weights |
 | `Fill_pages` | Forward `userFillsByTime` walk |
