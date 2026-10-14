@@ -62,7 +62,7 @@ Rules enforced by the library:
 - Depends on: no org packages. External: `core`, `ppx_jane`; `core_unix` and `base_quickcheck`
   for tests; the CLI package adds `core_unix` and requires `scheduler-core` at the same
   version. Requires the OxCaml compiler.
-- Used by: [pots-and-insights](pots-and-insights.md).
+- Used by: `pots-and-insights`.
 
 ## CI pin order
 
