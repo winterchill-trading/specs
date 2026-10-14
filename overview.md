@@ -44,6 +44,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Fiat rails | [griffin-client](repos/griffin-client.md) | Async client and CLI for a UK banking API: legal persons, accounts, payments, payees, Confirmation of Payee, webhooks; sandbox by default | done |
 | Fiat rails | [lightspark-client](repos/lightspark-client.md) | Async client and CLI for a Lightning and UMA GraphQL API and a Grid banking API: nodes, invoices, customers, transfers, quotes; sandbox writes only, webhook verification | done |
 | Fiat rails | [striga-client](repos/striga-client.md) | Async client and CLI for the Striga v1 API: consumers and KYC, wallets, payments, cards, standing orders, webhooks; sandbox by default | done |
+| Fiat rails | [striga-provider](repos/striga-provider.md) | `banking-provider`'s `Provider` and `Sandbox` over `striga-client`, with the endpoint and webhook mapping; sandbox by default | done, sandbox-limited |
 | Banking libraries | [money](repos/money.md) | Currencies, exact minor-unit amounts, FX rates, fees; the base of the banking libraries | done |
 | Banking libraries | [ledger](repos/ledger.md) | Double-entry ledger over an append-only Bin_prot journal: holds, idempotency, trial balance, statements | done |
 | Banking libraries | [risk-rules](repos/risk-rules.md) | Rule engine for transfers and card authorisations: reason codes, typologies, SCA exemptions, shadow mode, review queue | done |
@@ -128,6 +129,7 @@ graph LR
     griffin_client["griffin-client"]
     lightspark_client["lightspark-client"]
     striga_client["striga-client"]
+    striga_provider["striga-provider"]
   end
   subgraph banking["Banking libraries"]
     money["money"]
@@ -235,7 +237,10 @@ graph LR
   banking_provider --> kyc_core
   banking_provider --> payments_core
   banking_provider --> card_core
+  striga_provider --> banking_provider
+  striga_provider --> striga_client
   neobank_api --> banking_provider
+  neobank_api --> striga_provider
   neobank_api --> risk_rules
   neobank_api --> pg_async
   neobank_api --> neobank_api_types
