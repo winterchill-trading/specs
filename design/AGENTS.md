@@ -9,7 +9,8 @@ and links to the `repos/` pages and ADRs it depends on rather than repeating the
   `explanation`). Keep the line when editing; change it when the page changes kind.
 - Read the page for the area you will change before editing code there (for example `price-anchor.md`
   before touching a simulator's anchor flags, `data-platform.md` before a storage format).
-- A change to an on-disk format, file layout, wire protocol or venue adapter contract updates the page in
+- A change to an on-disk format, file layout, wire protocol or venue adapter contract
+  updates the page in
   the same change, and states the new shape in full.
 - Decisions with a trade-off go to `../adr/` as a numbered record; the design page links to it.
 - Open questions stay in the page under an explicit heading, so they can be found and closed.
