@@ -21,7 +21,8 @@ findings this plan rests on, with sources, are in
   feature to get it.
 - MIT license, descriptive names without an org prefix, `0.x` semver with OCaml-specific
   breaking-change rules, docs on GitHub Pages.
-- Tier 1: `fixed-decimal`, `money`, `pg-async`. Tier 2: `ledger`, `order-book` (with
+- Tier 1: `pg-async` first, because it already builds on upstream OCaml, then `fixed-decimal`
+  and `money`. Tier 2: `ledger`, `order-book` (with
   `exchange-core`), `venue-net`, `parquet`. Tier 3: the provider-neutral banking libraries.
 
 ## Why not upstream opam-repository, today
@@ -162,9 +163,33 @@ so dune picks the OxCaml file on OxCaml and the fallback elsewhere. Rules:
 - The upstream path is a second opam package only if it ever goes upstream; in our
   repository one package with the shim is enough.
 
-Candidates: `fixed-decimal` (17 `let mutable`, two `: immediate`, no Core-v0.18-only API
-known yet) is the cheapest; `money` needs its layout-polymorphic `to_fixed_decimal`
+Candidates: `pg-async` needs no shim, since it already builds upstream. `fixed-decimal`
+(17 `let mutable`, two `: immediate`, no Core-v0.18-only API known yet) is the cheapest
+shim; `money` needs its layout-polymorphic `to_fixed_decimal`
 reshaped; `order-book` and `parquet` are deep in OxCaml features and stay OxCaml-only.
+
+## Common blockers
+
+These block more than one package and are listed once here; each audit page names the
+ones that apply to it under its top blockers
+([research/opam-readiness](../research/opam-readiness/README.md#audits)).
+
+- **No venue yet.** Upstream opam CI has no OxCaml platform, and our own opam repository
+  (above) does not exist. Nothing can be released into a repository until it is created,
+  and merging into it is publishing.
+- **`odoc` is not installed on the switch.** `dune build @doc` has never run on any
+  audited package, so none can be released `--with-doc` yet. The OxCaml dry run plans
+  `odoc.3.2.0+ox2` and touches neither the compiler nor Core; installing it waits for the
+  owner's approval (see [Documentation](#documentation)).
+- **Tests need external servers or binaries.** `pg-async`'s cluster tests need PostgreSQL
+  (`initdb`, `pg_ctl`), and `parquet`'s tests need the DuckDB CLI. Neither is an opam
+  package, so `opam install --with-test` fails on a clean machine until the tests skip
+  without them or a depext supplies them.
+- **Circular dependency between `order-book` and `exchange-core`.** The `order-book`
+  library depends on `exchange-core`, and `exchange-core-engine` (in the `exchange-core`
+  repository) depends on `order-book`: a cycle between packages. `order-book` cannot be
+  released until `exchange-core` is, or until the primitives it uses move into a package
+  of their own.
 
 ## Licensing
 
@@ -263,9 +288,9 @@ Requires approval:
 
 | Tier | Package | Library deps | OxCaml-only constructs | Why this tier |
 | --- | --- | --- | --- | --- |
+| 1 | `pg-async` | async, core_unix, postgresql, uri, yojson | none (builds on upstream OCaml 5.2 with Core v0.17, checked by hand) | Upstream-buildable today; fills a real gap; libpq via `postgresql` from upstream |
 | 1 | `fixed-decimal` | core, ppx_jane, yojson | `[@zero_alloc]`, `let mutable`, `: immediate` | No org deps; unique; the cheapest dual build |
 | 1 | `exact-money` (`money`) | core, fixed-decimal, zarith, yojson | `: immediate` layouts | Only needs `fixed-decimal`; general-purpose currency maths |
-| 1 | `pg-async` | async, core_unix, postgresql, uri, yojson | none (Core v0.18 only) | Fills a real gap; libpq via `postgresql` from upstream |
 | 2 | `double-entry` (`ledger`) | core, core_unix, async_kernel, cryptokit, money | none | Owns an on-disk journal format; freeze it with versioned stable types first |
 | 2 | `order-book` | core, exchange-core, fixed-decimal | `or_null`, `exclave_`, `@ local`, `[@zero_alloc]` | Needs `exchange-core` published or the dependency cut |
 | 2 | `venue-net` | async, async_ssl, async_websocket, cohttp, conduit-async, uri | none (Async v0.18 only) | Useful plumbing, but its API was shaped by our venues |
@@ -277,7 +302,11 @@ Reasons in more detail:
 - **Tier 1** libraries are small, depend only on packages that already exist in the OxCaml
   or upstream repositories (or on each other), have no on-disk formats beyond their
   `Stable` sexps, and solve problems other OxCaml users have: exact decimals, money, and
-  PostgreSQL from Async. `fixed-decimal` goes first because `money` depends on it.
+  PostgreSQL from Async. `pg-async` goes first: it is the only library audited so far with
+  no OxCaml construct, and it builds and passes its tests on plain OCaml 5.2.0 with Jane
+  Street v0.17, so it is the first candidate for an upstream release. The other two need
+  the OxCaml overlay until a Core v0.17 port exists; `fixed-decimal` goes before `money`
+  because `money` depends on it.
 - **`ledger` is tier 2, not tier 1.** It is general (balanced postings, holds, reversals,
   idempotency keys), but it writes an append-only checksummed Bin_prot journal, and a
   public release turns that format into a compatibility promise. Release it once the
