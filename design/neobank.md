@@ -7,8 +7,9 @@ Status: in progress (2026-10-14). `money`, `ledger`, `kyc-core`, `payments-core`
 `neobank-api` and `neobank-web` are done on the fake provider; `striga-provider` is in
 progress; the infra compose profile `neobank` is drafted and being verified. The store of
 `neobank-api` is PostgreSQL through `pg-async` behind `Store.S`, a per-service store interface
-([ADR 0009](../adr/0009-postgres-replaceable-store.md)); `hl-copy-api` uses the same store. The bank-side domain is split into provider-neutral
-libraries named for what they are (`money`, `ledger`, `kyc-core`, `payments-core`,
+([ADR 0009](../adr/0009-postgres-replaceable-store.md)); `hl-copy-api` uses the same store.
+The bank-side domain is split into provider-neutral libraries named for what they are
+(`money`, `ledger`, `kyc-core`, `payments-core`,
 `card-core`, `risk-rules`, `banking-provider`); only the demo apps (`neobank-api`,
 `neobank-web`) and the infra compose profile carry the neobank name. Everything below is the
 design; repository pages are added as the repositories land.
