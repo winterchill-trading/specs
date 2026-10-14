@@ -3,8 +3,11 @@
 Kind: explanation.
 
 Status: in progress (2026-10-14). `money`, `ledger`, `kyc-core`, `payments-core`, `card-core`,
-`risk-rules` and `striga-client` are done; the other libraries in the table below are in
-progress and the demo apps are planned. The bank-side domain is split into provider-neutral
+`risk-rules`, `striga-client`, `banking-provider`, `risk-models` and `pg-async` are done;
+`striga-provider`, `neobank-api` and `neobank-web` are in progress. The application state of
+`neobank-api` is PostgreSQL through `pg-async`, behind a per-service store interface
+([ADR 0009](../adr/0009-postgres-replaceable-store.md)); `hl-copy-api` is moving to the same
+store. The bank-side domain is split into provider-neutral
 libraries named for what they are (`money`, `ledger`, `kyc-core`, `payments-core`,
 `card-core`, `risk-rules`, `banking-provider`); only the demo apps (`neobank-api`,
 `neobank-web`) and the infra compose profile carry the neobank name. Everything below is the
@@ -105,6 +108,11 @@ graph LR
 - `banking-provider` defines the `Provider` module type (Async, `Or_error`) over the
   domain types: everything the API needs from a provider. Its deterministic fake
   implements it in memory and simulates deposits, approvals and card activity on command.
+- `neobank-api` keeps its application state (users, sessions, provider ids, transfer and
+  card states, idempotency keys, outbox and inbox) in PostgreSQL through
+  [pg-async](../repos/pg-async.md). Each service has a `Store.S` with an in-memory and a
+  PostgreSQL implementation and one conformance suite over both; the ledger journal stays a
+  file outside the database ([ADR 0009](../adr/0009-postgres-replaceable-store.md)).
 - `striga-provider` implements `Provider` over `striga-client`, with a mapping table
   (which endpoint backs each operation, which webhook feeds which event) in its
   `docs/mapping.md`.
@@ -124,6 +132,7 @@ graph BT
   card_core["card-core"]
   risk_rules["risk-rules"]
   banking_provider["banking-provider"]
+  pg_async["pg-async"]
   striga_client["striga-client"]
   striga_provider["striga-provider"]
   neobank_api["neobank-api"]
@@ -146,6 +155,7 @@ graph BT
   striga_provider --> striga_client
   neobank_api --> banking_provider
   neobank_api --> risk_rules
+  neobank_api --> pg_async
   neobank_api --> striga_provider
   neobank_web --> neobank_api
   compose --> neobank_api
@@ -291,17 +301,17 @@ caps from the tier.
 | `payments-core` | Transfer state machines (SEPA, on-chain, Lightning, intraledger, swap), OTP/SCA step, standing orders | `money`, `ledger` | done ([repo page](../repos/payments-core.md)) |
 | `card-core` | Card lifecycle, authorizations and settlements, limits | `money`, `ledger`, `payments-core` | done ([repo page](../repos/card-core.md)) |
 | `risk-rules` | Rule engine for transfers and card authorisations: caps, typologies, SCA exemptions, shadow mode, review queue | `money`, `payments-core` | done ([repo page](../repos/risk-rules.md)) |
-| `risk-models` | Machine-learned scores through `risk-rules`' `Model.S`; trained offline, scored in OCaml | `risk-rules` | in progress |
-| `pg-async` | Non-blocking PostgreSQL client for Async over libpq: pool, parameterized queries, transactions, migrations | (none) | in progress |
-| `banking-provider` | `Provider` module type over the domain libraries, deterministic fake provider | `kyc-core`, `payments-core`, `card-core` | in progress |
+| `risk-models` | Machine-learned scores through `risk-rules`' `Model.S`; trained offline, scored in OCaml | `risk-rules` | done ([repo page](../repos/risk-models.md)) |
+| `pg-async` | Non-blocking PostgreSQL client for Async over libpq: pool, parameterized queries, transactions, migrations | (none) | done ([repo page](../repos/pg-async.md)) |
+| `banking-provider` | `Provider` module type over the domain libraries, deterministic fake provider | `money`, `ledger`, `kyc-core`, `payments-core`, `card-core` | done ([repo page](../repos/banking-provider.md)) |
 | `striga-client` | Striga SDK and `striga` CLI: HMAC transport, typed resources, simulator, webhook verification | (none) | done ([repo page](../repos/striga-client.md)) |
 | `striga-provider` | `Provider` over `striga-client`, endpoint and webhook mapping table | `banking-provider`, `striga-client` | in progress |
-| `neobank-api` | Async HTTP API, sessions, webhooks, `/ws`; the demo server | `banking-provider`, `risk-rules`, `striga-provider` | planned |
-| `neobank-web` | Bonsai frontend, mock mode on the fake provider | `neobank-api` types | planned |
+| `neobank-api` | Async HTTP API, sessions, webhooks, `/ws`; the demo server; state in PostgreSQL through `pg-async` | `banking-provider`, `risk-rules`, `striga-provider`, `pg-async` | in progress |
+| `neobank-web` | Bonsai frontend, mock mode on the fake provider | `neobank-api` types | in progress |
 | `infra` | Compose profile `neobank`: API, web, fake or sandbox provider | the images above | planned |
 
 CI pin order (planned), following the graph: fixed-decimal, money, ledger, kyc-core,
-payments-core, card-core, risk-rules, banking-provider, striga-client, striga-provider,
+payments-core, card-core, risk-rules, banking-provider, striga-client, striga-provider, pg-async,
 neobank-api. CI has no credentials; live tests are skipped with one line and the suites
 run on recorded, redacted fixtures and the fake provider.
 
