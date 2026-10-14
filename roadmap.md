@@ -385,7 +385,9 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
 - [hl-leaderboard](repos/hl-leaderboard.md): `collect`, `rank`, `serve`.
 - [hl-copy-engine](repos/hl-copy-engine.md): followers, resync, journals, metrics,
   end-to-end script on `hl-sim`.
-- [hl-copy-api](repos/hl-copy-api.md): wallet login, agent keys, follows.
+- [hl-copy-api](repos/hl-copy-api.md): wallet login, agent keys, follows; state in PostgreSQL
+  through [pg-async](repos/pg-async.md) (2026-10-14), the engine still reads the files the API
+  writes from it.
 - [hl-copy-web](repos/hl-copy-web.md): Bonsai frontend and `Api_types`.
 - `infra`: compose and Helm entries for the copy-trading services; the first real
   `make up-copy` run passed on 2026-10-13 (wallet login, agent approval, follow, mirrored
@@ -406,13 +408,13 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
 - `venue-net` TLS host-name verification (in progress).
 - Neobank demo (in progress; design in [design/neobank.md](design/neobank.md)):
   `money`, `ledger`, `kyc-core`, `payments-core`, `card-core`, `risk-rules`,
-  `striga-client`, `banking-provider`, `risk-models` and `pg-async` are done (2026-10-14).
-  In progress: `striga-provider`, `neobank-api` and `neobank-web`. `neobank-api` keeps its
-  state in PostgreSQL through [pg-async](repos/pg-async.md)
-  ([ADR 0009](adr/0009-postgres-replaceable-store.md)), and `hl-copy-api` moves to the same
-  store.
-  Then the infra compose profile `neobank` and an end-to-end run on the fake provider and
-  the sandbox.
+  `striga-client`, `banking-provider`, `risk-models` and `pg-async` are done (2026-10-14),
+  and so are [neobank-api](repos/neobank-api.md) and [neobank-web](repos/neobank-web.md) on
+  the fake provider. `neobank-api` keeps its state in PostgreSQL through
+  [pg-async](repos/pg-async.md) ([ADR 0009](adr/0009-postgres-replaceable-store.md)).
+  In progress: `striga-provider`, then merging the `neobank-api` striga branch once it
+  follows `Sandbox.S`. The infra compose profile `neobank` is drafted and being verified;
+  then an end-to-end run on the fake provider and the sandbox.
 
 ## Next
 
