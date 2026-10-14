@@ -1,13 +1,13 @@
 # payments-core
 
 Provider-neutral payment rails and transfer lifecycles: SEPA Credit Transfer and SCT Inst with
-their ISO 20022 fields and reason codes, UK Faster Payments, CHAPS and Bacs with sort codes and
-the published modulus check, US ACH, RTP and Fedwire with ABA routing numbers, on-chain transfers with travel-rule data and a
-confirmation policy, Lightning, and intraledger moves. It also covers beneficiary validation,
-strong customer authentication (SCA), standing orders, currency swaps, and the pure booking
-rules that turn every transfer transition into balanced `ledger` entries. Reconciliation
-compares a provider's view with the ledger and returns breaks. No network access; a provider
-adapter maps its webhooks onto these states.
+their ISO 20022 fields and reason codes, UK Faster Payments, CHAPS and Bacs with sort codes and the
+published modulus check, US ACH, RTP and Fedwire with ABA routing numbers, on-chain transfers with
+travel-rule data and a confirmation policy, Lightning, and intraledger moves. It also covers
+beneficiary validation, strong customer authentication (SCA), standing orders, currency swaps, and
+the pure booking rules that turn every transfer transition into balanced `ledger` entries.
+Reconciliation compares a provider's view with the ledger and returns breaks. No network access; a
+provider adapter maps its webhooks onto these states.
 
 | | |
 | --- | --- |
