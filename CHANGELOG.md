@@ -65,6 +65,9 @@ belong here.
   head), `pg-async` (prepared-statement cache, `Pool` lifetime, `Listen` reconnection; one
   source-incompatible change). See the audit pages under
   [research/opam-readiness](research/opam-readiness/README.md#audits).
+- `kyc-core`: business verification (KYB) for legal entities; new persisted format
+  `Kyb_event.Stable.V1` (with `Kyb_audit.Entry.Stable.V1`) and `kyc-case kyb` subcommands.
+  See [repos/kyc-core.md](repos/kyc-core.md).
 
 ## 2026-10-13
 
