@@ -1,17 +1,17 @@
 # ledger
 
-OCaml double-entry ledger for a bank or a banking demo: balanced journal entries, two-phase
-holds, reversals, trial balance and paged account statements, stored in an append-only,
-checksummed Bin_prot journal. It knows accounts, postings and idempotency keys; it knows
-nothing of IBANs, cards or webhooks. It is meant to be reusable later by exchange-core's
-clearinghouse.
+OCaml double-entry ledger: balanced journal entries, two-phase holds, reversals, four-eyes
+adjustments, trial balance and paged account statements, stored in an append-only,
+checksummed and hash-chained Bin_prot journal. It knows accounts, postings and idempotency
+keys; it knows nothing of IBANs, cards or webhooks. It is meant to be reusable later by
+exchange-core's clearinghouse. Opam readiness: [research/opam-readiness/ledger.md](../research/opam-readiness/ledger.md).
 
 | | |
 | --- | --- |
 | Repository | `winterchill-trading/ledger` |
 | opam package | `ledger` |
 | Library | `ledger` (module `Ledger`) |
-| Binary | `ledger` (`trial-balance`, `statement`, `camt053`, `verify`, `demo`) |
+| Binary | `ledger` (`trial-balance`, `statement`, `camt053`, `verify`, `example`) |
 | Status | done: library, CLI and property tests are in place; CI green |
 
 ## Key modules
@@ -34,12 +34,15 @@ clearinghouse.
 | `Clearing` | `open_items` for matching postings still awaiting a counterpart |
 | `Safeguarding` | `reconcile` and `exposures` for safeguarded (customer) funds |
 | `Snapshot` | `verify` of a day-close snapshot against the journal |
-| `Journal` | `append`, `append_linked` (a group that commits or refuses as one), `replay`, `close_day`, `expire_holds`, and opening from a snapshot |
+| `Journal` | `append`, `append_linked` (a group that commits or refuses as one), `replay`, `fold`, `close_day`, `expire_holds_at` with `next_expiry`, `forget_expired_refusals`, `chain_head`, and opening from a snapshot |
+| `Chain_head` | The hash-chain head as one line (`ledger-head-v1:<seq>:<length>:<sha256>`) to publish, and `verify` against a journal |
 
 Rules enforced by the journal:
 
-- Idempotency keys are kept forever, including the refusal stored for a rejected request, so
-  a retried webhook returns the same answer and books nothing twice.
+- Idempotency keys are kept forever, including the refusal stored for a rejected request
+  (also a builder's refusal, such as an unknown hold id), so a retried webhook returns the
+  same answer and books nothing twice. With `refusal_retention`, refusals last that window
+  and a `Refusals_forgotten` record drops them.
 - Time is assigned by the ledger, monotonically, not taken from the caller.
 - Each record carries the hash of the previous one; `verify` checks the chain.
 - Manual adjustments need a second approver (four-eyes).
@@ -55,10 +58,10 @@ Rules enforced by the journal:
 
 ## Dependencies
 
-- Depends on: [money](money.md). External: `core`, `core_unix` (CLI), `async_kernel`,
-  `cryptokit` (journal checksums), `ppx_jane`.
-- Used by: none in the organization yet; planned for `payments-core`, `card-core` and
-  `banking-provider` (see [design/neobank.md](../design/neobank.md)).
+- Depends on: [money](money.md). External: `core`, `core_unix` (journal file and CLI),
+  `async_kernel` (time source), `cryptokit` (SHA-256 chain), `ppx_jane`.
+- Used by: `payments-core`, `card-core`, `banking-provider` and `neobank-api` (see
+  [design/neobank.md](../design/neobank.md)).
 
 ## CI pin order
 
@@ -67,15 +70,17 @@ Rules enforced by the journal:
 
 ## Known gaps
 
-- The journal is read whole into memory on open; opening from a snapshot avoids the full
-  read only when one exists.
 - macOS `fsync` does not flush the drive cache, so durability on macOS is weaker than on
   Linux.
-- Hold expiry needs a timer or a day close to run; nothing expires holds on its own.
-- Refused idempotency keys are kept forever, with no retention window.
-- Errors raised before an entry exists are not recorded as refusals, so a retry of such a
-  request is processed again.
+- The folded state keeps every booked entry for idempotency, so memory grows with the number
+  of entries (the file itself is streamed, not read whole). Segment files per period with an
+  on-disk key index would bound it; that is a format decision.
 - Matching against provider statements (breaks, ageing) is not built; `Clearing.open_items`
-  lists open items only.
-- The journal chain head is not published, so truncation at the end cannot be detected from
-  outside the journal.
+  lists open items only. Needs its own design.
+- `ledger camt053` reads every record into memory, since the statement replays the journal
+  for its balances.
+
+Fixed on 2026-10-14: the journal is streamed on open (`Framing.fold`, `keep_records:false`,
+`Journal.fold`); hold expiry can be scheduled (`next_expiry`, `expire_holds_at`); refusals
+have a retention window; builder errors are recorded as refusals; the chain head is exposed
+(`Journal.chain_head`, `Chain_head`, `ledger verify -head`).
