@@ -4,8 +4,9 @@ Provider-neutral customer due diligence for a bank: identity verification steps 
 risk-based customer risk rating with CDD levels and enhanced due diligence, PEP records,
 sanctions, PEP and adverse-media screening with four-eyes discounting, ongoing monitoring,
 investigations and FIU reporting, periodic review, record retention with legal holds,
-travel-rule data, and an audit trail of every change with its actor. It is event-sourced and
-idempotent by provider event id. It does no I/O and has no Async; a provider adapter turns its
+travel-rule data, business verification (KYB) of legal entities with their beneficial owners,
+and an audit trail of every change with its actor. It is event-sourced and idempotent by
+provider event id. It does no I/O and has no Async; a provider adapter turns its
 webhooks into `Event.t` values.
 
 | | |
@@ -13,7 +14,7 @@ webhooks into `Event.t` values.
 | Repository | `winterchill-trading/kyc-core` |
 | opam package | `kyc-core` |
 | Library | `kyc-core` (module `Kyc_core`) |
-| Binary | `kyc-case` (`replay`, `policy`, `assess`, `match`) |
+| Binary | `kyc-case` (`replay`, `policy`, `assess`, `match`, `kyb replay`, `kyb policy`, `kyb assess`, `kyb requirements`) |
 | Status | done: library, CLI and property tests are in place |
 
 ## Key modules
@@ -38,6 +39,16 @@ webhooks into `Event.t` values.
 | `Travel_rule` | Originator and beneficiary data for crypto transfers; self-hosted ownership checks above EUR 1 000 |
 | `Event`, `Audit` | Persisted events with their provider event id, and the audit trail |
 | `Kyc_case` | The aggregate: `apply`, `of_events`, tiers, `cdd_level`, `can_approve`, `follow_ups`, `customer_view`, review and retention dates |
+| `Entity_id`, `Document_id` | String identifiers for business applicants and document records |
+| `Legal_form`, `Legal_entity` | Generic legal forms (trust as a legal arrangement); registration number, jurisdiction, addresses, industry code, bearer shares |
+| `Ownership` | Chains through intermediates, effective shares in exact parts per 10^12, opacity (`Transparent`, `Layered`, `Complex`, `Opaque`) |
+| `Kyb_party` | Linked people (director, authorised representative, shareholder, control by other means, senior managing official, trust parties), each pointing at their own `Kyc_case`; beneficial-owner determination |
+| `Kyb_document`, `Kyb_requirements` | Document metadata (no content); required documents by legal form and jurisdiction, coverage, accepted forms, monthly limits |
+| `Source_of_funds` | Declared sources, description, expected volume band, counterparty countries |
+| `Kyb_item`, `Kyb_status` | Missing or requested items; business status `Draft`, `Submitted`, `In_review`, `More_information`, `Approved`, `Rejected`, `Blocked`, `Closed` |
+| `Kyb_risk` | Business risk over `Risk` plus ownership opacity and cash intensity; opaque ownership is a hard floor |
+| `Kyb_event`, `Kyb_audit` | Persisted business events (provider event id, round) and their audit trail |
+| `Kyb_case` | The business aggregate: rounds, decisions, `missing_for_submission`, `parties_pending`, `can_approve`, `follow_ups`, `applicant_view` |
 
 Rules enforced by the case:
 
@@ -55,19 +66,41 @@ Rules enforced by the case:
   5 more years. After `retain_until` the case reports `Retention_ended`.
 - Periodic review falls due 5, 3 or 1 years after approval or the last review, by band.
 
+Rules enforced by the business case:
+
+- Same idempotency as the personal case. Editing is allowed in `Draft` and `More_information`
+  only; the jurisdiction is fixed after the first submission; opening checks coverage and the
+  accepted legal forms.
+- Each `Submit` opens a round; a status event naming an older round is refused, so late
+  provider events cannot overturn a resubmission.
+- `Submit` needs registration data, a director (a trustee for a trust), identified beneficial
+  owners, the documents for the legal form and jurisdiction, and a source-of-funds declaration.
+- Beneficial owners: 25 % or more summed over ownership chains (stakes multiplied through
+  intermediates), control by other means, every party to a trust, and senior managing officials
+  only when none of those exists.
+- `Approve` also needs every beneficial owner, director and representative approved in their own
+  `Kyc_case` (reported with `Party_case_changed`), a risk assessment, and under EDD a senior
+  sign-off after the latest assessment.
+- The applicant's view shows a blocked case as `Under_review` and never names a linked person
+  whose own case is blocked; the applicant's audit drops risk, linked people's case states,
+  block reasons and staff notes.
+
 ## Stored formats
 
 `Event.Stable.V1` and the stable modules it is built from (`Audit.Entry.Stable.V1`,
-`Risk.Assessment.Stable.V1`, `Travel_rule.Stable.V1`) are the persisted formats. Their bin_io
+`Risk.Assessment.Stable.V1`, `Travel_rule.Stable.V1`) are the persisted formats, and
+`Kyb_event.Stable.V1` with `Kyb_audit.Entry.Stable.V1` for business cases. Their bin_io
 digests are pinned in the tests. A risk assessment is stored as computed, so replay never
 rescores with a newer model. PII is in clear inside bin_io, so the event store is PII storage.
 
 ## Tests
 
 - `dune test`: expect tests per transition and per rule, cram tests for the `kyc-case` CLI over
-  `examples/approved.sexp`.
-- Base_quickcheck properties: applying an event twice equals applying it once; floors always
-  give High; a riskier sector never lowers the score; Jaro-Winkler is symmetric.
+  `examples/approved.sexp` and `kyc-case kyb replay` over `examples/kyb-approved.sexp`.
+- Base_quickcheck properties: applying an event twice equals applying it once (personal and
+  business cases); floors always give High; a riskier sector never lowers the score; more
+  opaque ownership never lowers a business score; business rounds never go down and a blocked
+  business case shows the applicant nothing; Jaro-Winkler is symmetric.
 - Jaro-Winkler reference pairs (MARTHA/MARHTA, DWAYNE/DUANE, DIXON/DICKSONX).
 
 ## Dependencies
@@ -83,7 +116,9 @@ Standalone: no pins. CI builds and tests this repository alone.
 ## Known gaps
 
 - Name matching folds Latin scripts only; other scripts are not transliterated.
-- No beneficial-owner (legal entity) model; customers are natural persons.
+- The business case does not screen the entity's own name; the linked people are screened in
+  their own cases.
+- Per-jurisdiction monthly limits are declared for the caller to enforce; no volume tracking.
 - FIU working days skip weekends only; the caller passes a holiday calendar if one is needed.
 - Report contents (goAML XML and similar) are out of scope; only report states are tracked.
 - Encryption and erasure of PII are left to the storage layer.
