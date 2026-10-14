@@ -77,7 +77,7 @@ evaluating; a second tick in the same period gets the existing record back. A cl
 the same key, and the late writer loses its compare-and-set. Action keys are stable across
 attempts, for use as idempotency keys with the rails.
 
-```
+```text
 Evaluating -> Skipped | Shadowed | Awaiting_approval | Awaiting_execution | Failed
 Awaiting_approval -> Awaiting_execution | Rejected
 Awaiting_execution -> Executed | Failed
