@@ -11,7 +11,7 @@ takes commits from are in [research/opam-readiness](../research/opam-readiness/R
 | Repository | `winterchill-trading/opam-repository` |
 | opam package | none (it holds opam package entries) |
 | Add it | `opam repo add winterchill https://github.com/winterchill-trading/opam-repository.git` |
-| Status | in progress: first wave of entries and CI in place |
+| Status | in progress: first wave installs from a fresh OxCaml switch in CI (run 38516961893: all seven packages) |
 
 ## Layout
 
