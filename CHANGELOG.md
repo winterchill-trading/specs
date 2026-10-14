@@ -22,6 +22,17 @@ belong here.
   has none. See [design/neobank.md](design/neobank.md) and the pages
   [kyc-core](repos/kyc-core.md), [payments-core](repos/payments-core.md) and
   [card-core](repos/card-core.md).
+- `banking-provider`, `risk-models`, `pg-async`: new repositories for the neobank demo's
+  provider boundary, the machine-learned risk scores and the PostgreSQL client. New
+  dependency edges: `banking-provider` to `money`, `ledger`, `kyc-core`, `payments-core` and
+  `card-core`; `risk-models` to `risk-rules`; `pg-async` has none. See
+  [design/neobank.md](design/neobank.md) and the pages
+  [banking-provider](repos/banking-provider.md), [risk-models](repos/risk-models.md) and
+  [pg-async](repos/pg-async.md).
+- ADR 0009: PostgreSQL for application state through `pg-async`, behind a per-service store
+  interface with an in-memory and a PostgreSQL implementation (`neobank-api`, `hl-copy-api`).
+  See [adr/0009-postgres-replaceable-store.md](adr/0009-postgres-replaceable-store.md) and
+  [repos/pg-async.md](repos/pg-async.md).
 
 ## 2026-10-13
 
