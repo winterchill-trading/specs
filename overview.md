@@ -53,6 +53,17 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Banking libraries | [payments-core](repos/payments-core.md) | Payment rails and transfer state machines (SEPA, on-chain, Lightning, intraledger), SCA, standing orders, swaps, reconciliation | done |
 | Banking libraries | [card-core](repos/card-core.md) | Card lifecycle, authorization decision, clearing and settlement, disputes, statements | done |
 | Banking libraries | [banking-provider](repos/banking-provider.md) | `Provider` interface over the domain libraries and a deterministic fake provider for the neobank demo | done |
+| Consumer banking libraries | [service-kit](repos/service-kit.md) | Async HTTP building blocks: typed routes, RFC 9457 problems, idempotency keys, step-up grants, rate limits, health and metrics; no database | done |
+| Consumer banking libraries | [otp-mail](repos/otp-mail.md) | One-time codes hashed at rest, transactional email with MIME and DKIM signing, SMTP client | done |
+| Consumer banking libraries | [webauthn](repos/webauthn.md) | WebAuthn and passkey relying-party verification in pure OCaml, with CBOR and COSE decoding; requires OxCaml | done |
+| Consumer banking libraries | [auth-kit](repos/auth-kit.md) | Passcode rules, Argon2id hashing, progressive lockout, devices and a security log | done |
+| Consumer banking libraries | [fx-core](repos/fx-core.md) | Reference rates, customer FX pricing with rounding rules, single-use quotes, booking through payments-core | done |
+| Consumer banking libraries | [investing-core](repos/investing-core.md) | Instruments, end-of-day prices, fractional market orders, positions and their ledger bookings | done |
+| Consumer banking libraries | [scheduler-core](repos/scheduler-core.md) | Recurring schedules and exactly-once runs per schedule and date, for any job | done |
+| Consumer banking libraries | [requests-core](repos/requests-core.md) | Money requests, payment links and bill splits between customers of one institution | done |
+| Consumer banking libraries | [pots-and-insights](repos/pots-and-insights.md) | Savings pots as owned sub-accounts, spending insights and monthly budgets | done |
+| Consumer banking libraries | [rewards-core](repos/rewards-core.md) | Loyalty points ledger, earn rules, tiers, cashback redemption and expiry | done |
+| Consumer banking libraries | [statements](repos/statements.md) | Customer account statements as CSV and PDF over the ledger journal | done |
 | Infrastructure libraries | [pg-async](repos/pg-async.md) | Non-blocking PostgreSQL client for Async over libpq: pool, queries, transactions, migrations; application state store | done |
 | Neobank demo | [neobank-api](repos/neobank-api.md) | HTTP API of the neobank demo over `banking-provider`, `risk-rules` and PostgreSQL through `pg-async`; fake provider | done |
 | Neobank demo | [neobank-web](repos/neobank-web.md) | Bonsai browser app of the neobank demo, with a built-in mock bank | done |
@@ -141,6 +152,19 @@ graph LR
     risk_rules["risk-rules"]
     risk_models["risk-models"]
     banking_provider["banking-provider"]
+  end
+  subgraph consumer["Consumer banking libraries"]
+    service_kit["service-kit"]
+    otp_mail["otp-mail"]
+    webauthn["webauthn"]
+    auth_kit["auth-kit"]
+    fx_core["fx-core"]
+    investing_core["investing-core"]
+    scheduler_core["scheduler-core"]
+    requests_core["requests-core"]
+    pots_and_insights["pots-and-insights"]
+    rewards_core["rewards-core"]
+    statements["statements"]
   end
   subgraph infra_libs["Infrastructure libraries"]
     pg_async["pg-async"]
@@ -246,6 +270,23 @@ graph LR
   neobank_api --> pg_async
   neobank_api --> neobank_api_types
   neobank_web --> neobank_api_types
+
+  fx_core --> money
+  fx_core --> ledger
+  fx_core --> payments_core
+  investing_core --> fixed_decimal
+  investing_core --> money
+  investing_core --> ledger
+  requests_core --> money
+  requests_core --> ledger
+  requests_core --> payments_core
+  pots_and_insights --> money
+  pots_and_insights --> ledger
+  pots_and_insights --> scheduler_core
+  rewards_core --> money
+  rewards_core --> ledger
+  statements --> money
+  statements --> ledger
 
   copy_core --> exchange_core
   copy_core --> hl_protocol
