@@ -23,7 +23,7 @@ Requires the OxCaml compiler (`5.2.0+ox`).
 
 | Module | Purpose |
 | --- | --- |
-| `Rule`, `Rule_id`, `Rule_kind` | Rules with validation and an active, paused, archived lifecycle |
+| `Rule`, `Rule_id` | Rules with validation and an active, paused, archived lifecycle |
 | `Action`, `Hit`, `Reason_code` | What a rule proposes, the checks that fired, the stable reason codes |
 | `Settings` | Caps, freshness limits, approval thresholds |
 | `Snapshot`, `Location` | Balances per location, prices and recent runs at one instant |
@@ -121,8 +121,8 @@ with its hits, or a run record whose status disagrees with its outcome is refuse
 ## CI pin order
 
 `fixed-decimal`, `money`, `ledger`, `payments-core`, `risk-rules`. CI pins each from GitHub,
-then runs `dune build`, `dune test`, the examples and the API docs build. The library itself
-needs only `money` and `risk-rules`; the wider pin list follows the org's workflow template.
+then runs `dune build`, `dune test`, the examples and the API docs build. The library
+itself needs only `money` and `risk-rules`.
 
 ## Known gaps
 
