@@ -412,9 +412,30 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
   and so are [neobank-api](repos/neobank-api.md) and [neobank-web](repos/neobank-web.md) on
   the fake provider. `neobank-api` keeps its state in PostgreSQL through
   [pg-async](repos/pg-async.md) ([ADR 0009](adr/0009-postgres-replaceable-store.md)).
-  In progress: `striga-provider`, then merging the `neobank-api` striga branch once it
-  follows `Sandbox.S`. The infra compose profile `neobank` is drafted and being verified;
-  then an end-to-end run on the fake provider and the sandbox.
+  [striga-provider](repos/striga-provider.md) is done, sandbox-limited: the sandbox never
+  provisioned a EUR account for either test person, so 4 of 11 conformance scenarios pass.
+  `neobank-api` has its Striga mode on `main`, and the infra compose profile `neobank` is
+  verified with the fake provider. Open: EUR and USDC provisioning in the sandbox, then the
+  end-to-end run against the sandbox.
+
+## Publishing
+
+Preparation only. Publishing (a tag, a GitHub release, an opam repository or a pull request
+to one) is the owner's decision; nothing here is published.
+
+- Opam readiness audits for seven libraries are written
+  ([index](research/opam-readiness/README.md)). `pg-async` leads tier 1 of
+  [design/opam-publishing.md](design/opam-publishing.md): it builds on plain OCaml 5.2 with
+  Jane Street v0.17.
+- Open before any release: the owner decides whether to publish at all; the own opam
+  repository `winterchill-trading/opam-repository` is not created; `odoc` is not on the
+  switch, so no `dune build @doc` has run; the `pg-async` upstream build has no CI job, and
+  its tests need a PostgreSQL server; `parquet`'s tests need the DuckDB CLI; `order-book`
+  waits for `exchange-core`; `fixed-decimal` needs a Core v0.17 shim before its upstream
+  build.
+- Naming decisions (`exact-money`, `double-entry`, `parquet-writer`, `venue-net` or
+  `async-net-client`) are made before the first release, since a rename later costs a
+  deprecation cycle.
 
 ## Next
 
