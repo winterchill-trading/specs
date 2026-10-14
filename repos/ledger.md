@@ -60,8 +60,10 @@ Rules enforced by the journal:
 
 - Depends on: [money](money.md). External: `core`, `core_unix` (journal file and CLI),
   `async_kernel` (time source), `cryptokit` (SHA-256 chain), `ppx_jane`.
-- Used by: `payments-core`, `card-core`, `banking-provider` and `neobank-api` (see
-  [design/neobank.md](../design/neobank.md)).
+- Used by: `accounting-sync`, `banking-provider`, `billing-core`, `card-core`, `chain-books`,
+  `fx-core`, `griffin-provider`, `investing-core`, `lightspark-provider`, `neobank-api`,
+  `payments-core`, `payouts-core`, `pots-and-insights`, `requests-core`, `rewards-core`,
+  `risk-rules`, `statements`, `striga-provider`.
 
 ## CI pin order
 
