@@ -10,6 +10,12 @@ belong here.
 
 ## 2026-10-14
 
+- `opam-repository`: new repository, the organization's opam repository and the only
+  place packages are published. `0.1.0` entries for `pg-async`, `fixed-decimal`, `money`,
+  `money-cli`, `ledger`, `venue-net` and `parquet`, each a git URL pinned to the audited
+  commit; `order-book` waits for `exchange-core`. See
+  [repos/opam-repository.md](repos/opam-repository.md) and
+  [design/opam-publishing.md](design/opam-publishing.md).
 - `money`, `ledger`, `risk-rules`, `striga-client`: new repositories for the neobank demo's
   banking foundations and provider SDK. New dependency edges: `money` to `fixed-decimal`,
   `ledger` to `money`, `risk-rules` to `money` and `payments-core`. See
