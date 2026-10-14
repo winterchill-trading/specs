@@ -42,6 +42,23 @@ belong here.
   format change for follows and agent keys; the engine's files are unchanged). New dependency
   edge `hl-copy-api` to `pg-async`. See [repos/hl-copy-api.md](repos/hl-copy-api.md) and
   [ADR 0009](adr/0009-postgres-replaceable-store.md).
+- `striga-provider`: new repository, the Striga adapter of `banking-provider`'s `Provider`
+  and `Sandbox`, sandbox-limited (the sandbox never provisioned EUR accounts for the test
+  persons). New dependency edges: `striga-provider` to `banking-provider` and
+  `striga-client`; `neobank-api` to `striga-provider` (its Striga mode is on `main`). See
+  [repos/striga-provider.md](repos/striga-provider.md) and
+  [design/neobank.md](design/neobank.md).
+- Opam readiness audits for `fixed-decimal`, `money`, `ledger`, `order-book`, `parquet`,
+  `venue-net` and `pg-async`. `pg-async` builds and passes on plain OCaml 5.2 with Jane
+  Street v0.17 and leads tier 1 of the publishing plan; nothing is published. See
+  [research/opam-readiness](research/opam-readiness/README.md) and
+  [design/opam-publishing.md](design/opam-publishing.md).
+- Audit gap fixes that change a public interface or an on-disk format: `money` (rational
+  basis points, `Amount.allocate` and `split`, a frozen currency registry), `ledger` (a
+  `Refusals_forgotten` journal record for `?refusal_retention`, the `ledger-head-v1` chain
+  head), `pg-async` (prepared-statement cache, `Pool` lifetime, `Listen` reconnection; one
+  source-incompatible change). See the audit pages under
+  [research/opam-readiness](research/opam-readiness/README.md#audits).
 
 ## 2026-10-13
 
