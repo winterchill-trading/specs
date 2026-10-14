@@ -54,7 +54,7 @@ because the API adds values within its version.
 - Depends on: no org package. External: `core`, `core_unix`, `async`, `async_ssl`,
   `cohttp`, `cohttp-async`, `conduit-async`, `uri`, `yojson`, `ppx_jane`,
   `ppx_yojson_conv`, `cryptokit`, `zarith`, `base64`.
-- Used by: none in the organization yet.
+- Used by: `griffin-provider`.
 
 ## CI pin order
 
