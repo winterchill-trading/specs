@@ -4,9 +4,11 @@ Kind: explanation.
 
 Status: in progress (2026-10-14). `money`, `ledger`, `kyc-core`, `payments-core`, `card-core`,
 `risk-rules`, `striga-client`, `banking-provider`, `risk-models` and `pg-async` are done;
-`neobank-api` and `neobank-web` are done on the fake provider; `striga-provider` is in
-progress; the infra compose profile `neobank` is drafted and being verified. The store of
-`neobank-api` is PostgreSQL through `pg-async` behind `Store.S`, a per-service store interface
+`neobank-api` and `neobank-web` are done on the fake provider; `striga-provider` is done
+for the sandbox, which never provisioned a EUR account for the test persons, and
+`neobank-api` has its Striga mode on `main`; the infra compose profile `neobank` is verified
+with the fake provider. The store of `neobank-api` is PostgreSQL through `pg-async` behind
+`Store.S`, a per-service store interface
 ([ADR 0009](../adr/0009-postgres-replaceable-store.md)); `hl-copy-api` uses the same store.
 The bank-side domain is split into provider-neutral libraries named for what they are
 (`money`, `ledger`, `kyc-core`, `payments-core`,
@@ -306,10 +308,10 @@ caps from the tier.
 | `pg-async` | Non-blocking PostgreSQL client for Async over libpq: pool, parameterized queries, transactions, migrations | (none) | done ([repo page](../repos/pg-async.md)) |
 | `banking-provider` | `Provider` module type over the domain libraries, deterministic fake provider | `money`, `ledger`, `kyc-core`, `payments-core`, `card-core` | done ([repo page](../repos/banking-provider.md)) |
 | `striga-client` | Striga SDK and `striga` CLI: HMAC transport, typed resources, simulator, webhook verification | (none) | done ([repo page](../repos/striga-client.md)) |
-| `striga-provider` | `Provider` over `striga-client`, endpoint and webhook mapping table | `banking-provider`, `striga-client` | in progress |
-| `neobank-api` | Async HTTP API, sessions, webhooks, `/ws`; the demo server; state in PostgreSQL through `pg-async` | `banking-provider`, `risk-rules`, `striga-provider`, `pg-async` | done on the fake provider ([repo page](../repos/neobank-api.md)) |
+| `striga-provider` | `Provider` over `striga-client`, endpoint and webhook mapping table | `banking-provider`, `striga-client` | done, sandbox-limited ([repo page](../repos/striga-provider.md)) |
+| `neobank-api` | Async HTTP API, sessions, webhooks, `/ws`; the demo server; state in PostgreSQL through `pg-async` | `banking-provider`, `risk-rules`, `striga-provider`, `pg-async` | done on the fake provider; Striga mode on `main` ([repo page](../repos/neobank-api.md)) |
 | `neobank-web` | Bonsai frontend, mock mode on the fake provider | `neobank-api` types | done ([repo page](../repos/neobank-web.md)) |
-| `infra` | Compose profile `neobank`: API, web, fake or sandbox provider | the images above | drafted, being verified |
+| `infra` | Compose profile `neobank`: API, web, fake or sandbox provider | the images above | verified with the fake provider |
 
 CI pin order (planned), following the graph: fixed-decimal, money, ledger, kyc-core,
 payments-core, card-core, risk-rules, banking-provider, striga-client, striga-provider, pg-async,
