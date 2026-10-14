@@ -130,7 +130,7 @@ blockers.
 | `ledger` | 2 | [ledger.md](ledger.md) |
 | `order-book` | 2 | [order-book.md](order-book.md) |
 | `venue-net` | 2 | [venue-net.md](venue-net.md) |
-| `parquet` | 2 | pending |
+| `parquet` | 2 | [parquet.md](parquet.md) |
 | `payments-core`, `kyc-core`, `card-core`, `risk-rules`, `banking-provider` | 3 | pending |
 
 An audit replaces "pending" with a link to its page.
