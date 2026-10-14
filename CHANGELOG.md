@@ -10,6 +10,21 @@ belong here.
 
 ## 2026-10-14
 
+- `org-access`, `payouts-core`, `accounting-sync`, `treasury-rules`, `billing-core`: new
+  repositories for business banking libraries: organisations and maker-checker, payout
+  batches, accounting exports, treasury policy rules and billing. New dependency edges:
+  `org-access` to `money`; `payouts-core` to `money`, `ledger` and `payments-core`;
+  `accounting-sync` to `money` and `ledger`; `treasury-rules` to `money` and `risk-rules`;
+  `billing-core` to `money` and `ledger`. `billing-core` is in progress. See the pages
+  [org-access](repos/org-access.md), [payouts-core](repos/payouts-core.md),
+  [accounting-sync](repos/accounting-sync.md), [treasury-rules](repos/treasury-rules.md)
+  and [billing-core](repos/billing-core.md).
+- `griffin-provider`, `lightspark-provider`: new repositories, the GBP and USD adapters of
+  `banking-provider` over `griffin-client` and `lightspark-client`, sandbox by default. New
+  dependency edges: to `banking-provider` and to their client. See
+  [design/neobank.md](design/neobank.md) and the pages
+  [griffin-provider](repos/griffin-provider.md) and
+  [lightspark-provider](repos/lightspark-provider.md).
 - `opam-repository`: new repository, the organization's opam repository and the only
   place packages are published. `0.1.0` entries for `pg-async`, `fixed-decimal`, `money`,
   `money-cli`, `ledger`, `venue-net` and `parquet`, each a git URL pinned to the audited
