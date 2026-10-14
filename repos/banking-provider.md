@@ -94,7 +94,7 @@ inbox and idempotency records in its own store (see
 - Depends on: [kyc-core](kyc-core.md), [payments-core](payments-core.md),
   [card-core](card-core.md), and through them [money](money.md) and [ledger](ledger.md).
   No database and no HTTP client.
-- Used by: `striga-provider` (in progress) and `neobank-api` (planned).
+- Used by: `griffin-provider`, `lightspark-provider`, `neobank-api`, `striga-provider`.
 
 ## CI pin order
 
