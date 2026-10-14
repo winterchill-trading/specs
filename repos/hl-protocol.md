@@ -57,8 +57,8 @@ builder field and `userEvents` follow the documentation's examples;
 ## Dependencies
 
 - Depends on: `fixed-decimal`, `exchange-core`.
-- Used by: `hl-sim`, `hl-client`, `hl-mm`, `market-maker`; planned: `hl-copy-core`,
-  `hl-copy-engine`, `hl-copy-api`, `hl-copy-web`, `hl-leaderboard`.
+- Used by: `chain-books`, `hl-client`, `hl-copy-api`, `hl-copy-core`, `hl-copy-engine`,
+  `hl-leaderboard`, `hl-mm`, `hl-sim`, `market-maker`, `market-replay`.
 
 ## CI pin order
 
