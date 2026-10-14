@@ -60,7 +60,8 @@ injected time source, and nothing is random. Every movement is booked in the giv
 so balances are what the journal says and the trial balance always holds. It simulates KYC
 steps and decisions, IBANs and deposit addresses, deposits on each rail, payment settlement in
 immediate, delayed or manual modes, rejections and returns, swaps with three linked ledger
-legs, card decisions, clearing, reversal, refund and stand-in advice, verification of payee,
+legs, card decisions, clearing, reversal, refund and stand-in advice, payee checks, GBP and
+USD accounts with UK and US details and payments on the UK and US rails,
 standing orders, and signed webhook deliveries kept for redelivery and reordering.
 
 It keeps no personal data: `create_customer` and `update_customer` accept the person and
@@ -68,11 +69,15 @@ ignore it.
 
 ## Conformance
 
-`Conformance.Make (P) (S)` provides eleven scenarios. Each awaits results through events or
+`Conformance.Make (P) (S)` provides twelve scenarios, run in the config's currency over its
+rail: `Config.default` (EUR, SCT Inst), `Config.gbp` (GBP, Faster Payments) and `Config.usd`
+(USD, ACH PPD). Each awaits results through events or
 polling within a timeout, so a sandbox that provisions an IBAN minutes later still passes:
 idempotent customers, KYC approval, EUR account with IBAN, deposit and balance, SCA-confirmed
 payment debiting amount plus fee, resend pays once, overdraft refused, wrong code refused,
-unsigned webhook refused, ping event, card approved and card declined `57` when frozen.
+unsigned webhook refused, ping event, card approved and card declined `57` when frozen, and
+`verify_payee` returning a simulated answer. The account scenario asks for the address the rail
+needs (IBAN, sort code and account number, routing and account number).
 
 The fake passes them in its own tests, immediately and with fees and delayed settlement on the
 wall clock. An adapter runs the same functor against its sandbox behind an environment gate.
@@ -111,6 +116,15 @@ balance.
 
 - Lightning payments to a BOLT 11 invoice settle without a preimage in the fake: the invoice's
   payment hash belongs to the payee.
+- `Event.Stable.V1` and the unversioned `bin_io` of `Account` cannot write UK or US rails,
+  accounts or details, or newer-network addresses (they raise); an inbox that may see them
+  must persist `Event.Stable.V2`.
+- `verify_payee` is new in `Provider.S`: striga-provider answers an error (no verification of
+  payee at Striga); griffin-provider maps it onto its Confirmation of Payee but its
+  `simulate_payee_check` refuses (Griffin simulates one request at a time), so the
+  conformance payee scenario fails there until the adapter keeps answers per beneficiary.
+- The fake's payee checks are deterministic by account-number suffix, not a name register;
+  US accounts are never checked (no US scheme checks names).
 - The fake charges cards only in their billing currency (no FX clearings) and simulates neither
   incremental authorizations nor disputes.
 - An approved stand-in advice above the available balance cannot be held.
