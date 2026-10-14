@@ -53,6 +53,8 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Banking libraries | [card-core](repos/card-core.md) | Card lifecycle, authorization decision, clearing and settlement, disputes, statements | done |
 | Banking libraries | [banking-provider](repos/banking-provider.md) | `Provider` interface over the domain libraries and a deterministic fake provider for the neobank demo | done |
 | Infrastructure libraries | [pg-async](repos/pg-async.md) | Non-blocking PostgreSQL client for Async over libpq: pool, queries, transactions, migrations; application state store | done |
+| Neobank demo | [neobank-api](repos/neobank-api.md) | HTTP API of the neobank demo over `banking-provider`, `risk-rules` and PostgreSQL through `pg-async`; fake provider | done |
+| Neobank demo | [neobank-web](repos/neobank-web.md) | Bonsai browser app of the neobank demo, with a built-in mock bank | done |
 | Tooling | [infra](repos/infra.md) | Container images, compose stack, Helm chart, deployment notes | done |
 | Tooling | [oxcaml-claude-skills](repos/oxcaml-claude-skills.md) | Agent skills and the gotchas log | done |
 | Tooling | specs | This repository | in progress |
@@ -139,6 +141,11 @@ graph LR
   end
   subgraph infra_libs["Infrastructure libraries"]
     pg_async["pg-async"]
+  end
+  subgraph neobank["Neobank demo"]
+    neobank_api["neobank-api"]
+    neobank_api_types["neobank-api-types"]
+    neobank_web["neobank-web"]
   end
   subgraph tooling["Tooling"]
     infra["infra"]
@@ -228,6 +235,11 @@ graph LR
   banking_provider --> kyc_core
   banking_provider --> payments_core
   banking_provider --> card_core
+  neobank_api --> banking_provider
+  neobank_api --> risk_rules
+  neobank_api --> pg_async
+  neobank_api --> neobank_api_types
+  neobank_web --> neobank_api_types
 
   copy_core --> exchange_core
   copy_core --> hl_protocol
@@ -244,6 +256,7 @@ graph LR
   copy_api --> copy_core
   copy_api --> hl_client
   copy_api --> copy_web
+  copy_api --> pg_async
   copy_api -.-> leaderboard
 
   hl_mm -.-> hl_sim
@@ -353,7 +366,7 @@ graph LR
 - The copy-trading platform (in progress) mirrors a Hyperliquid leader's positions
   into followers' accounts through agent keys the followers approve, against `hl-sim`
   or testnet. See [design/copytrading.md](design/copytrading.md).
-- The neobank demo (planned) runs onboarding with KYC, a EUR IBAN account, crypto wallets,
+- The neobank demo (in progress) runs onboarding with KYC, a EUR IBAN account, crypto wallets,
   swaps, SEPA, on-chain and Lightning payments, virtual cards and standing orders over
   provider-neutral libraries (`money`, `ledger`, `kyc-core`, `payments-core`, `card-core`,
   `risk-rules`, `banking-provider`) and the Striga sandbox, or offline over a fake provider.
