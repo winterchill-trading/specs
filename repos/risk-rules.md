@@ -51,8 +51,7 @@ digest on purpose.
 - Depends on: [money](money.md), [payments-core](payments-core.md) (transfer drafts,
   beneficiaries with trust, first use and payee check, travel-rule records).
   External: `core`, `core_unix` (CLI), `ppx_jane`, `ppx_yojson_conv`, `yojson`, `zarith`.
-- Used by: `neobank-api` and the card authoriser (planned, see
-  [design/neobank.md](../design/neobank.md)); `risk-models` implements `Model.S`.
+- Used by: `neobank-api`, `risk-models`, `treasury-rules`.
 
 ## CI pin order
 
