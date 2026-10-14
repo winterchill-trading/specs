@@ -33,6 +33,15 @@ belong here.
   interface with an in-memory and a PostgreSQL implementation (`neobank-api`, `hl-copy-api`).
   See [adr/0009-postgres-replaceable-store.md](adr/0009-postgres-replaceable-store.md) and
   [repos/pg-async.md](repos/pg-async.md).
+- `neobank-api`, `neobank-web`: new repositories for the neobank demo's HTTP API and browser
+  app. New dependency edges: `neobank-api` to `banking-provider`, `risk-rules` and `pg-async`;
+  `neobank-web` to `neobank-api-types`, a package of the `neobank-api` repository. See
+  [design/neobank.md](design/neobank.md) and the pages [neobank-api](repos/neobank-api.md)
+  and [neobank-web](repos/neobank-web.md).
+- `hl-copy-api`: state moves from sexp files to PostgreSQL through `pg-async` (an on-disk
+  format change for follows and agent keys; the engine's files are unchanged). New dependency
+  edge `hl-copy-api` to `pg-async`. See [repos/hl-copy-api.md](repos/hl-copy-api.md) and
+  [ADR 0009](adr/0009-postgres-replaceable-store.md).
 
 ## 2026-10-13
 
