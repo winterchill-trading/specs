@@ -52,7 +52,7 @@ Enumerations are strings rather than variants where the API adds values over tim
 - Depends on: no org package. External: `core`, `core_unix`, `async`, `async_ssl`,
   `conduit-async`, `cohttp`, `cohttp-async`, `uri`, `yojson`, `ppx_jane`,
   `ppx_yojson_conv`, `base64`, `cryptokit`, `zarith`.
-- Used by: none in the organization yet.
+- Used by: `lightspark-provider`.
 - It does not use `venue-net`, because it needs response headers (`x-request-id`,
   `Retry-After`) and its own TLS configuration.
 
