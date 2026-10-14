@@ -45,6 +45,8 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Fiat rails | [lightspark-client](repos/lightspark-client.md) | Async client and CLI for a Lightning and UMA GraphQL API and a Grid banking API: nodes, invoices, customers, transfers, quotes; sandbox writes only, webhook verification | done |
 | Fiat rails | [striga-client](repos/striga-client.md) | Async client and CLI for the Striga v1 API: consumers and KYC, wallets, payments, cards, standing orders, webhooks; sandbox by default | done |
 | Fiat rails | [striga-provider](repos/striga-provider.md) | `banking-provider`'s `Provider` and `Sandbox` over `striga-client`, with the endpoint and webhook mapping; sandbox by default | done, sandbox-limited |
+| Fiat rails | [griffin-provider](repos/griffin-provider.md) | `banking-provider`'s `Provider` and `Sandbox` over `griffin-client` for GBP: UK legal persons, sort-code accounts, Faster Payments, book transfers, Confirmation of Payee; sandbox by default | done, sandbox-limited |
+| Fiat rails | [lightspark-provider](repos/lightspark-provider.md) | `banking-provider`'s `Provider` and `Sandbox` over `lightspark-client` for USD: Grid customers, USD and stablecoin accounts, cross-border payouts, FX quotes, swaps; sandbox by default | done, sandbox-limited |
 | Banking libraries | [money](repos/money.md) | Currencies, exact minor-unit amounts, FX rates, fees; the base of the banking libraries | done |
 | Banking libraries | [ledger](repos/ledger.md) | Double-entry ledger over an append-only Bin_prot journal: holds, idempotency, trial balance, statements | done |
 | Banking libraries | [risk-rules](repos/risk-rules.md) | Rule engine for transfers and card authorisations: reason codes, typologies, SCA exemptions, shadow mode, review queue | done |
@@ -53,6 +55,11 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Banking libraries | [payments-core](repos/payments-core.md) | Payment rails and transfer state machines (SEPA, on-chain, Lightning, intraledger), SCA, standing orders, swaps, reconciliation | done |
 | Banking libraries | [card-core](repos/card-core.md) | Card lifecycle, authorization decision, clearing and settlement, disputes, statements | done |
 | Banking libraries | [banking-provider](repos/banking-provider.md) | `Provider` interface over the domain libraries and a deterministic fake provider for the neobank demo | done |
+| Business banking libraries | [org-access](repos/org-access.md) | Organisations, members and roles, invitations, maker-checker approvals and a hash-chained access audit | done |
+| Business banking libraries | [payouts-core](repos/payouts-core.md) | Batches of payouts to many payees: one approval per batch, line state machine, ledger funding holds, receipts, reconciliation | done |
+| Business banking libraries | [accounting-sync](repos/accounting-sync.md) | Export of ledger journals to accounting systems: mappings, idempotent entries, period locks, reconciliation | done, no adapter for a real system yet |
+| Business banking libraries | [treasury-rules](repos/treasury-rules.md) | Treasury policy rules (sweep, top-up, convert, rebalance, yield, hedge) with caps, guards and exactly-once runs | done |
+| Business banking libraries | [billing-core](repos/billing-core.md) | Recurring and usage billing: price lists, subscriptions, invoices, dunning, credit notes, ledger bookings | in progress |
 | Consumer banking libraries | [service-kit](repos/service-kit.md) | Async HTTP building blocks: typed routes, RFC 9457 problems, idempotency keys, step-up grants, rate limits, health and metrics; no database | done |
 | Consumer banking libraries | [otp-mail](repos/otp-mail.md) | One-time codes hashed at rest, transactional email with MIME and DKIM signing, SMTP client | done |
 | Consumer banking libraries | [webauthn](repos/webauthn.md) | WebAuthn and passkey relying-party verification in pure OCaml, with CBOR and COSE decoding; requires OxCaml | done |
@@ -142,6 +149,8 @@ graph LR
     lightspark_client["lightspark-client"]
     striga_client["striga-client"]
     striga_provider["striga-provider"]
+    griffin_provider["griffin-provider"]
+    lightspark_provider["lightspark-provider"]
   end
   subgraph banking["Banking libraries"]
     money["money"]
@@ -165,6 +174,13 @@ graph LR
     pots_and_insights["pots-and-insights"]
     rewards_core["rewards-core"]
     statements["statements"]
+  end
+  subgraph business["Business banking libraries"]
+    org_access["org-access"]
+    payouts_core["payouts-core"]
+    accounting_sync["accounting-sync"]
+    treasury_rules["treasury-rules"]
+    billing_core["billing-core"]
   end
   subgraph infra_libs["Infrastructure libraries"]
     pg_async["pg-async"]
@@ -264,6 +280,20 @@ graph LR
   banking_provider --> card_core
   striga_provider --> banking_provider
   striga_provider --> striga_client
+  griffin_provider --> banking_provider
+  griffin_provider --> griffin_client
+  lightspark_provider --> banking_provider
+  lightspark_provider --> lightspark_client
+  org_access --> money
+  payouts_core --> money
+  payouts_core --> ledger
+  payouts_core --> payments_core
+  accounting_sync --> money
+  accounting_sync --> ledger
+  treasury_rules --> money
+  treasury_rules --> risk_rules
+  billing_core --> money
+  billing_core --> ledger
   neobank_api --> banking_provider
   neobank_api --> striga_provider
   neobank_api --> risk_rules
