@@ -23,7 +23,12 @@ units, so arithmetic is exact and allocation-free.
   which is how `Price`, `Size` and `Usd` stay apart at compile time.
 - `Fixed_decimal.Product (A) (B) (C)`: mixed products and quotients
   (`Price.t -> Size.t -> Usd.t`) without overflowing intermediates.
-- `mul_units`, `div_units`: the raw helpers.
+- `mul_units`, `div_units`: the raw helpers, and `mul_units_round_nearest`,
+  `div_units_round_nearest`.
+- Added for the opam-readiness audit: `of_string_or_error`, `of_string_exact` (an error
+  instead of truncating past 8 decimals), `div_or_error`, and `mul_round_nearest`,
+  `div_round_nearest` on `S` and `Product` (half away from zero). Audit:
+  [research/opam-readiness/fixed-decimal.md](../research/opam-readiness/fixed-decimal.md).
 
 `S.t` is declared `[@@immediate]`, so values are unboxed `int`s and can cross modes.
 `of_float` rounds to the nearest unit, raises on NaN, infinities and out-of-range values,
@@ -72,9 +77,13 @@ None; `opam install . --deps-only --with-test`.
 
 ## Known gaps
 
-- More than 8 fractional digits are truncated toward zero on parse; protocol libraries
-  inherit this.
 - The range is that of a 63-bit `int` in 10^-8 units, about 4.6 * 10^10. Larger values
   fail to parse: hl-mm logs and skips Hyperliquid clearinghouse snapshots whose
-  `liquidationPx` is out of range.
-- `mul`, `div` and `div_int` truncate toward zero; division by zero raises.
+  `liquidationPx` is out of range. A wider range needs a second representation; design
+  decision.
+- The scale is fixed at 8 fractional digits for every instance; a per-instance scale is a
+  design change.
+- Closed 2026-10-14: digits past the eighth are still truncated by `of_string` (protocol
+  libraries inherit this), but `of_string_exact` rejects them; `mul_round_nearest` and
+  `div_round_nearest` round instead of truncating; `div_or_error` returns an error on a
+  zero divisor.
