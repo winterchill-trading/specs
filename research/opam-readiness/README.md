@@ -29,12 +29,15 @@ Core `v0.17.2`.
    that added it says plainly that it is not settled whether packages depending on OxCaml
    should be released upstream. A GitHub code search of ocaml/opam-repository on
    2026-10-14 finds no package depending on `oxcaml` besides the virtual package itself.
-3. **Even our syntax-clean libraries are OxCaml-only, because of Core.** Our libraries build
-   against Core and Async `v0.18~preview.*`, which exist only in the OxCaml repository;
-   upstream stops at `core.v0.17.2`. Verified: `kyc-core`, which uses no OxCaml syntax,
-   fails on upstream OCaml 5.2.0 with Core v0.17.2 (`String_id.make` is unbound;
-   `quickcheck_observer` is missing on `Date.Stable.V1`). A dual build therefore needs a
-   Core v0.17 port as well as syntax shims.
+3. **Most of our libraries are OxCaml-only because of Core; `pg-async` is the exception.**
+   Our libraries build against Core and Async `v0.18~preview.*`, which exist only in the
+   OxCaml repository; upstream stops at `core.v0.17.2`. Verified: `kyc-core`, which uses no
+   OxCaml syntax, fails on upstream OCaml 5.2.0 with Core v0.17.2 (`String_id.make` is
+   unbound; `quickcheck_observer` is missing on `Date.Stable.V1`), so a dual build needs a
+   Core v0.17 port as well as syntax shims. `pg-async` needs no port: by hand, it builds and
+   passes its tests on plain OCaml 5.2.0 with Jane Street v0.17 (Core and Async v0.17,
+   `yojson` 3.0.0, `postgresql` 5.4.0) and uses no OxCaml construct. It is therefore the
+   first upstream-publishable candidate, though no CI job proves the upstream build yet.
 4. **The OxCaml repository is not a place for third-party libraries.** It holds the
    compiler (`ocaml-variants`, `oxcaml-compiler`, the `oxcaml` signal package), the Core
    and Async family at `v0.18~preview.*`, and patched third-party packages as
@@ -122,16 +125,19 @@ blockers.
 
 ## Audits
 
-| Library | Tier in the plan | Audit |
-| --- | --- | --- |
-| `fixed-decimal` | 1 | [fixed-decimal.md](fixed-decimal.md) |
-| `pg-async` | 1 | [pg-async.md](pg-async.md) |
-| `money` | 1 | [money.md](money.md) |
-| `ledger` | 2 | [ledger.md](ledger.md) |
-| `order-book` | 2 | [order-book.md](order-book.md) |
-| `venue-net` | 2 | [venue-net.md](venue-net.md) |
-| `parquet` | 2 | [parquet.md](parquet.md) |
-| `payments-core`, `kyc-core`, `card-core`, `risk-rules`, `banking-provider` | 3 | pending |
+Readiness counts the eight checklist items: done, or documented where the item is a
+portability note; the rest are open. Each page ends with its top three blockers.
+
+| Library | Tier in the plan | Audit | Readiness | Top blocker |
+| --- | --- | --- | --- | --- |
+| `fixed-decimal` | 1 | [fixed-decimal.md](fixed-decimal.md) | 6 done, 1 documented, 1 open (docs) | no venue yet; `odoc` not on the switch; Core v0.18 preview only |
+| `pg-async` | 1 | [pg-async.md](pg-async.md) | 7 done, 1 open (docs) | tests need a PostgreSQL server, which opam CI does not provide; `odoc` not on the switch |
+| `money` | 1 | [money.md](money.md) | 6 done, 1 documented, 1 open (docs) | `fixed-decimal` unpublished; no venue yet; `odoc` not on the switch |
+| `ledger` | 2 | [ledger.md](ledger.md) | 6 done, 1 documented, 1 open (docs) | `money` and `fixed-decimal` unpublished; no venue yet; `odoc` not on the switch |
+| `order-book` | 2 | [order-book.md](order-book.md) | 7 done, 1 open (docs) | `exchange-core` unpublished and tied back to `order-book`; no venue yet; `odoc` not on the switch |
+| `venue-net` | 2 | [venue-net.md](venue-net.md) | 7 done, 1 open (docs) | Jane Street v0.18 preview only; name undecided; `Http` relies on cohttp's `Private` functors |
+| `parquet` | 2 | [parquet.md](parquet.md) | 6 done, 1 documented, 1 open (docs) | tests need the DuckDB CLI, which is not an opam package; no venue yet |
+| `payments-core`, `kyc-core`, `card-core`, `risk-rules`, `banking-provider` | 3 | pending | | |
 
 An audit replaces "pending" with a link to its page.
 
