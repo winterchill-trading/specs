@@ -61,8 +61,8 @@ Rules enforced by the library:
 
 - Depends on: [money](money.md), [ledger](ledger.md). External: `core`, `core_unix` (CLI),
   `async_kernel`, `cryptokit`, `zarith`, `ppx_jane`.
-- Used by: [card-core](card-core.md) (SCA counters and exemptions); planned for `risk-rules`
-  and `banking-provider` (see [design/neobank.md](../design/neobank.md)).
+- Used by: `banking-provider`, `card-core`, `fx-core`, `griffin-provider`, `lightspark-provider`,
+  `neobank-api`, `payouts-core`, `requests-core`, `risk-rules`, `striga-provider`.
 
 ## CI pin order
 
