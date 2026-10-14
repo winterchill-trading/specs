@@ -96,6 +96,11 @@ belong here.
   `pots-and-insights` to `money`, `ledger` and `scheduler-core`; `rewards-core` and
   `statements` to `money` and `ledger`. The other five have no org package dependency.
   See [overview.md](overview.md#dependency-graph).
+- `chain-books`: new repository, double-entry books for an organisation's on-chain treasury:
+  venue records booked as ledger entries, positions with cost basis, valuation and
+  reconciliation against chain balances, with a Hyperliquid sub-library. New dependency
+  edges: `chain-books` to `money`, `ledger` and `hl-protocol`. See
+  [repos/chain-books.md](repos/chain-books.md).
 
 ## 2026-10-13
 
