@@ -2,9 +2,11 @@
 
 Kind: explanation.
 
-Status: plan (2026-10-14). Nothing is published, tagged or released, and no opam repository
-exists yet; each step below that would publish anything waits for an explicit decision. The
-findings this plan rests on, with sources, are in
+Status: in progress (2026-10-14). Our opam repository exists,
+[opam-repository](../repos/opam-repository.md), with `0.1.0` entries for `pg-async`,
+`fixed-decimal`, `money`, `money-cli`, `ledger`, `venue-net` and `parquet`, each pinned to
+a commit (no tags, no GitHub releases). Every other step below that would publish anything
+waits for an explicit decision. The findings this plan rests on, with sources, are in
 [research/opam-readiness](../research/opam-readiness/README.md).
 
 ## Decision in short
@@ -49,6 +51,11 @@ syntax-clean library (`kyc-core`) already uses v0.18-only Core API. Revisit when
 upstream CI gains an OxCaml platform or Core v0.18 is released upstream.
 
 ## Our opam repository
+
+The repository is [opam-repository](../repos/opam-repository.md). Two things differ from
+the layout below while the libraries are untagged: each `url` is a git URL with the
+exact audited commit instead of a tarball with checksums, and CI installs on push to
+`main` rather than per pull request.
 
 ### Layout
 
@@ -174,9 +181,9 @@ These block more than one package and are listed once here; each audit page name
 ones that apply to it under its top blockers
 ([research/opam-readiness](../research/opam-readiness/README.md#audits)).
 
-- **No venue yet.** Upstream opam CI has no OxCaml platform, and our own opam repository
-  (above) does not exist. Nothing can be released into a repository until it is created,
-  and merging into it is publishing.
+- **No upstream venue.** Upstream opam CI has no OxCaml platform. Our own opam
+  repository ([opam-repository](../repos/opam-repository.md)) now exists, and merging
+  into it is publishing.
 - **`odoc` is not installed on the switch.** `dune build @doc` has never run on any
   audited package, so none can be released `--with-doc` yet. The OxCaml dry run plans
   `odoc.3.2.0+ox2` and touches neither the compiler nor Core; installing it waits for the
