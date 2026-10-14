@@ -60,6 +60,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Business banking libraries | [accounting-sync](repos/accounting-sync.md) | Export of ledger journals to accounting systems: mappings, idempotent entries, period locks, reconciliation | done, no adapter for a real system yet |
 | Business banking libraries | [treasury-rules](repos/treasury-rules.md) | Treasury policy rules (sweep, top-up, convert, rebalance, yield, hedge) with caps, guards and exactly-once runs | done |
 | Business banking libraries | [billing-core](repos/billing-core.md) | Recurring and usage billing: price lists, subscriptions, invoices, dunning, credit notes, ledger bookings | in progress |
+| Business banking libraries | [chain-books](repos/chain-books.md) | Double-entry books for an on-chain treasury: activities booked as ledger entries, positions and cost basis, valuation, reconciliation against chain balances, Hyperliquid adapter | done, not on opam yet |
 | Consumer banking libraries | [service-kit](repos/service-kit.md) | Async HTTP building blocks: typed routes, RFC 9457 problems, idempotency keys, step-up grants, rate limits, health and metrics; no database | done |
 | Consumer banking libraries | [otp-mail](repos/otp-mail.md) | One-time codes hashed at rest, transactional email with MIME and DKIM signing, SMTP client | done |
 | Consumer banking libraries | [webauthn](repos/webauthn.md) | WebAuthn and passkey relying-party verification in pure OCaml, with CBOR and COSE decoding; requires OxCaml | done |
@@ -181,6 +182,7 @@ graph LR
     accounting_sync["accounting-sync"]
     treasury_rules["treasury-rules"]
     billing_core["billing-core"]
+    chain_books["chain-books"]
   end
   subgraph infra_libs["Infrastructure libraries"]
     pg_async["pg-async"]
@@ -294,6 +296,9 @@ graph LR
   treasury_rules --> risk_rules
   billing_core --> money
   billing_core --> ledger
+  chain_books --> money
+  chain_books --> ledger
+  chain_books --> hl_protocol
   neobank_api --> banking_provider
   neobank_api --> striga_provider
   neobank_api --> risk_rules
