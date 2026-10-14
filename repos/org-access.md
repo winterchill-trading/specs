@@ -3,9 +3,8 @@
 Access control for business customers of a bank: organisations, members and roles,
 invitations, maker-checker approvals and an append-only, hash-chained access audit. Every
 decision is a pure function (`Authorize.decide`) with a stable reason code, and the library
-never persists anything: a service implements `Store.S` over its own database. It is the
-business-side counterpart of the personal access rules, and it depends only on
-[money](money.md) for amounts. Opam package and command: `org-access` and `org-access-cli`.
+never persists anything: a service implements `Store.S` over its own database. It depends
+only on [money](money.md) for amounts. Opam package and command: `org-access` and `org-access-cli`.
 
 | | |
 | --- | --- |
