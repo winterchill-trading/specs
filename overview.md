@@ -47,12 +47,12 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Banking libraries | [money](repos/money.md) | Currencies, exact minor-unit amounts, FX rates, fees; the base of the banking libraries | done |
 | Banking libraries | [ledger](repos/ledger.md) | Double-entry ledger over an append-only Bin_prot journal: holds, idempotency, trial balance, statements | done |
 | Banking libraries | [risk-rules](repos/risk-rules.md) | Rule engine for transfers and card authorisations: reason codes, typologies, SCA exemptions, shadow mode, review queue | done |
-| Banking libraries | risk-models | Machine-learned scores behind `risk-rules`' `Model.S` | in progress |
-| Banking libraries | pg-async | Non-blocking PostgreSQL client for Async over libpq | in progress |
+| Banking libraries | [risk-models](repos/risk-models.md) | Machine-learned scores behind `risk-rules`' `Model.S`; trained offline, scored in OCaml | done |
 | Banking libraries | [kyc-core](repos/kyc-core.md) | Customer due diligence: verification tiers, risk rating, screening, monitoring, retention, audit trail; standalone | done |
 | Banking libraries | [payments-core](repos/payments-core.md) | Payment rails and transfer state machines (SEPA, on-chain, Lightning, intraledger), SCA, standing orders, swaps, reconciliation | done |
 | Banking libraries | [card-core](repos/card-core.md) | Card lifecycle, authorization decision, clearing and settlement, disputes, statements | done |
-| Banking libraries | banking-provider | `Provider` interface over the domain libraries and a deterministic fake provider for the neobank demo | in progress |
+| Banking libraries | [banking-provider](repos/banking-provider.md) | `Provider` interface over the domain libraries and a deterministic fake provider for the neobank demo | done |
+| Infrastructure libraries | [pg-async](repos/pg-async.md) | Non-blocking PostgreSQL client for Async over libpq: pool, queries, transactions, migrations; application state store | done |
 | Tooling | [infra](repos/infra.md) | Container images, compose stack, Helm chart, deployment notes | done |
 | Tooling | [oxcaml-claude-skills](repos/oxcaml-claude-skills.md) | Agent skills and the gotchas log | done |
 | Tooling | specs | This repository | in progress |
@@ -136,6 +136,8 @@ graph LR
     risk_rules["risk-rules"]
     risk_models["risk-models"]
     banking_provider["banking-provider"]
+  end
+  subgraph infra_libs["Infrastructure libraries"]
     pg_async["pg-async"]
   end
   subgraph tooling["Tooling"]
@@ -221,6 +223,8 @@ graph LR
   risk_rules --> money
   risk_rules --> payments_core
   risk_models --> risk_rules
+  banking_provider --> money
+  banking_provider --> ledger
   banking_provider --> kyc_core
   banking_provider --> payments_core
   banking_provider --> card_core
@@ -267,9 +271,8 @@ package of [hl-copy-core](repos/hl-copy-core.md); it needs `hl-leaderboard`, whi
 `hl-copy-core`. See [design/copytrading.md](design/copytrading.md).
 
 The `*-feed` repositories also list `exchange-core` (Coinbase, Kraken, Deribit) and
-`fixed-decimal` (Kraken) directly. `fixed-decimal`, `venue-net` and `parquet` depend on no
-org package. `exchange-core`
-holds two packages because `order-book` sits between them:
+`fixed-decimal` (Kraken) directly. `fixed-decimal`, `venue-net`, `parquet` and `pg-async`
+depend on no org package. `exchange-core` holds two packages because `order-book` sits between them:
 `fixed-decimal -> exchange-core -> order-book -> exchange-core-engine`.
 
 ## Runtime data flow
@@ -354,7 +357,8 @@ graph LR
   swaps, SEPA, on-chain and Lightning payments, virtual cards and standing orders over
   provider-neutral libraries (`money`, `ledger`, `kyc-core`, `payments-core`, `card-core`,
   `risk-rules`, `banking-provider`) and the Striga sandbox, or offline over a fake provider.
-  See [design/neobank.md](design/neobank.md).
+  Its application state is in PostgreSQL through [pg-async](repos/pg-async.md). See
+  [design/neobank.md](design/neobank.md).
 - The TradFi simulators have no real data source: noise traders move their books, and
   their order entry and market data are binary over TCP, with the feed repeated as JSON
   on `/ws`. Nothing in the data platform consumes them yet. See
