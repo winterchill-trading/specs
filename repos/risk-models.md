@@ -69,7 +69,7 @@ Time-ordered split with a 7-day label delay gap: days 0 to 51 train, 52 to 65 ca
 66 to 72 are dropped, 73 to 90 test (146 504 rows, 504 positive, 0.34%).
 
 | | scikit-learn trees | LightGBM | Logistic baseline |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Average precision | 0.547 | 0.544 | 0.436 |
 | ROC-AUC | 0.979 | 0.980 | 0.972 |
 | Recall at 50 alerts a day | 0.647 | 0.635 | 0.565 |
