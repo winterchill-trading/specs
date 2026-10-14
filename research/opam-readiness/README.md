@@ -128,7 +128,7 @@ blockers.
 | `pg-async` | 1 | pending |
 | `money` | 1 | pending |
 | `ledger` | 2 | pending |
-| `order-book` | 2 | pending |
+| `order-book` | 2 | [order-book.md](order-book.md) |
 | `venue-net` | 2 | pending |
 | `parquet` | 2 | pending |
 | `payments-core`, `kyc-core`, `card-core`, `risk-rules`, `banking-provider` | 3 | pending |
