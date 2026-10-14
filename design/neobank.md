@@ -4,10 +4,10 @@ Kind: explanation.
 
 Status: in progress (2026-10-14). `money`, `ledger`, `kyc-core`, `payments-core`, `card-core`,
 `risk-rules`, `striga-client`, `banking-provider`, `risk-models` and `pg-async` are done;
-`striga-provider`, `neobank-api` and `neobank-web` are in progress. The application state of
-`neobank-api` is PostgreSQL through `pg-async`, behind a per-service store interface
-([ADR 0009](../adr/0009-postgres-replaceable-store.md)); `hl-copy-api` is moving to the same
-store. The bank-side domain is split into provider-neutral
+`neobank-api` and `neobank-web` are done on the fake provider; `striga-provider` is in
+progress; the infra compose profile `neobank` is drafted and being verified. The store of
+`neobank-api` is PostgreSQL through `pg-async` behind `Store.S`, a per-service store interface
+([ADR 0009](../adr/0009-postgres-replaceable-store.md)); `hl-copy-api` uses the same store. The bank-side domain is split into provider-neutral
 libraries named for what they are (`money`, `ledger`, `kyc-core`, `payments-core`,
 `card-core`, `risk-rules`, `banking-provider`); only the demo apps (`neobank-api`,
 `neobank-web`) and the infra compose profile carry the neobank name. Everything below is the
@@ -108,11 +108,11 @@ graph LR
 - `banking-provider` defines the `Provider` module type (Async, `Or_error`) over the
   domain types: everything the API needs from a provider. Its deterministic fake
   implements it in memory and simulates deposits, approvals and card activity on command.
-- `neobank-api` keeps its application state (users, sessions, provider ids, transfer and
-  card states, idempotency keys, outbox and inbox) in PostgreSQL through
-  [pg-async](../repos/pg-async.md). Each service has a `Store.S` with an in-memory and a
-  PostgreSQL implementation and one conformance suite over both; the ledger journal stays a
-  file outside the database ([ADR 0009](../adr/0009-postgres-replaceable-store.md)).
+- The store of `neobank-api` is PostgreSQL through [pg-async](../repos/pg-async.md), behind
+  `Store.S`: the service's store interface, with an in-memory and a PostgreSQL implementation
+  and one conformance suite over both ([ADR 0009](../adr/0009-postgres-replaceable-store.md)).
+  It holds users, sessions, provider ids, transfer and card states, idempotency keys, outbox
+  and inbox; the ledger journal stays a file outside the database.
 - `striga-provider` implements `Provider` over `striga-client`, with a mapping table
   (which endpoint backs each operation, which webhook feeds which event) in its
   `docs/mapping.md`.
@@ -306,9 +306,9 @@ caps from the tier.
 | `banking-provider` | `Provider` module type over the domain libraries, deterministic fake provider | `money`, `ledger`, `kyc-core`, `payments-core`, `card-core` | done ([repo page](../repos/banking-provider.md)) |
 | `striga-client` | Striga SDK and `striga` CLI: HMAC transport, typed resources, simulator, webhook verification | (none) | done ([repo page](../repos/striga-client.md)) |
 | `striga-provider` | `Provider` over `striga-client`, endpoint and webhook mapping table | `banking-provider`, `striga-client` | in progress |
-| `neobank-api` | Async HTTP API, sessions, webhooks, `/ws`; the demo server; state in PostgreSQL through `pg-async` | `banking-provider`, `risk-rules`, `striga-provider`, `pg-async` | in progress |
-| `neobank-web` | Bonsai frontend, mock mode on the fake provider | `neobank-api` types | in progress |
-| `infra` | Compose profile `neobank`: API, web, fake or sandbox provider | the images above | planned |
+| `neobank-api` | Async HTTP API, sessions, webhooks, `/ws`; the demo server; state in PostgreSQL through `pg-async` | `banking-provider`, `risk-rules`, `striga-provider`, `pg-async` | done on the fake provider ([repo page](../repos/neobank-api.md)) |
+| `neobank-web` | Bonsai frontend, mock mode on the fake provider | `neobank-api` types | done ([repo page](../repos/neobank-web.md)) |
+| `infra` | Compose profile `neobank`: API, web, fake or sandbox provider | the images above | drafted, being verified |
 
 CI pin order (planned), following the graph: fixed-decimal, money, ledger, kyc-core,
 payments-core, card-core, risk-rules, banking-provider, striga-client, striga-provider, pg-async,
