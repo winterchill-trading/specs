@@ -338,8 +338,9 @@ caps from the tier.
 
 CI pin order (planned), following the graph: fixed-decimal, money, ledger, kyc-core,
 payments-core, card-core, risk-rules, banking-provider, striga-client, striga-provider,
-griffin-client, griffin-provider, lightspark-client, lightspark-provider, pg-async, neobank-api. CI has no credentials; live tests are skipped with one line and the suites
-run on recorded, redacted fixtures and the fake provider.
+griffin-client, griffin-provider, lightspark-client, lightspark-provider, pg-async,
+neobank-api. CI has no credentials; live tests are skipped with one line and the suites run on
+recorded, redacted fixtures and the fake provider.
 
 ## Open questions
 
