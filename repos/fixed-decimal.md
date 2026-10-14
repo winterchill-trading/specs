@@ -67,9 +67,10 @@ in-range values with 11 integer digits; it now accepts any integer part that fit
 
 - Depends on: no org package (core, ppx_jane, ppx_yojson_conv, yojson; zarith and
   core_bench for tests and benchmarks).
-- Used by: `exchange-core`, `exchange-core-engine`, `order-book`, `hl-protocol`,
-  `binance-protocol`, `bybit-protocol`, `hl-sim`, `binance-sim`, `bybit-sim`,
-  `market-data`, `mm-core`, `hl-mm`, `binance-client`.
+- Used by: `binance-client`, `binance-protocol`, `binance-sim`, `bybit-protocol`, `bybit-sim`,
+  `cboe-sim`, `cme-sim`, `equities-core`, `exchange-core`, `hl-copy-core`, `hl-mm`, `hl-protocol`,
+  `hl-sim`, `investing-core`, `market-data`, `mm-core`, `money`, `nyse-sim`, `order-book`,
+  `price-anchor`.
 
 ## CI pin order
 
