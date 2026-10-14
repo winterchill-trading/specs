@@ -51,7 +51,7 @@ with stable binary forms that a service stores however it likes.
 - An entry whose ledger content changes after it was submitted or posted is not re-sent: the
   new content waits as a replacement until the remote entry is voided.
 
-```
+```text
 Pending --accepted--> Submitted --posted--> Posted --voided--> Voided
    |                     |                                       |
    +------posted---------|-------------------> Posted            |
