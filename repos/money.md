@@ -42,8 +42,10 @@ modules with pinned digests, so a changed wire shape fails a test rather than a 
 - Depends on: [fixed-decimal](fixed-decimal.md) (for handing amounts to the trading stack).
   External: `core`, `zarith`, `yojson`, `ppx_jane`, `ppx_yojson_conv`; `core_unix` for the
   CLI only.
-- Used by: `ledger`, and by the other banking libraries planned in
-  [design/neobank.md](../design/neobank.md).
+- Used by: `accounting-sync`, `banking-provider`, `billing-core`, `card-core`, `chain-books`,
+  `fx-core`, `griffin-provider`, `investing-core`, `ledger`, `lightspark-provider`, `neobank-api`,
+  `org-access`, `payments-core`, `payouts-core`, `pots-and-insights`, `requests-core`,
+  `rewards-core`, `risk-rules`, `statements`, `striga-provider`, `treasury-rules`.
 
 ## CI pin order
 
