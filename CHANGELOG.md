@@ -69,6 +69,19 @@ belong here.
   `Kyb_event.Stable.V1` (with `Kyb_audit.Entry.Stable.V1`) and `kyc-case kyb` subcommands.
   See [repos/kyc-core.md](repos/kyc-core.md).
 
+- `service-kit`, `otp-mail`, `webauthn`, `auth-kit`, `fx-core`, `investing-core`,
+  `scheduler-core`, `requests-core`, `pots-and-insights`, `rewards-core`, `statements`: new
+  repositories, the consumer banking libraries (HTTP service blocks, one-time codes and
+  email, passkeys, passcodes, FX pricing, investing, recurring schedules, money requests,
+  savings pots and insights, loyalty points, account statements). See
+  [overview.md](overview.md#repositories-by-layer) and the pages under
+  [repos/](repos/service-kit.md).
+- Consumer banking library edges: `fx-core` and `requests-core` to `money`, `ledger` and
+  `payments-core`; `investing-core` to `fixed-decimal`, `money` and `ledger`;
+  `pots-and-insights` to `money`, `ledger` and `scheduler-core`; `rewards-core` and
+  `statements` to `money` and `ledger`. The other five have no org package dependency.
+  See [overview.md](overview.md#dependency-graph).
+
 ## 2026-10-13
 
 - `exchange-core`, `hl-sim`: trigger orders (`Exchange.place_trigger`, `Trigger_event`),
