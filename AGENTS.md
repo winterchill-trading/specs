@@ -39,8 +39,8 @@ network access on the first run. CI runs the same two checks with Node 22.
 
 ## Conventions
 
-- One document per topic: a repository gets one page under `repos/`; a design spanning repositories gets
-  one page under `design/`. Link instead of repeating.
+- One document per topic: a repository gets one page under `repos/`; a design spanning
+  repositories gets one page under `design/`. Link instead of repeating.
 - Each `design/` page states its kind on the line after the H1 (`Kind: tutorial`, `how-to`, `reference`
   or `explanation`). A page that needs two kinds is two pages.
 - Status words are `done`, `in progress` and `planned`, with the same meaning everywhere.
@@ -62,7 +62,8 @@ show up on the page of every repository whose CI pins it.
 
 `.github/workflows/ci.yml` has two jobs: `lint` runs `markdownlint-cli2-action` on `**/*.md`, and
 `mermaid` runs `scripts/check-mermaid.sh` with Node 22. A pull request that changes architecture needs
-the `repos/`, `overview.md`, `design/` or ADR update and a `CHANGELOG.md` line in the same piece of work.
+the `repos/`, `overview.md`, `design/` or ADR update and a `CHANGELOG.md` line in the same
+piece of work.
 To check a run, use `gh run list --limit 1`, and at most one `gh run watch <id> --exit-status`.
 Do not poll in a loop.
 
@@ -72,7 +73,8 @@ Do not poll in a loop.
   files first; they win, and the spec is fixed in the same session.
 - Commit one document per commit when several documents change, so each commit reads on its own.
 - When the shared checkout holds other agents' uncommitted edits, commit only your own paths.
-- ADRs are never renumbered or deleted. A reversed decision gets a new ADR and a "Superseded by" line on the old one.
+- ADRs are never renumbered or deleted. A reversed decision gets a new ADR and a
+  "Superseded by" line on the old one.
 
 ## Where to read more
 
