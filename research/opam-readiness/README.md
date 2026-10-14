@@ -129,7 +129,7 @@ blockers.
 | `money` | 1 | [money.md](money.md) |
 | `ledger` | 2 | [ledger.md](ledger.md) |
 | `order-book` | 2 | [order-book.md](order-book.md) |
-| `venue-net` | 2 | pending |
+| `venue-net` | 2 | [venue-net.md](venue-net.md) |
 | `parquet` | 2 | pending |
 | `payments-core`, `kyc-core`, `card-core`, `risk-rules`, `banking-provider` | 3 | pending |
 
