@@ -30,26 +30,27 @@ cancellation, but the API is not yet stable.
 | `Dunning` | Retry schedule and states for failed payments |
 | `Credit_note` | Credits against invoices |
 | `Booking` | Ledger bookings of invoices, payments and credits |
-| `Engine` | Applies events (billing run, usage, payment, cancellation) to the state |
+| `Engine` | Billing operations over a `Store.S`: invoices for periods, usage, payments, credit, cancellation |
 | `Refusal` | Why an event was refused |
 | `Store`, `Store_memory`, `Store_conformance` | Persistence as a module type, an in-memory store and the conformance suite |
 
 ## Design
 
-- Pure values: the engine takes state and an event and returns the new state and the
-  effects (invoices to issue, bookings to make, retries to schedule). Nothing is persisted
-  or sent by the library.
-- Money is [money](money.md) amounts; bookings go through [ledger](ledger.md) entries, so a
-  billing run never changes a balance except through the ledger's own rules.
-- Refusals are values, as in the other banking libraries; an event that does not apply is
-  reported, not raised.
-
-## Tests
-
-- `dune test`: expect tests per module and a walk of the engine through billing, dunning,
-  credit and cancellation.
-- `Store_conformance` is the suite a service runs against its own store.
-- `@examples/runtest` builds the examples in CI.
+- `Engine` runs the pure state machines over a `Store.S`. Every operation is safe to retry and
+  safe to run from several processes: invoice ids derive from the subscription and the period
+  they bill, document numbers are idempotent, saves are compare-and-set (a stale save reloads
+  and redoes the pure step).
+- The engine never appends to a journal. It returns the ledger entries and the caller books
+  them; a retried call returns the same entries, and the journal recognises the duplicates.
+- `Booking` builds balanced [ledger](ledger.md) entries with deterministic keys such as
+  `billing:invoice:<id>:issue`. Issuing an invoice debits the customer's receivable and credits
+  fee income per component and tax payable per rate; a payment credits the receivable, and a
+  payment on a written-off invoice credits bad debt instead.
+- `Dunning` is a state machine (`Waiting`, `Collecting`, `Exhausted`, `Recovered`, `Closed`)
+  driven by a policy of waits in days. On a retry date it asks the caller to collect once and
+  waits for the outcome.
+- Periods close `close_after_days` after they end (default 0). Usage dated before the current
+  period is refused with `Period_closed`.
 
 ## Dependencies
 
@@ -64,7 +65,5 @@ cancellation, but the API is not yet stable.
 
 ## Known gaps
 
-- Work in progress: the README says so, and the interfaces may still change before a first
-  release.
-- No stable binary formats yet, so no pinned digests.
-- Payment collection, tax rules by jurisdiction and invoice delivery are left to the caller.
+- Work in progress: the interfaces may still change before a first release.
+- No `Stable.V1` binary formats yet, so no pinned digests.
