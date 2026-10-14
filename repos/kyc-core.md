@@ -106,8 +106,8 @@ rescores with a newer model. PII is in clear inside bin_io, so the event store i
 ## Dependencies
 
 - Depends on: `core`, `ppx_jane`; `core_unix` for the CLI. No sibling repositories.
-- Used by: none yet; planned for `banking-provider` (see
-  [design/neobank.md](../design/neobank.md)).
+- Used by: `banking-provider`, `griffin-provider`, `lightspark-provider`, `neobank-api`,
+  `striga-provider`.
 
 ## CI pin order
 
