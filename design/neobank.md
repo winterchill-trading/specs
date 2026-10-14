@@ -6,6 +6,7 @@ Status: in progress (2026-10-14). `money`, `ledger`, `kyc-core`, `payments-core`
 `risk-rules`, `striga-client`, `banking-provider`, `risk-models` and `pg-async` are done;
 `neobank-api` and `neobank-web` are done on the fake provider; `striga-provider` is done
 for the sandbox, which never provisioned a EUR account for the test persons, and
+`griffin-provider` (GBP) and `lightspark-provider` (USD) are done for their sandboxes, and
 `neobank-api` has its Striga mode on `main`; the infra compose profile `neobank` is verified
 with the fake provider. The store of `neobank-api` is PostgreSQL through `pg-async` behind
 `Store.S`, a per-service store interface
@@ -119,6 +120,20 @@ graph LR
 - `striga-provider` implements `Provider` over `striga-client`, with a mapping table
   (which endpoint backs each operation, which webhook feeds which event) in its
   `docs/mapping.md`.
+- Three real adapters exist, one per provider. Each is the only place that knows both its
+  provider and `banking-provider`; each is sandbox by default and persists nothing itself.
+  - `striga-provider`: EUR, SEPA, cards, KYC and crypto over `striga-client`.
+  - [griffin-provider](../repos/griffin-provider.md): GBP, Faster Payments, book transfers and
+    Confirmation of Payee over `griffin-client`. Conformance on the sandbox, 2026-10-14:
+    4 passed, 7 failed. The failures are the suite's EUR account with an IBAN, which Griffin
+    does not hold. The GBP walk passes.
+  - [lightspark-provider](../repos/lightspark-provider.md): USD, USDC, USDT and USDB accounts,
+    cross-border payouts with Grid's FX quotes, wallet and Lightning payouts and swaps over
+    `lightspark-client`. Conformance on the Grid sandbox, 2026-10-14: 3 passed, 8 failed. The
+    suite assumes an EUR account with an IBAN, which this platform does not offer. The USD walk
+    passes.
+  - The conformance suite is EUR-only, so the EUR scenarios are unverified for every provider
+    until the suite takes a currency and rail.
 - `striga-client` follows [griffin-client](../repos/griffin-client.md): `Config`, `Secret`,
   `Tls`, `Transport`, typed resources with stable JSON codecs, a `striga` CLI, a live test
   gated by `STRIGA_LIVE_TESTS=1`, and recorded, redacted fixtures for CI.
@@ -138,6 +153,8 @@ graph BT
   pg_async["pg-async"]
   striga_client["striga-client"]
   striga_provider["striga-provider"]
+  griffin_provider["griffin-provider"]
+  lightspark_provider["lightspark-provider"]
   neobank_api["neobank-api"]
   neobank_web["neobank-web"]
   compose["infra: compose profile neobank"]
@@ -156,6 +173,10 @@ graph BT
   banking_provider --> card_core
   striga_provider --> banking_provider
   striga_provider --> striga_client
+  griffin_provider --> banking_provider
+  griffin_provider --> griffin_client["griffin-client"]
+  lightspark_provider --> banking_provider
+  lightspark_provider --> lightspark_client["lightspark-client"]
   neobank_api --> banking_provider
   neobank_api --> risk_rules
   neobank_api --> pg_async
@@ -309,13 +330,15 @@ caps from the tier.
 | `banking-provider` | `Provider` module type over the domain libraries, deterministic fake provider | `money`, `ledger`, `kyc-core`, `payments-core`, `card-core` | done ([repo page](../repos/banking-provider.md)) |
 | `striga-client` | Striga SDK and `striga` CLI: HMAC transport, typed resources, simulator, webhook verification | (none) | done ([repo page](../repos/striga-client.md)) |
 | `striga-provider` | `Provider` over `striga-client`, endpoint and webhook mapping table | `banking-provider`, `striga-client` | done, sandbox-limited ([repo page](../repos/striga-provider.md)) |
+| `griffin-provider` | `Provider` over `griffin-client` for GBP: UK customers, sort-code accounts, Faster Payments, Confirmation of Payee | `banking-provider`, `griffin-client` | done, sandbox-limited ([repo page](../repos/griffin-provider.md)) |
+| `lightspark-provider` | `Provider` over `lightspark-client` for USD: Grid customers, USD and stablecoin accounts, cross-border payouts, FX quotes, swaps | `banking-provider`, `lightspark-client` | done, sandbox-limited ([repo page](../repos/lightspark-provider.md)) |
 | `neobank-api` | Async HTTP API, sessions, webhooks, `/ws`; the demo server; state in PostgreSQL through `pg-async` | `banking-provider`, `risk-rules`, `striga-provider`, `pg-async` | done on the fake provider; Striga mode on `main` ([repo page](../repos/neobank-api.md)) |
 | `neobank-web` | Bonsai frontend, mock mode on the fake provider | `neobank-api` types | done ([repo page](../repos/neobank-web.md)) |
 | `infra` | Compose profile `neobank`: API, web, fake or sandbox provider | the images above | verified with the fake provider |
 
 CI pin order (planned), following the graph: fixed-decimal, money, ledger, kyc-core,
-payments-core, card-core, risk-rules, banking-provider, striga-client, striga-provider, pg-async,
-neobank-api. CI has no credentials; live tests are skipped with one line and the suites
+payments-core, card-core, risk-rules, banking-provider, striga-client, striga-provider,
+griffin-client, griffin-provider, lightspark-client, lightspark-provider, pg-async, neobank-api. CI has no credentials; live tests are skipped with one line and the suites
 run on recorded, redacted fixtures and the fake provider.
 
 ## Open questions
