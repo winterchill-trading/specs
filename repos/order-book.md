@@ -20,7 +20,8 @@ mutable: no I/O, no margin or account checks.
 - `Order_book.Fill` (`lib/fill.mli`): taker/maker match with trade id, price, size, both
   order ids, accounts and client ids.
 
-Each side is a `Map` from price to a FIFO `Queue`. Fills execute at the maker's price.
+Each side is a `Map` from price to a level, and a level is an intrusive linked list of
+orders in arrival order. Fills execute at the maker's price.
 Self-trade prevention is a per-book policy, `Order_book.Stp.t`, given to
 `create ?stp`: `Cancel_taker` (default; matching stops and the taker's remainder is
 cancelled), `Expire_maker` (the own resting order is removed and the taker keeps
@@ -32,9 +33,9 @@ temporaries.
 
 The best level of each side is cached, so `best_bid`, `best_ask` and `mid` do not go
 through `Map.max_elt`; `best_bid_or_null`, `best_ask_or_null` and `mid_or_null` return
-`Price.t or_null` and allocate nothing. Each level keeps its orders in a linked list and
-the id index points at the node, so cancel is O(1): behind 1000 orders it went from
-24.8 us and about 2100 words to 0.26 us and 40 words.
+`Price.t or_null`, allocate nothing and are checked with `[@@zero_alloc]`. The id index
+points at each order's node in its level, so cancel is O(1): behind 1000 orders it went
+from 24.8 us and about 2100 words to 0.26 us and 40 words.
 
 ## Tests
 
@@ -43,7 +44,8 @@ cancelling everything empties the book), a bisimulation property against
 `test/naive_book.ml` (a sorted-list reference matcher; fills, status, remainder, cancel
 result and full L2 must agree after every operation), a byte-string fuzz property,
 edge cases pinned with `~examples`, and `test/test_alloc.ml`, which prints minor words
-per operation.
+per operation. `examples/quickstart.ml` is run by `dune test` and compared with its
+expected output.
 
 ## Benchmarks
 
@@ -63,14 +65,14 @@ level). Apple M3 Max, after the best-level cache, best of two `-quota 3` runs:
 roughly halves a single fill, because `Price`, `Size` and `Account` comparisons get
 inlined; `-O3` on this repository alone only took it from 66 ns to 62 ns. The best-level
 cache cut `best_bid` from 5 to 2 minor words, `mid` from 12 to 2 and a single-fill match
-from 31 to 26. The README lists hot-path fields that would gain from `or_null` or
-unboxing; none is changed yet.
+from 31 to 26. The README lists the remaining hot-path fields that would gain from
+`or_null` (the cached best levels, client order ids in fills and resting orders).
 
 ## Dependencies
 
 - Depends on: `fixed-decimal`, `exchange-core`.
-- Used by: `exchange-core-engine`; `hl-sim`, `binance-sim`, `bybit-sim` list it
-  directly too.
+- Used by: `exchange-core-engine` and `price-anchor`; `hl-sim`, `binance-sim`,
+  `bybit-sim`, `nyse-sim`, `cboe-sim` and `cme-sim` list it directly too.
 
 ## CI pin order
 
@@ -78,7 +80,25 @@ unboxing; none is changed yet.
 
 ## Known gaps
 
-- One instrument per book; the engine keeps one book per instrument.
-- Trade ids come from a caller-supplied `next_tid`; the book never reads a clock.
-- `mid_or_null` carries no `[@@zero_alloc]` annotation because the checker fails through
-  `Price.of_units` until `fixed-decimal` annotates its own functions.
+Left open because each needs a design decision or belongs to the caller (the README says
+why for each):
+
+- One instrument per book; the caller keeps one book per instrument.
+- No amend: price or size changes are cancel and resubmit, until a priority policy for
+  amendments is chosen.
+- `reduce_only` is stored, not enforced; enforcing it needs the account's position.
+- No fill-or-kill, stop or iceberg orders; fill-or-kill needs a new `Exchange_core.Tif.t`
+  constructor.
+- `add_limit` and `market` raise on invalid input (documented); an `Or_error` variant is
+  an open question.
+- Client order ids in `Fill.t` and `Resting_order.t` are boxed options; `or_null` would
+  change public record types.
+
+Closed on 2026-10-14: `mid_or_null` carries `[@@zero_alloc]` (it was blocked on
+`fixed-decimal` annotating `Price.of_units`), and `l2` with a negative level count returns
+empty sides instead of raising.
+
+## Publishing
+
+Opam metadata, `CHANGES.md`, a compiled example and the OxCaml-only constructs are
+covered in the [opam readiness audit](../research/opam-readiness/order-book.md).
