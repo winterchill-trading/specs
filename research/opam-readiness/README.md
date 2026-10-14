@@ -124,7 +124,7 @@ blockers.
 
 | Library | Tier in the plan | Audit |
 | --- | --- | --- |
-| `fixed-decimal` | 1 | pending |
+| `fixed-decimal` | 1 | [fixed-decimal.md](fixed-decimal.md) |
 | `pg-async` | 1 | pending |
 | `money` | 1 | pending |
 | `ledger` | 2 | pending |
