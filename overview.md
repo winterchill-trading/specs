@@ -57,6 +57,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Neobank demo | [neobank-api](repos/neobank-api.md) | HTTP API of the neobank demo over `banking-provider`, `risk-rules` and PostgreSQL through `pg-async`; fake provider | done |
 | Neobank demo | [neobank-web](repos/neobank-web.md) | Bonsai browser app of the neobank demo, with a built-in mock bank | done |
 | Tooling | [infra](repos/infra.md) | Container images, compose stack, Helm chart, deployment notes | done |
+| Tooling | [opam-repository](repos/opam-repository.md) | Our opam repository: `0.1.0` entries pinned to audited commits, installed from a fresh OxCaml switch in CI (see [design/opam-publishing.md](design/opam-publishing.md)) | in progress |
 | Tooling | [oxcaml-claude-skills](repos/oxcaml-claude-skills.md) | Agent skills and the gotchas log | done |
 | Tooling | specs | This repository | in progress |
 
