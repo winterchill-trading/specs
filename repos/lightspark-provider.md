@@ -77,7 +77,7 @@ records what the sandbox showed.
 
 ## CLI
 
-```
+```text
 lightspark-provider customer -id Customer:...
 lightspark-provider fee -account Customer:.../InternalAccount:... -amount '30.00 EUR' [-instant]
 ```
