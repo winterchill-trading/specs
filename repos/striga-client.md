@@ -25,21 +25,21 @@ sandbox simulator and webhook verification. Sandbox by default; any other host n
 | `Tls` | Peer verification against an explicit CA bundle, plus a host-name check |
 | `Redact` | Masks credentials, card numbers, IBANs and one-time tokens (SumSub, PAN auth, TOTP secrets, recovery codes, PINs) in anything that may be logged |
 | `Transport` | HTTP calls with the `api-key` header and signature, `Api_error` decoding, and event logs with no credentials |
-| `Api_error` | Striga error bodies; `status_of_error` and `code_of_error` recover the HTTP status and `errorCode` |
+| `Api_error` | Striga error bodies; `status_of_error` and `code_of_error` recover the HTTP status and `errorCode`; `is_sca_session_required` spots `30070` |
 | `Call` | Endpoint plumbing for the resource modules: call, check and decode |
 | `Wire` | JSON helpers shared by the resource modules |
 | `Common` | Small records shared by several resources; lenient decoding (unknown fields ignored, absent or `null` optional fields become `None`) |
-| `User` | Consumers: create, email and mobile verification, KYC start and status |
+| `User` | Consumers: create, email and mobile verification, KYC start (with share token) and status, Payment Account consent, verified-email change, PII read |
 | `Wallet` | Wallets and accounts, IBAN and crypto deposit details, enrichment |
 | `Transaction` | Transaction lists and single transactions |
 | `Exchange` | Rates and swaps (with OTP) |
 | `Payment` | SEPA, on-chain and Lightning payouts with OTP, address whitelist, intraledger transfers |
-| `Card` | Virtual cards: create, freeze and unfreeze, limits, settings, statements, close; `Card.Pan_ui.browser_options` for the browser PAN component |
+| `Card` | Virtual cards: create, freeze and unfreeze, limits, settings, statements, close, replace, physical activation; `Card.Pan_ui.browser_options` for the browser PAN component |
 | `Standing_order` | Create, confirm (OTP) and cancel recurring transfers |
-| `Sca` | PSD2 strong customer authentication: TOTP enrollment, the unified login that opens a 180-day SCA session, security events, trusted beneficiaries |
+| `Sca` | PSD2 strong customer authentication: TOTP enrollment, the unified login that opens a 180-day SCA session (needed for EUR and USDC to be listed), security events, trusted beneficiaries, passkeys, 2FA reset |
 | `Totp` | RFC 6238 codes (HMAC-SHA1, 30 s, 6 digits); used by the live walk and dev tools to act as the user's authenticator. A real application never holds the user's TOTP secret |
 | `Simulator` | `/simulate/...` stand-ins for events that start outside the application (KYC decision, incoming SEPA, card at a till); each refuses any host that is not the sandbox |
-| `Webhook` | Verifies the signature on an incoming webhook |
+| `Webhook` | Verifies the signature on an incoming webhook and decodes it by channel; `Webhook.notice` types enrichment, review, standing-order, debt, KYC-action, KYB and travel-rule deliveries |
 
 ## Tests
 
@@ -53,7 +53,16 @@ sandbox simulator and webhook verification. Sandbox by default; any other host n
   payout with OTP and settlement simulation; virtual cards (freeze, limits, settings,
   statement, close, approved and declined authorisation simulation); TOTP enrollment and SCA
   login; Lightning invoice; address whitelist; rates; statements; webhook ping; standing
-  order create with challenge.
+  order create with challenge; EUR intraledger between two users (after opening an SCA
+  session for each right after KYC approval).
+- Checked from the CLI against the sandbox (2026-10-15): Payment Account consent set and
+  read, the SMS 2FA reset (initiate, simulated liveness, status, complete), KYC share token,
+  card replace, passkey list.
+- `docs/api-coverage.md` in the repository lists every endpoint found in public sources
+  (API reference, its Postman collection, public example code) with its status: 103
+  consumer-side rows, 55 live, 8 fixture, 32 wrapped but untested, 1 missing
+  (`/standing-orders/update-fees`, body not published), 7 not planned; business,
+  corporate and travel-rule families are not planned.
 - HMAC signing is checked against the sample vector in the provider's documentation.
 
 ## Environment
@@ -105,3 +114,9 @@ in CI because it has no sandbox credentials.
 - Webhooks are signed with the API key, as the provider documents.
 - Payouts to the user's own IBAN, and intraledger transfers between accounts of one user,
   are refused by the sandbox.
+- Completing a 2FA reset revokes the user's SCA session: EUR and USDC leave the wallet
+  listing again until the next login.
+- Passkeys are not enabled for the sandbox application, so the passkey wrappers are pinned
+  offline only.
+- New webhook kinds go into `Webhook.Notice.t`, not `Webhook.Event.t`, which
+  `striga-provider` matches exhaustively.
