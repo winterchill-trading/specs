@@ -52,6 +52,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Banking libraries | [risk-rules](repos/risk-rules.md) | Rule engine for transfers and card authorisations: reason codes, typologies, SCA exemptions, shadow mode, review queue | done |
 | Banking libraries | [risk-models](repos/risk-models.md) | Machine-learned scores behind `risk-rules`' `Model.S`; trained offline, scored in OCaml | done |
 | Banking libraries | [kyc-core](repos/kyc-core.md) | Customer due diligence: verification tiers, risk rating, screening, monitoring, retention, audit trail; standalone | done |
+| Banking libraries | [sanctions-screening](repos/sanctions-screening.md) | Name screening against OFAC, EU and UK sanctions lists: parsers, normalisation across scripts, explainable fuzzy matching, index, rescreening, cases; PostgreSQL store package | done |
 | Banking libraries | [payments-core](repos/payments-core.md) | Payment rails and transfer state machines (SEPA, on-chain, Lightning, intraledger), SCA, standing orders, swaps, reconciliation | done |
 | Banking libraries | [card-core](repos/card-core.md) | Card lifecycle, authorization decision, clearing and settlement, disputes, statements | done |
 | Banking libraries | [banking-provider](repos/banking-provider.md) | `Provider` interface over the domain libraries and a deterministic fake provider for the neobank demo | done |
@@ -157,6 +158,7 @@ graph LR
     money["money"]
     ledger["ledger"]
     kyc_core["kyc-core"]
+    sanctions_screening["sanctions-screening"]
     payments_core["payments-core"]
     card_core["card-core"]
     risk_rules["risk-rules"]
@@ -278,6 +280,8 @@ graph LR
   banking_provider --> money
   banking_provider --> ledger
   banking_provider --> kyc_core
+  sanctions_screening --> kyc_core
+  sanctions_screening --> pg_async
   banking_provider --> payments_core
   banking_provider --> card_core
   striga_provider --> banking_provider
