@@ -405,6 +405,11 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
   deliveries.
 - [lightspark-client](repos/lightspark-client.md) (done): Grid sandbox reads and writes pass
   live, GraphQL covered by fixtures. Open: GraphQL side verified with a Lightning token.
+- [transaction-monitoring](repos/transaction-monitoring.md) (done, 2026-10-16): rolling
+  profiles, eleven AML typologies on risk-rules, a GBDT trained on synthetic data and
+  scored through risk-models, Allow/Hold/Block with alerts, memory and PostgreSQL stores,
+  replay with baseline diffs. Open: real labelled data, graph features, calling
+  `on_event` from the demo API's payment and booking paths.
 - [sanctions-screening](repos/sanctions-screening.md) (done, 2026-10-16): OFAC, EU and UK
   list parsers, screening and rescreening, cases, memory and PostgreSQL stores. Open: UK
   Sanctions List and UN parsers, and calling it from onboarding, payee creation and the
