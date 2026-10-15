@@ -85,8 +85,10 @@ in CI because it has no sandbox credentials.
 
 ## Known gaps
 
-- EUR and USDC provisioning takes minutes after KYC approval; the live walk must allow for
-  it.
+- The sandbox's `/wallets/get` and `/wallets/get/all` never list the EUR account, although
+  it exists and is `ACTIVE` (enrich by id works); what looked like a provisioning delay was
+  the account being unlisted. With the id, enrich and statement work and
+  `/wallets/get/account` answers 403 `SCA_REQUIRED` (`NO_SESSION`).
 - The sandbox does not fund crypto. On-chain payouts, crypto intraledger transfers and
   Lightning payouts stop at their balance or invoice checks; they are not exercised past
   that point.
