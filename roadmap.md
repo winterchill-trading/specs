@@ -15,6 +15,10 @@ the same change that finishes or starts them.
   `market-maker` binary and per-venue end-to-end scripts.
 - Data: `parquet` writer, `market-data` (event logs, Parquet sink, day close, DuckDB
   views, replay feed, candles).
+- Backtest statistics: [backtest-stats](repos/backtest-stats.md) (2026-10-16): PSR, DSR,
+  reality check and SPA, PBO, VaR backtests with exact p-values, a sexp acceptance gate and
+  a JSON report CLI. Open: wire the gate into leader rankings, copy backtests and
+  market-maker parameter changes.
 - Agent tooling: `oxcaml-claude-skills` (skills and gotchas log).
 - Read-only feeds: `okx-feed`, `coinbase-feed`, `kraken-feed`, `deribit-feed`,
   `bitget-feed`, each a `Market_data.Feed.t` verified against the live venue.
