@@ -42,6 +42,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Data platform | [market-data](repos/market-data.md) | Normalized types, event logs, Parquet sink, day close, DuckDB views, replay | done |
 | Data platform | [market-recorder](repos/market-recorder.md) | Live recorder: raw minute files, event logs, uploader, metrics | done |
 | Data platform | [market-replay](repos/market-replay.md) | Replay server: raw lines over HTTP, venue-native websockets for the eight crypto venues | done |
+| Data platform | [backtest-stats](repos/backtest-stats.md) | Backtest statistics: adjusted, probabilistic and deflated Sharpe ratios, reality check and SPA, probability of backtest overfitting, VaR backtests, acceptance gate from a sexp policy | done |
 | Fiat rails | [griffin-client](repos/griffin-client.md) | Async client and CLI for a UK banking API: legal persons, accounts, payments, payees, Confirmation of Payee, webhooks; sandbox by default | done |
 | Fiat rails | [lightspark-client](repos/lightspark-client.md) | Async client and CLI for a Lightning and UMA GraphQL API and a Grid banking API: nodes, invoices, customers, transfers, quotes; sandbox writes only, webhook verification | done |
 | Fiat rails | [striga-client](repos/striga-client.md) | Async client and CLI for the Striga v1 API: consumers and KYC, wallets, payments, cards, standing orders, webhooks; sandbox by default | done |
@@ -148,6 +149,7 @@ graph LR
     market_data["market-data"]
     market_recorder["market-recorder"]
     market_replay["market-replay"]
+    backtest_stats["backtest-stats"]
   end
   subgraph fiat["Fiat rails"]
     griffin_client["griffin-client"]
@@ -223,6 +225,7 @@ graph LR
   price_anchor --> market_data
   market_data --> exchange_core
   market_data --> parquet
+  backtest_stats --> parquet
   mm_core --> exchange_core
   hl_client --> hl_protocol
   hl_client --> venue_net
