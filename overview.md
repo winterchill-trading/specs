@@ -35,6 +35,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Market making | [market-maker](repos/market-maker.md) | One `market-maker` binary for all three venues | done |
 | Copy trading | [hl-copy-core](repos/hl-copy-core.md) | Pure mirroring, scaling, caps and leader scoring; `hl-copy-backtest` replays recorded leaders | done |
 | Copy trading | [hl-leaderboard](repos/hl-leaderboard.md) | Leader collection, scoring and `/leaders` JSON | done |
+| Copy trading | [leader-scoring](repos/leader-scoring.md) | Track records, metrics, composite and learned scores, copy capacity and alerts; read-only Hyperliquid source | done |
 | Copy trading | [hl-copy-engine](repos/hl-copy-engine.md) | Mirrors leaders into follower accounts with agent keys | done |
 | Copy trading | [hl-copy-api](repos/hl-copy-api.md), [hl-copy-web](repos/hl-copy-web.md) | Wallet login, agent approval and follows; Bonsai frontend | in progress |
 | Data platform | [parquet](repos/parquet.md) | Pure OCaml Parquet writer | done |
@@ -137,6 +138,7 @@ graph LR
     copy_core["hl-copy-core"]
     copy_backtest["hl-copy-backtest"]
     leaderboard["hl-leaderboard"]
+    leader_scoring["leader-scoring"]
     copy_engine["hl-copy-engine"]
     copy_api["hl-copy-api"]
     copy_web["hl-copy-web"]
@@ -339,6 +341,9 @@ graph LR
   copy_core --> market_data
   leaderboard --> hl_client
   leaderboard --> copy_core
+  leaderboard --> leader_scoring
+  leader_scoring --> market_data
+  leader_scoring --> hl_client
   leaderboard --> parquet
   copy_backtest --> leaderboard
   copy_backtest --> copy_core
