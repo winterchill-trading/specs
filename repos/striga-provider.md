@@ -13,14 +13,14 @@ each operation, sandbox call and webhook to Striga endpoints is in the repositor
 | opam package | `striga-provider` |
 | Library | `striga-provider` (module `Striga_provider`) |
 | Binary | none. `test/live` is the conformance runner, enabled by `STRIGA_LIVE_TESTS=1` |
-| Status | done, sandbox-limited: the adapter's mappings are tested on recorded bodies, and the live checks cover customer creation, KYC, wallets and webhook signatures. The sandbox never provisioned a EUR account for the test persons, so the EUR-dependent conformance scenarios did not run (see Conformance) |
+| Status | done: 13 of 14 conformance scenarios pass on the sandbox (2026-10-15); the one failure is the payee check Striga does not offer |
 
 ## Key modules
 
 | Module | Purpose |
 | --- | --- |
 | `Adapter` | `Provider.S`, `Sandbox.S`, webhook ingestion (`ingest_webhook`) and the poller used when there is no public webhook URL |
-| `Store` | Links Striga cannot hold (our customer, transfer, challenge, swap and card request ids), with an in-memory implementation; a service supplies its own persisted one |
+| `Store` | Links Striga cannot hold (our customer, transfer, challenge, swap and card request ids) and card display tokens, with an in-memory implementation; a service supplies its own persisted one |
 | `Refs` | Account and standing order refs carrying the Striga user id |
 | `Units` | Striga tickers and smallest units to `Money`; USDC and USDT cents rescaled to micro-units |
 | `Kyc_map` | Striga tiers and statuses to `kyc-core` steps, status and events |
@@ -44,13 +44,13 @@ up the store first. Only the in-memory store ships; a service must persist its o
 
 ## Conformance
 
-Two sandbox runs, each with a different test person, stopped the same way: after the
-simulated KYC approval the sandbox provisioned the crypto accounts (BTC, ETH, BNB, POL,
-SOL) within seconds, but no EUR or USDC account, neither within the 6-minute timeout nor
-about an hour later. Four of the 11 scenarios pass (customer creation idempotency, KYC
-approval as an event, a bad webhook signature refused, the webhook ping). The seven
-others all start by opening a EUR account, so none reached the deposit, SCA payment,
-double-initiation, overdraft, wrong-code or card steps. The suite has no crypto scenarios.
+Sandbox run on 2026-10-15: 13 of 14 scenarios pass (customer idempotency, KYC event,
+EUR account with IBAN, deposit, SCA-confirmed payment, double initiation, overdraft
+refusal, wrong code, bad webhook signature, ping, virtual card approve and frozen
+decline, account details kept, delayed KYC decision). The failure is `verify_payee`:
+Striga has no payee check. The earlier run (4 of 11) stopped at `open_account` because
+Striga lists EUR and USDC only for a customer with an SCA session; the adapter now
+opens one (on the sandbox, with the fixed code) instead of waiting for the account.
 
 ## Dependencies
 
@@ -70,11 +70,11 @@ does not run in CI.
 
 ## Known gaps
 
-- **EUR and USDC accounts in the sandbox.** Not provisioned after a simulated KYC approval in
-  either run, so deposits, SEPA payouts with SCA, wrong-code handling, double-initiation,
-  overdraft refusal and cards were not exercised live by this adapter. Earlier SDK-level runs
-  saw EUR appear minutes after approval. Whether this is an application setting, the test
-  person's residence or a sandbox fault is not known.
+- **SCA session.** EUR and USDC are listed and read only while the customer has an SCA
+  session (SMS login, 180 days, revoked by a 2FA reset). Outside the sandbox the
+  application opens it with `start_session` and `complete_session`.
+- **SEPA needs a BIC** (beneficiary, SEPA details or `Config.bic_for`); a payout to an
+  IBAN of the same application goes intraledger, since Striga refuses it as SEPA.
 - **No crypto funding in the sandbox.** On-chain, crypto intraledger and Lightning payouts
   stop at Striga's balance or invoice checks; `simulate_deposit` credits EUR by SEPA only.
 - **No idempotency keys at Striga**, so the `Store` is what makes creates idempotent; only
@@ -83,7 +83,8 @@ does not run in CI.
   The application schedules them.
 - **Fee quotes** for on-chain and Lightning are known only once a payout is initiated; SEPA
   and intraledger quote zero (the sandbox application charges none).
-- **Card numbers** need Striga's browser component to start the consent. Card limits are
+- **Card numbers** need Striga's browser component to start the consent; the display
+  token (24 hours) is kept in the `Store`. Card limits are
   whole euros, without ATM counts, MCC or country block lists. `Blocked`, `Requested` and
   `Expired` cannot be set.
 - **`simulate_transfer_outcome`** covers confirmed SEPA payouts only.
