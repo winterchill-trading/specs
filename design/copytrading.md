@@ -225,6 +225,22 @@ the curve's start are flagged `truncated`. A mainnet pull on 2026-10-13 (34 cand
 155k fills, 10.4k weight, 10.6 minutes) found 17 truncated histories, and only 5
 candidates with 5 or more closed round trips: the largest accounts rarely go flat.
 
+Status (2026-10-16): [leader-scoring](../repos/leader-scoring.md) extends step 4.
+hl-leaderboard's `collect` also logs `userFunding` pages, the `l2Book` of the 25 coins the
+candidates trade most and `metaAndAssetCtxs`; `rank` rebuilds each leader's track record
+from the raw logs (positions held at the start seeded from `startPosition`, the curve
+anchored on the snapshots or taken from the `portfolio` month window), computes 34 metrics
+(returns, Sharpe, Sortino, Calmar, drawdowns, trade statistics, leverage distribution,
+concentration, VaR and CVaR, rolling consistency, time in market, style drift), a
+weighted percentile composite across the collected leaders, a learned forecast of the next
+30 days' Sharpe ratio, a capacity curve (the follower size that copies at 10 bps or less
+against the collected books) and alerts, and writes one report per leader. `/leaders`
+carries a summary per leader and `/leaders/<address>` the report; hl-copy-api orders the
+leaders by the composite when every leader has one, and the web app's leader page shows
+the components, the metrics, the capacity curve and the alerts. The Hyperliquid
+`Score` above stays in the ranking file unchanged. Checked on a local stack of hl-sim (3
+leaders, 40 noise traders), hl-leaderboard, hl-copy-api and the web app's leader page.
+
 ## Backtest
 
 The leader score rates a leader's own trading. A follower does not get that trading: it
