@@ -405,6 +405,10 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
   deliveries.
 - [lightspark-client](repos/lightspark-client.md) (done): Grid sandbox reads and writes pass
   live, GraphQL covered by fixtures. Open: GraphQL side verified with a Lightning token.
+- [sanctions-screening](repos/sanctions-screening.md) (done, 2026-10-16): OFAC, EU and UK
+  list parsers, screening and rescreening, cases, memory and PostgreSQL stores. Open: UK
+  Sanctions List and UN parsers, and calling it from onboarding, payee creation and the
+  list-update job of the demo API.
 - `venue-net` TLS host-name verification (in progress).
 - Neobank demo (in progress; design in [design/neobank.md](design/neobank.md)):
   `money`, `ledger`, `kyc-core`, `payments-core`, `card-core`, `risk-rules`,
