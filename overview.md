@@ -51,6 +51,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Banking libraries | [ledger](repos/ledger.md) | Double-entry ledger over an append-only Bin_prot journal: holds, idempotency, trial balance, statements | done |
 | Banking libraries | [risk-rules](repos/risk-rules.md) | Rule engine for transfers and card authorisations: reason codes, typologies, SCA exemptions, shadow mode, review queue | done |
 | Banking libraries | [risk-models](repos/risk-models.md) | Machine-learned scores behind `risk-rules`' `Model.S`; trained offline, scored in OCaml | done |
+| Banking libraries | [transaction-monitoring](repos/transaction-monitoring.md) | Real-time AML monitoring: rolling customer and counterparty profiles, eleven typology rules, a GBDT score, Allow/Hold/Block decisions, alerts with a case lifecycle; memory and PostgreSQL stores | done |
 | Banking libraries | [kyc-core](repos/kyc-core.md) | Customer due diligence: verification tiers, risk rating, screening, monitoring, retention, audit trail; standalone | done |
 | Banking libraries | [sanctions-screening](repos/sanctions-screening.md) | Name screening against OFAC, EU and UK sanctions lists: parsers, normalisation across scripts, explainable fuzzy matching, index, rescreening, cases; PostgreSQL store package | done |
 | Banking libraries | [payments-core](repos/payments-core.md) | Payment rails and transfer state machines (SEPA, on-chain, Lightning, intraledger), SCA, standing orders, swaps, reconciliation | done |
@@ -163,6 +164,7 @@ graph LR
     card_core["card-core"]
     risk_rules["risk-rules"]
     risk_models["risk-models"]
+    transaction_monitoring["transaction-monitoring"]
     banking_provider["banking-provider"]
   end
   subgraph consumer["Consumer banking libraries"]
@@ -277,6 +279,11 @@ graph LR
   risk_rules --> money
   risk_rules --> payments_core
   risk_models --> risk_rules
+  transaction_monitoring --> risk_rules
+  transaction_monitoring --> risk_models
+  transaction_monitoring --> money
+  transaction_monitoring --> ledger
+  transaction_monitoring --> pg_async
   banking_provider --> money
   banking_provider --> ledger
   banking_provider --> kyc_core
