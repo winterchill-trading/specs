@@ -93,7 +93,6 @@ in CI because it has no sandbox credentials.
 - The sandbox does not fund crypto. On-chain payouts, crypto intraledger transfers and
   Lightning payouts stop at their balance or invoice checks; they are not exercised past
   that point.
-- EUR intraledger transfers are not verified against the sandbox.
 - Standing-order confirm and cancel are not verified against the sandbox.
 - PAN display needs the browser component; the consent step cannot run from the CLI.
 - Not wrapped: business (KYB) onboarding, travel-rule records, passkeys, 2FA reset, card
