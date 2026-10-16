@@ -86,6 +86,7 @@ Two jobs, because `hl-copy-backtest` needs `hl-leaderboard`, which needs `hl-cop
   `hl-protocol`, `market-data`.
 - `backtest`: `fixed-decimal`, `exchange-core`, `parquet`, `market-data`,
   `hl-protocol`, `venue-net`, `hl-client`, `hl-copy-core` (at the commit under test),
+  `leader-scoring`, `leader-scoring-hl` (hl-leaderboard depends on them),
   `hl-leaderboard`; only `hl-copy-backtest` is built.
 
 See [design/copytrading.md](../design/copytrading.md) for the platform design.
