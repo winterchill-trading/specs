@@ -267,6 +267,14 @@ Bugs found in waves 2 and 3:
   [repos/market-recorder.md](repos/market-recorder.md),
   [repos/market-replay.md](repos/market-replay.md) and
   [repos/market-data.md](repos/market-data.md).
+- Market features and plausibility guards (2026-10-16). `market-data`: information-driven
+  bars, directional-change and CUSUM event clocks, triple-barrier labels, VPIN toxicity
+  with a feed consumer, and the `features` subcommand writing `bars` and `toxicity`
+  Parquet tables checked against DuckDB. `mm-core`: `Toxicity_gate` and `Reference_guard`
+  pull or widen quotes, with typed events and live-loop inputs; `mm-core-replay` turns
+  market-data's VPIN into the gate's signal. Open: wire a reference feed and a toxicity
+  feed into `market-maker`, toxicity per account class in the simulators. See
+  [repos/market-data.md](repos/market-data.md) and [repos/mm-core.md](repos/mm-core.md).
 
 [market-data-a7fdae0]: https://github.com/winterchill-trading/market-data/commit/a7fdae0
 [hl-client-e91dc3e]: https://github.com/winterchill-trading/hl-client/commit/e91dc3e
