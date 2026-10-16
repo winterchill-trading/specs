@@ -19,6 +19,18 @@ belong here.
   the reports to the leader page. See [leader-scoring](repos/leader-scoring.md),
   [hl-leaderboard](repos/hl-leaderboard.md) and
   [design/copytrading.md](design/copytrading.md).
+- `execution-algos`: new repository, venue-neutral child-order schedulers, impact
+  estimates, cost reports and a paper venue; edges to `fixed-decimal`, `exchange-core` and
+  `market-data`. `hl-copy-engine` depends on it (new edge) and works every planned order
+  with the follow's algorithm; its journal entries move to version 2
+  (`<date>.v2.journal`, version 1 still read). `hl-copy-core`'s `Follower_config` gains
+  `Stable.V2` with an `algo` field (`Exec_algo`), absent from files when `Immediate`. See
+  [execution-algos](repos/execution-algos.md), [hl-copy-engine](repos/hl-copy-engine.md)
+  and [design/copytrading.md](design/copytrading.md#execution-algorithms).
+- `copy-backtest`: new repository and binary, recorded markets and leader fills through
+  the mirror and the algorithms, Parquet results checked with DuckDB; edges to
+  `fixed-decimal`, `exchange-core`, `parquet`, `market-data`, `hl-protocol`,
+  `hl-copy-core` and `execution-algos`. See [copy-backtest](repos/copy-backtest.md).
 
 ## 2026-10-14
 
