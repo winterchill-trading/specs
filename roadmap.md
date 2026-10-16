@@ -426,6 +426,20 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
 - Open: verify on testnet that another address's user streams are readable and what
   the 10-unique-users websocket limit counts.
 
+### Simulator realism and safety
+
+- [exchange-core](repos/exchange-core.md) (done, 2026-10-16): per-symbol price collar
+  (reject or re-price aggressive orders beyond a band around the last trade, mid or mark)
+  and a market-wide or per-symbol halt rule with a reopening hook, journaled, with a guard
+  event log. Open: set them in hl-sim, binance-sim and bybit-sim behind flags; a
+  trade-bust band on executions; `Halt_rule` in the TradFi simulators' auctions.
+- [sim-scorecard](repos/sim-scorecard.md) (done, 2026-10-16): stylised facts of a
+  simulator run against recorded data, with distances and pass bands; first run on hl-sim
+  free (2 of 11) and anchored (3 of 11) against 90 s of Binance BTCUSDT. Open: score a
+  longer recorded window and pairs of recorded days to calibrate the bands; re-score after
+  each realism change (agent populations, self-exciting order flow, sub-tick arrival
+  times).
+
 ## Fiat rails
 
 - [griffin-client](repos/griffin-client.md) (done): sandbox client and `griffin` CLI, with
