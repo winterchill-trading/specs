@@ -8,6 +8,18 @@ describes the change. The line is added in the same piece of work that updates t
 pages (see [CLAUDE.md](CLAUDE.md)). Bug fixes, tests and documentation-only changes do not
 belong here.
 
+## 2026-10-16
+
+- `leader-scoring`: new repository with two packages, `leader-scoring` (venue-neutral track
+  records, metrics, composite and learned scores, copy capacity, alerts; new edge to
+  `market-data`) and `leader-scoring-hl` (read-only Hyperliquid source and the
+  `leader-scoring` binary; edges to `hl-protocol` and `hl-client`). `hl-leaderboard` now
+  depends on both, logs funding, books and open interest, and writes
+  `reports/<address>.json`; `hl-copy-api` and `hl-copy-web` (`Api_types.Scoring`) carry
+  the reports to the leader page. See [leader-scoring](repos/leader-scoring.md),
+  [hl-leaderboard](repos/hl-leaderboard.md) and
+  [design/copytrading.md](design/copytrading.md).
+
 ## 2026-10-14
 
 - `org-access`, `payouts-core`, `accounting-sync`, `treasury-rules`, `billing-core`: new
