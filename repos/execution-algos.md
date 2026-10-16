@@ -36,9 +36,10 @@ journal replay identical, events round-trip through `bin_io`.
 
 ## Performance
 
-Dev build, Apple M-series (`bench/main.exe`): an idle tick 9 to 17 ns and 0 words (pinned in
-`test/test_alloc.ml`), a tick placing a TWAP child 71 ns, `Impact.walk` over 10 levels 63 ns
-and 0 words, a whole 12-step TWAP parent through the paper venue 1.6 us.
+Apple M-series (`bench/main.exe`), dev / release / release with `-O3`: an idle tick 9 /
+8 / 7 ns (TWAP) and 0 words (pinned in `test/test_alloc.ml`), a tick placing a TWAP child
+76 / 75 / 44 ns, `Impact.walk` over 10 levels 65 / 46 / 29 ns and 0 words, a whole 12-step
+TWAP parent through the paper venue 1.7 / 1.6 / 1.3 us.
 
 ## Dependencies
 
