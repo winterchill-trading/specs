@@ -370,6 +370,8 @@ graph LR
   copy_bt --> market_data
   copy_bt --> parquet
   copy_bt --> hl_protocol
+  copy_bt --> backtest_stats
+  copy_bt --> copy_engine
   copy_api --> copy_core
   copy_api --> hl_client
   copy_api --> copy_web
