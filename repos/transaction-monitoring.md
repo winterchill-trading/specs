@@ -13,7 +13,7 @@ carry stable keys, amounts and countries, never names or account numbers.
 | opam package | `transaction-monitoring` |
 | Library | `transaction-monitoring` (module `Transaction_monitoring`) |
 | Binary | `transaction-monitoring` (`generate`, `features`, `replay`, `bench`, `typologies`, `check-model`, `default-config`) |
-| Status | done (2026-10-16) |
+| Status | 0.1.2 (2026-10-16) |
 
 ## Key modules
 
@@ -22,11 +22,11 @@ carry stable keys, amounts and countries, never names or account numbers.
 | `Event` | Stable transaction event (`Stable.V1`, JSON lines): rail (SEPA, SCT Inst, Faster Payments, CHAPS, ACH, wire, card, intraledger, crypto), direction, `money` amounts in the payment and the reporting currency, times, MCC, card channel, device and country hints |
 | `Window`, `P2_quantile`, `Recent`, `Country_set` | Bucketed sliding counters, P-square quantiles, a bounded recent-keys table, a country bitmap |
 | `Profile` | Customer and counterparty profiles: 1 h / 24 h / 7 d / 30 d windows, quantiles, new counterparties, dormancy, round amounts, sub-threshold sums, cash, card bursts, pass-through, countries and devices; bin_prot snapshots |
-| `Typology`, `Rules`, `Explanation` | Eleven typologies as `Risk_rules.Rule.t` with FATF, EBA, EU and US references; sexp config with shadow and disabled typologies; explanation records |
-| `Features`, `Model` | risk-rules `Features.t` from event and profiles, laid out by `Risk_models.Encoding`, plus 32 AML features, each with a reviewer-facing label; a risk-models scorer on that schema and its explainer |
+| `Typology`, `Rules`, `Explanation` | Eleven typologies as `Risk_rules.Rule.t` with FATF, EBA, EU and US references; sexp config with shadow and disabled typologies and severity overrides per typology and per country; explanation records |
+| `Features`, `Model` | risk-rules `Features.t` from event and profiles, laid out by `Risk_models.Encoding`, plus 32 AML features, each with a reviewer-facing label; a risk-models scorer on that schema and its explainer; the bundled model embedded at build time (`Model.bundled`, `of_string`, `of_json`) |
 | `Policy`, `Decision`, `Alert` | Rules and score combined (model `Off`, `Shadow`, `Active`, optional abstain band); `Allow`/`Hold`/`Block` decisions (`Stable.V2`: rule explanations, score, the model's top feature contributions, abstention); the alert lifecycle as a pure state machine with SAR-candidate flag and four eyes on reopen |
-| `Evaluator`, `Monitor`, `Replay` | Synchronous core; Async pipeline with bounded intake, idempotent per event id, LRU profile cache; history replay with baseline diffs, reasons per change and an accuracy-coverage table |
-| `Store`, `Store_memory`, `Store_pg` | `Store.S` per ADR 0009; PostgreSQL schema `transaction_monitoring`, one transaction per event |
+| `Evaluator`, `Monitor`, `Replay` | Synchronous core; Async pipeline with bounded intake, idempotent per event id, LRU profile cache, `revoke` for decided events that did not happen; history replay with baseline diffs, reasons per change and an accuracy-coverage table |
+| `Store`, `Store_memory`, `Store_pg` | `Store.S` per ADR 0009; the library's own PostgreSQL schema (default `transaction_monitoring`) with its own `schema_migrations`, one transaction per event |
 | `Synthetic` | Seeded generator of labelled activity: four personas, nine injected typologies, a third of episodes under rule thresholds, benign look-alikes |
 
 ## Design
@@ -59,6 +59,20 @@ carry stable keys, amounts and countries, never names or account numbers.
   uninterrupted replay. Decision and alert bodies carry a `body_version` (migration
   0002): V2 rows also store the explanation as JSON in `attribution`; V1 rows are
   upgraded on read.
+- The library owns its schema, including the migrations table: migrations are
+  unqualified and run with the schema as search path, so the host application,
+  sanctions-screening and this library migrate into one database without clashing (a
+  test does exactly that). 0.1.x installs are adopted by their migration checksums.
+- Severity overrides (`Rules.Config.overrides`) change a hit's severity, and so the
+  decision, per typology, per country (counterparty or IP) or both, most specific first;
+  e.g. countermeasure countries block instead of holding.
+- Revocation: profiles only move forward (quantile sketches, bounded tables), so
+  `Monitor.revoke` rebuilds the customer's and the counterparty's profiles from the
+  stored, non-revoked history in commit order (migration 0003 adds the order, the
+  counterparty column and `revocations`) and stores them with the revocation in one
+  transaction. A property test checks the rebuilt profiles, and every later decision,
+  equal those of a monitor that never saw the event. It refuses when the store does not
+  hold a profile's whole history.
 
 ## Numbers
 
@@ -94,7 +108,8 @@ recall 0.995 and alert precision 0.063 to 0.067.
 ## CI pin order
 
 `pg-async`, `fixed-decimal`, `money`, `ledger`, `payments-core`, `risk-rules`,
-`risk-models`. CI installs `libpq-dev`, runs a Postgres service
+`risk-models`, `kyc-core`, `sanctions-screening`, `sanctions-screening-pg` (the last
+three for the shared-database test only). CI installs `libpq-dev`, runs a Postgres service
 (`TM_TEST_DATABASE_URL`), `dune build`, `dune test` and the odoc build with warnings as
 errors.
 
@@ -104,5 +119,7 @@ errors.
 - No multi-hop graph features; the counterparty table saturates at 64 entries.
 - One monitor per customer partition for fresh profiles; alerts are per event (case
   grouping belongs to case management).
+- `revoke` reads whole histories and does not revisit decisions taken after the revoked
+  event.
 - Counterparty names are screened by [sanctions-screening](sanctions-screening.md), not
   here; no FX conversion (callers supply the reporting-currency amount).
