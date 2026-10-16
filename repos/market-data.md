@@ -9,7 +9,7 @@ replay.
 | Repository | `winterchill-trading/market-data` |
 | opam package | `market-data` |
 | Library | `market-data` (module `Market_data`) |
-| Binary | `market-data` (`day-close`, `views`, `query`, `dump`, `check`, `catalog`, `rebuild-norm`) |
+| Binary | `market-data` (`day-close`, `views`, `query`, `dump`, `check`, `catalog`, `rebuild-norm`, `features`) |
 | Status | done |
 
 ## Key modules
@@ -46,6 +46,12 @@ replay.
 | `Catalog` | Per table venues, symbols, first and last day, files and leftover parts |
 | `L2_book`, `Event_dump` | Book rebuilt from snapshots and deltas; one-line event rendering, behind `dump` and `dump -book-at` |
 | `Query_log` | Appends `{time, user, sql}` of each `query` to `query-log.ndjson` |
+| `Bars` | Information-driven bars from trades: tick, volume and dollar bars; tick, volume and dollar imbalance and run bars whose threshold is the expected bar length times the expected signed (or one-sided) flow per trade, exponentially weighted over closed bars and bounded; a warm-up bar seeds them. Trades are never split, so bars reconcile with the input; `Bar.Stable.V1` bin shape pinned |
+| `Directional_change`, `Cusum_filter` | Event clocks over a price series: directional-change events at a relative threshold theta (turning point, confirmation, overshoot of the trend that ended) and a symmetric CUSUM filter on log returns |
+| `Labels` | Triple-barrier labels (profit-take and stop at multiples of an event width, vertical barrier), meta-labels for a primary model's side, EWMA volatility for widths |
+| `Toxicity` | Volume-synchronised probability of informed trading (VPIN) over equal-volume buckets; buy and sell volume from the aggressor side, the tick rule or bulk volume classification over time bars; per bucket signed imbalance and dominant side, VPIN over a window, z-score and mid-rank percentile against previous values |
+| `Toxicity_feed` | `Toxicity` over a `Feed.t`'s trades, one state per instrument, a pipe of bucket events |
+| `Feature_schemas`, `Features` | Parquet tables `parquet/bars/<date>.parquet` (every requested bar kind, `bar_type` column, partial last bar flagged) and `parquet/toxicity/<date>.parquet`, built from a day of `norm/` trades by `Features.run` and the `features` subcommand; not `Parquet_kind`s, so `day-close`, `views` and `catalog` do not see them |
 
 ## Tests
 
@@ -58,7 +64,14 @@ aggregation, the lead-lag query over a fixture with planted venue lags, a cram t
 in CI (`scripts/pyarrow-check.sh`), a `bin_io` round-trip property for every
 stable type, a `Framed` round trip over random flush and buffer sizes with an allocation
 check, quality checks and manifests over day-closed tables, and derived views comparing
-per-token mids across venues.
+per-token mids across venues. The feature folds have expect tests on synthetic streams,
+properties that bars hold every trade once (counts, volumes, buy volumes, value) and that
+toxicity buckets conserve volume, 0-word pins for a trade that closes nothing, and a
+DuckDB recomputation of tick bars, volume bars and VPIN from the trades table.
+
+core_bench of the per-trade folds (`bench/features_bench.exe`, M-series Mac, dev profile,
+of which 3 words are the harness): `Bars.add` 20 to 24 ns, `Directional_change` 10 ns,
+`Cusum_filter` 15 ns, `Toxicity.add` 10 to 17 ns.
 
 ## Dependencies
 
@@ -89,3 +102,7 @@ See [design/data-platform.md](../design/data-platform.md).
   raw minute files (`raw/<venue>/<stream>/<symbol>/...ndjson.zst`) are two different raw
   formats; the recorder uses only the latter.
 - DuckDB multiplies two `DECIMAL(18,8)` without widening; cast first.
+- The `bars` and `toxicity` tables are built only by `features`, not by `day-close`, and
+  have no DuckDB views.
+- Toxicity is per symbol from the public tape; per account class (known in the simulators)
+  is not done.
