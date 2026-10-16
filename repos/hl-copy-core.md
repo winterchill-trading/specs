@@ -26,12 +26,13 @@ files the API writes and the engine reads.
 | `Mirror` | Per-follower state; `on_leader_position_change`, `on_follower_fill`, `on_order_closed`, `on_resync ~leader_state ~follower_state ~marks`, `rebalance`, `start_day`; `Event.t` and `apply` for journals |
 | `Score` | Leader score from fills and an equity curve: pnl, return, maximum drawdown, win rate and average hold over round trips, trade count, consistency across windows |
 | `Pnl` | Follower pnl per leader with average-entry books; `on_fill ~leader`, `summary ~marks` |
-| `Follower_config` | One follow (follower, leader, mode, caps, slippage, paused) as a sexp file, validated; `mirror_config ~specs` builds `Mirror.Config.t` |
+| `Follower_config` | One follow (follower, leader, mode, caps, slippage, paused, execution algo) as a sexp file, validated; `mirror_config ~specs` builds `Mirror.Config.t`; `Stable.V2` adds `algo` (left out of the file when `Immediate`, so older files read unchanged), `Stable.V1` kept for old journals |
+| `Exec_algo` | The execution algorithm of a follow: the constructors, sexp and bin_prot shape of [execution-algos](execution-algos.md)' `Algo`, kept here so this library does not depend on it |
 | `Key_store` | Agent keys at rest: `<state_dir>/agents/<account>.key` (mode 0600, sexp of agent address, name, created, valid until, ciphertext, nonce, tag), sealed under `HL_COPY_MASTER_KEY` with ChaCha20 and HMAC-SHA256 (encrypt-then-MAC; cryptokit 1.16 has no AEAD, TODO); `create ~state_dir`, `put`, `find`, `get ~account` (decrypted key as hex), `list`, `revoke` |
 | `Fill`, `Usd`, `Cloid`, `Address` | Shared fill record and binable wrappers of the `hl-protocol` and `exchange-core` types |
 
-Persisted types have a `Stable.V1` deriving `sexp` and `bin_io`, for journals and config
-files. The formulas are in the repository README.
+Persisted types have a `Stable.V1` (a `Stable.V2` for `Follower_config`) deriving `sexp`
+and `bin_io`, for journals and config files. The formulas are in the repository README.
 
 ## Mirroring
 
