@@ -10,6 +10,12 @@ belong here.
 
 ## 2026-10-16
 
+- `risk-models`: `Tree_shap`, `Explanation` (bin_io `Stable.V1` and JSON format 1),
+  `Explainer`, `Abstain` and the `explain` subcommand; `model.json` trees may carry
+  `count`. `transaction-monitoring`: `Decision.Stable.V2` and `Alert.Stable.V2` with the
+  model's feature contributions, `Policy.abstain`, migration `0002_explanations`
+  (`body_version`, `attribution` jsonb). See [risk-models](repos/risk-models.md) and
+  [transaction-monitoring](repos/transaction-monitoring.md).
 - `hl-copy-core`: `No_trade_band`, an optional per-follow no-trade band;
   `Follower_config.Stable.V3` (`band`, left out of files when unset), `Plan.Stable.V2`
   (`Within_band` note), `Mirror.Config.Stable.V2` and `Mirror.Stable.V2`.
