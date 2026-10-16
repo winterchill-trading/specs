@@ -10,6 +10,14 @@ belong here.
 
 ## 2026-10-16
 
+- `exchange-core`: `Price_collar`, `Halt_rule` and `Guard_event` in `exchange-core-engine`;
+  `Exchange.set_collar`, `set_halt_rule`, `set_session_reference`, `reopen`,
+  `drain_guard_events`; four `Input` constructors appended to the journal encoding. No new
+  `Event.t` or `Reject_reason.t` constructor. `sim-scorecard`: new repository and binary,
+  stylised facts of a simulator run against recorded data; new edges to
+  `exchange-core-engine` and `market-data`. See [exchange-core](repos/exchange-core.md),
+  [sim-scorecard](repos/sim-scorecard.md) and
+  [design/simulators.md](design/simulators.md#price-collar-and-halts).
 - `market-data`: `Bars`, `Directional_change`, `Cusum_filter`, `Labels`, `Toxicity` and
   `Toxicity_feed`; the `features` subcommand writes two new Parquet tables per instrument
   and day, `parquet/bars/` and `parquet/toxicity/`, outside `day-close`. `mm-core`:
