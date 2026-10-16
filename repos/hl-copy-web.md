@@ -46,10 +46,10 @@ unknown fields and optional fields accept `null`. `Approve_agent.typed_data` and
 
 | Route | Content |
 | --- | --- |
-| `#/leaders` | Ranked table with every score component, sort by any column, filter by text, minimum score, maximum drawdown, minimum trades |
-| `#/leader/<address>` | Headline figures, window pnl, SVG equity curve, positions, recent fills; with a [leader-scoring](leader-scoring.md) report also the composite score and its components, the 30-day forecast, 34 metrics, the capacity curve (SVG, log size axis) and alerts |
-| `#/follow/<address>` | Scale mode, caps and allowlist with validation; when the agent is missing or expired, the `approveAgent` (and optional `approveBuilderFee`) typed data shown in full before the wallet signs |
-| `#/dashboard` | Account, agent status, one card per follow with pnl, positions, pause, resume, stop |
+| `#/leaders` | Ranking check (does the order persist, against random picks; PBO; flagged and excluded counts), ranked table with every score component and an integrity badge, sort by any column, filter by text, minimum score, maximum drawdown, minimum trades |
+| `#/leader/<address>` | Headline figures, window pnl, SVG equity curve, positions, recent fills; with a [leader-scoring](leader-scoring.md) report also the composite score and its components, the 30-day forecast, 34 metrics, the capacity curve (SVG, log size axis), alerts, integrity flags, the leader's persistence row and selection statistics (PSR, DSR, track record needed, PBO, SPA, the gate's verdict) |
+| `#/follow/<address>` | Scale mode, caps, allowlist and execution (Immediate, TWAP, Adaptive, Passive) with validation; when the agent is missing or expired, the `approveAgent` (and optional `approveBuilderFee`) typed data shown in full before the wallet signs |
+| `#/dashboard` | Account, agent status, one card per follow with pnl, the algorithm, the engine's cost report, positions, pause, resume, stop |
 | `#/login` | `eth_requestAccounts`, then `personal_sign` of the challenge |
 
 The wallet binding is gen_js_api over EIP-1193 (`ethereum/eip1193.mli`). The page
@@ -61,7 +61,7 @@ because wallets refuse typed data for another chain.
 | Directory | Library | Purpose |
 | --- | --- | --- |
 | `api/` | `hl-copy-api-types` | `Api_types` |
-| `model/` | `copy_web_model` (private) | `Route`, `Format`, `Leader_table`, `Chart`, `Follow_form`, `Agent_check`, `Mock_state`; pure, tested natively |
+| `model/` | `copy_web_model` (private) | `Route`, `Format`, `Leader_table`, `Chart`, `Algo_choice`, `Follow_form`, `Agent_check`, `Mock_state`, `Scoring_view`; pure, tested natively |
 | `ethereum/` | `ethereum` (private) | `Eip1193` (generated binding), `Ethereum` (deferred calls) |
 | `ui/` | `copy_web_ui` (private) | `Backend` (live HTTP with any method, or mock fixtures), `Wallet`, `Remote`, `Nav`, the pages, `App` |
 
