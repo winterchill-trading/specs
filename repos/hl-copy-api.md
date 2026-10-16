@@ -76,7 +76,8 @@ hl-leaderboard and hl-copy-web into one dune workspace and runs it.
 
 ## Dependencies
 
-- Depends on: `hl-copy-core`, `execution-algos`, `hl-client`, `hl-protocol`, `hl-copy-api-types` (from the
+- Depends on: `hl-copy-core`, `execution-algos`, `hl-client`, `hl-protocol`,
+  `hl-copy-api-types` (from the
   `hl-copy-web` repository), `market-data`, `pg-async`; `cryptokit`, `cohttp-async`,
   `async_websocket`.
 - Test-only: `hl-sim`, `hl-leaderboard`, `exchange-core-engine`, `venue-net`.
@@ -86,7 +87,8 @@ hl-leaderboard and hl-copy-web into one dune workspace and runs it.
 ## CI pin order
 
 `fixed-decimal`, `exchange-core`, `order-book`, `exchange-core-engine`, `hl-protocol`,
-`parquet`, `pg-async`, `market-data`, `backtest-stats`, `price-anchor`, `execution-algos`, `venue-net`, `hl-client`, `binance-protocol`,
+`parquet`, `pg-async`, `market-data`, `backtest-stats`, `price-anchor`, `execution-algos`,
+`venue-net`, `hl-client`, `binance-protocol`,
 `mm-core`, `binance-client`, `hl-sim`, `hl-copy-core`, `leader-scoring`,
 `leader-scoring-hl`, `hl-leaderboard`,
 `hl-copy-api-types` (the `hl-copy-web` repository, that package only).

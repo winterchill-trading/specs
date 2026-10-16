@@ -8,7 +8,7 @@ Bybit v5 linear perpetual simulator: REST under `/v5`, public stream
 | Repository | `winterchill-trading/bybit-sim` |
 | opam packages | `bybit-sim` (library), `bybit-sim-anchor` (anchor library and binary) |
 | Libraries | `bybit-sim` (module `Bybit_sim`), `bybit-sim-anchor` (module `Bybit_sim_anchor`) |
-| Binary | `bybit-sim` (`-port` 3400, `-seed`, `-vol-bps`, `-symbols`, `-noise-traders`, `-initial-balance`, `-log-level`; `-anchor VENUE:SYMBOL=SIMSYM` (repeatable), `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from T -anchor-to T`, `-anchor-speed X`, `-anchor-status-interval-s`, `-input-journal FILE`; guards, off by default: `-collar-bps N` / `-collar-ticks N`, `-collar-reference last|mid|mark`, `-collar-action reject|reprice`, `-halt-levels PCT:DURATION,...`, `-halt-scope market|symbol`) |
+| Binary | `bybit-sim` (`-port` 3400, `-seed`, `-vol-bps`, `-symbols`, `-noise-traders`, `-initial-balance`, `-log-level`; `-anchor VENUE:SYMBOL=SIMSYM` (repeatable), `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from T -anchor-to T`, `-anchor-speed X`, `-anchor-status-interval-s`, `-input-journal FILE`; guards, off by default: `-collar-bps N` / `-collar-ticks N`, `-collar-reference last\|mid\|mark`, `-collar-action reject\|reprice`, `-halt-levels PCT:DURATION,...`, `-halt-scope market\|symbol`) |
 | Status | done |
 
 ## Key modules

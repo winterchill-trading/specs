@@ -8,7 +8,7 @@ Binance USD-M Futures simulator: REST under `/fapi`, market streams on `/ws` and
 | Repository | `winterchill-trading/binance-sim` |
 | opam packages | `binance-sim` (library), `binance-sim-anchor` (anchor library and binary) |
 | Libraries | `binance-sim` (module `Binance_sim`), `binance-sim-anchor` (module `Binance_sim_anchor`) |
-| Binary | `binance-sim` (`-port` 3300, `-seed`, `-vol-bps`, `-symbols`, `-noise-traders`, `-initial-balance`, `-log-level`; `-anchor VENUE:SYMBOL=SIM` (repeatable), `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from T -anchor-to T`, `-anchor-speed X`; guards, off by default: `-collar-bps N` / `-collar-ticks N`, `-collar-reference last|mid|mark`, `-collar-action reject|reprice`, `-halt-levels PCT:DURATION,...`, `-halt-scope market|symbol`) |
+| Binary | `binance-sim` (`-port` 3300, `-seed`, `-vol-bps`, `-symbols`, `-noise-traders`, `-initial-balance`, `-log-level`; `-anchor VENUE:SYMBOL=SIM` (repeatable), `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from T -anchor-to T`, `-anchor-speed X`; guards, off by default: `-collar-bps N` / `-collar-ticks N`, `-collar-reference last\|mid\|mark`, `-collar-action reject\|reprice`, `-halt-levels PCT:DURATION,...`, `-halt-scope market\|symbol`) |
 | Status | done |
 
 ## Key modules

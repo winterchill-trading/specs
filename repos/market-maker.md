@@ -78,7 +78,8 @@ connecting and passed to `Params.for_instrument ~min_notional`.
 
 ## Dependencies
 
-- Depends on: `exchange-core`, `mm-core`, `mm-core-replay`, `market-data`, `hl-protocol`, `hl-client`, `hl-mm`,
+- Depends on: `exchange-core`, `mm-core`, `mm-core-replay`, `market-data`, `hl-protocol`,
+  `hl-client`, `hl-mm`,
   `binance-protocol`, `binance-client`, `bybit-protocol`, `bybit-client`; tests also on
   `hl-sim`.
 - Used by: `infra` (service image and compose stack).

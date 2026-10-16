@@ -8,7 +8,7 @@ public API over `exchange-core-engine`, with the engine's market simulation.
 | Repository | `winterchill-trading/hl-sim` |
 | opam package | `hl-sim` |
 | Library | `hl-sim` (module `Hl_sim`) |
-| Binary | `hl-sim` (`-port` 3000, `-seed`, `-vol-bps`, `-coins`, `-noise-traders`, `-initial-balance`, `-response-delay-ms`, `-journal`, `-input-journal`, `-log-level`; price anchor: `-anchor VENUE:SYMBOL=COIN` (repeatable), `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from`, `-anchor-to`, `-anchor-speed`, `-anchor-base-url`, `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-status-interval-s`; copy trading: `-leaders N`, `-leaders-seed`, `-leader-balance`, `-leader-edge-s` 60, `-strict-signatures`, `-mainnet-signatures`; `-taker-fee-bps` 4.5, `-maker-fee-bps` 1.5, `-l2-interval-ms` 500; guards, off by default: `-collar-bps N` / `-collar-ticks N`, `-collar-reference last|mid|mark`, `-collar-action reject|reprice`, `-halt-levels PCT:DURATION,...`, `-halt-scope market|symbol`) |
+| Binary | `hl-sim` (`-port` 3000, `-seed`, `-vol-bps`, `-coins`, `-noise-traders`, `-initial-balance`, `-response-delay-ms`, `-journal`, `-input-journal`, `-log-level`; price anchor: `-anchor VENUE:SYMBOL=COIN` (repeatable), `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from`, `-anchor-to`, `-anchor-speed`, `-anchor-base-url`, `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-status-interval-s`; copy trading: `-leaders N`, `-leaders-seed`, `-leader-balance`, `-leader-edge-s` 60, `-strict-signatures`, `-mainnet-signatures`; `-taker-fee-bps` 4.5, `-maker-fee-bps` 1.5, `-l2-interval-ms` 500; guards, off by default: `-collar-bps N` / `-collar-ticks N`, `-collar-reference last\|mid\|mark`, `-collar-action reject\|reprice`, `-halt-levels PCT:DURATION,...`, `-halt-scope market\|symbol`) |
 | Status | done |
 
 ## Key modules
@@ -52,7 +52,8 @@ public API over `exchange-core-engine`, with the engine's market simulation.
 - `Guard`: the price collar and halt rule flags, set on the engine through recorded calls
   (`set_collar` on every coin, `set_halt_rule`); the `guard` status JSON; tells a collar
   rejection from a tick error by the engine's `collar_rejected` counter.
-- `Server`: cohttp-async server for `POST /info`, `POST /exchange`, `GET /status`, `POST /sim/reopen` and the `/ws`
+- `Server`: cohttp-async server for `POST /info`, `POST /exchange`, `GET /status`,
+  `POST /sim/reopen` and the `/ws`
   websocket on the same port; owns the engine and its timers. `-response-delay-ms`
   delays every `/exchange` response while the order and its websocket events take effect
   at once, for double-placement tests. Each connection may queue at most 10,000 messages
