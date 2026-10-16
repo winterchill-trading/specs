@@ -8,7 +8,7 @@ Bybit v5 linear perpetual simulator: REST under `/v5`, public stream
 | Repository | `winterchill-trading/bybit-sim` |
 | opam packages | `bybit-sim` (library), `bybit-sim-anchor` (anchor library and binary) |
 | Libraries | `bybit-sim` (module `Bybit_sim`), `bybit-sim-anchor` (module `Bybit_sim_anchor`) |
-| Binary | `bybit-sim` (`-port` 3400, `-seed`, `-vol-bps`, `-symbols`, `-noise-traders`, `-initial-balance`, `-log-level`; `-anchor VENUE:SYMBOL=SIMSYM` (repeatable), `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from T -anchor-to T`, `-anchor-speed X`, `-anchor-status-interval-s`, `-input-journal FILE`) |
+| Binary | `bybit-sim` (`-port` 3400, `-seed`, `-vol-bps`, `-symbols`, `-noise-traders`, `-initial-balance`, `-log-level`; `-anchor VENUE:SYMBOL=SIMSYM` (repeatable), `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from T -anchor-to T`, `-anchor-speed X`, `-anchor-status-interval-s`, `-input-journal FILE`; guards, off by default: `-collar-bps N` / `-collar-ticks N`, `-collar-reference last|mid|mark`, `-collar-action reject|reprice`, `-halt-levels PCT:DURATION,...`, `-halt-scope market|symbol`) |
 | Status | done |
 
 ## Key modules
@@ -19,9 +19,12 @@ Bybit v5 linear perpetual simulator: REST under `/v5`, public stream
   status, reject reason, closed history.
 - `Venue`: the engine plus the registry: trading and account endpoints, event buffering
   for the streams.
+- `Guard`: the price collar and halt rule flags, set through the engine's recorded calls
+  (after `-input-journal` is attached); the `GET /sim/guard` status; tells a collar
+  rejection from a tick error by the engine's `collar_rejected` counter.
 - `Server`: cohttp-async server for REST and both websocket streams; drives the clock
   and the market simulation; clock step hooks and plain JSON routes for simulator
-  endpoints.
+  endpoints, `POST /sim/reopen`. `Venue.sync` drains the guard log.
 - `Bybit_sim_anchor.Spec`, `Reference`, `Anchors` (package `bybit-sim-anchor`): the
   `-anchor` argument, the reference venues' live feeds and raw normalizers (Bybit and
   Binance clients), and the anchors of a running server (sources, clock hook,
@@ -49,6 +52,14 @@ Described in [design/simulators.md](../design/simulators.md). `X-BAPI-API-KEY` i
 account; `X-BAPI-TIMESTAMP` must be within `X-BAPI-RECV-WINDOW` of the server clock;
 `X-BAPI-SIGN` is ignored. Create returns only an acknowledgement; the order's fate is on
 `/v5/order/realtime` and the `order` topic.
+
+Price collar and halts are off unless their flags are given (collar reference: last
+trade, or the mark when anchored). A limit order beyond the collar (create, batch item or
+amend) gets retCode 110003 `Order price exceeds the allowable range: max buy price
+<bound>.` (`min sell price` for a sell); an order that would trade during a halt gets
+10001 `params error: symbol is halted` (simulator choice; Bybit publishes no perp halt
+code). `GET /sim/guard` and `POST /sim/reopen` (`?symbol=`) are simulator endpoints.
+`scripts/collar-e2e.sh` runs `market-maker` against a 50 bps collar.
 
 ## Known gaps
 
