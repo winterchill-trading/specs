@@ -452,12 +452,17 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
   scored through risk-models, Allow/Hold/Block with alerts, memory and PostgreSQL stores,
   replay with baseline diffs. Holds and alerts carry the model's exact feature
   contributions from [risk-models](repos/risk-models.md) (`Tree_shap`, `Explanation`),
-  and a policy may let the model abstain near its threshold (done, 2026-10-16). Open:
+  and a policy may let the model abstain near its threshold (done, 2026-10-16). Gaps a
+  consumer app reported are closed in 0.1.2 (own migrations table, bundled model and
+  in-memory loaders, severity overrides per typology and country, `Monitor.revoke`;
+  2026-10-16). Open:
   real labelled data, graph features, calling `on_event` from the demo API's payment and
   booking paths, adopting `Explainer.of_forest` in leader-scoring.
 - [sanctions-screening](repos/sanctions-screening.md) (done, 2026-10-16): OFAC, EU and UK
-  list parsers, screening and rescreening, cases, memory and PostgreSQL stores. Open: UK
-  Sanctions List and UN parsers, and calling it from onboarding, payee creation and the
+  list parsers, screening and rescreening, cases, memory and PostgreSQL stores. UK
+  Sanctions List parser, own migrations table, list-qualified kyc keys, bundled fixtures
+  and a 158 MB OFAC XML load (was 883 MB) in 0.1.1 (done, 2026-10-16). Open: UN parser,
+  the Arabic-script prefilter miss, and calling it from onboarding, payee creation and the
   list-update job of the demo API.
 - `venue-net` TLS host-name verification (in progress).
 - Neobank demo (in progress; design in [design/neobank.md](design/neobank.md)):
