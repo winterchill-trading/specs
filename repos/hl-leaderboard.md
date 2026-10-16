@@ -35,7 +35,7 @@ as JSON.
 | `Raw_log`, `Layout`, `Progress`, `Dataset` | Raw logs, directory layout, resumable manifest, loading a directory back |
 | `Parquet_out` | `leaders.parquet`, `fills.parquet` (via `parquet`) |
 | `Rank` | Score input (perp fills, synthetic opens for positions held at the start of the history, `month` portfolio curve), ordering, JSON |
-| `Scoring` | [leader-scoring](leader-scoring.md) reports from the raw logs, ranked across the collected leaders; summaries for the ranking file |
+| `Scoring` | [leader-scoring](leader-scoring.md) reports from the raw logs, ranked across the collected leaders; the universe checks (persistence, selection statistics, integrity from fills, logged books and first-seen times) written as `scoring_universe`; summaries for the ranking file |
 | `Server` | The JSON API |
 
 ## Directory layout
@@ -74,7 +74,8 @@ sub-account skipped).
 ## CI pin order
 
 `fixed-decimal`, `exchange-core`, `parquet`, `market-data`, `hl-protocol`, `venue-net`,
-`hl-client`, `hl-copy-core`, `leader-scoring`, `leader-scoring-hl` (same repository).
+`hl-client`, `hl-copy-core`, `backtest-stats`, `leader-scoring`, `leader-scoring-hl`
+(same repository).
 hl-sim is used only by `scripts/sim-e2e.sh`, outside CI.
 
 See [design/copytrading.md](../design/copytrading.md) for the platform design.
