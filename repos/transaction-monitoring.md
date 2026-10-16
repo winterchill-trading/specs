@@ -23,9 +23,9 @@ carry stable keys, amounts and countries, never names or account numbers.
 | `Window`, `P2_quantile`, `Recent`, `Country_set` | Bucketed sliding counters, P-square quantiles, a bounded recent-keys table, a country bitmap |
 | `Profile` | Customer and counterparty profiles: 1 h / 24 h / 7 d / 30 d windows, quantiles, new counterparties, dormancy, round amounts, sub-threshold sums, cash, card bursts, pass-through, countries and devices; bin_prot snapshots |
 | `Typology`, `Rules`, `Explanation` | Eleven typologies as `Risk_rules.Rule.t` with FATF, EBA, EU and US references; sexp config with shadow and disabled typologies; explanation records |
-| `Features`, `Model` | risk-rules `Features.t` from event and profiles, laid out by `Risk_models.Encoding`, plus 32 AML features; a risk-models scorer on that schema |
-| `Policy`, `Decision`, `Alert` | Rules and score combined (model `Off`, `Shadow`, `Active`); `Allow`/`Hold`/`Block` decisions (`Stable.V1`); the alert lifecycle as a pure state machine with SAR-candidate flag and four eyes on reopen |
-| `Evaluator`, `Monitor`, `Replay` | Synchronous core; Async pipeline with bounded intake, idempotent per event id, LRU profile cache; history replay with baseline diffs |
+| `Features`, `Model` | risk-rules `Features.t` from event and profiles, laid out by `Risk_models.Encoding`, plus 32 AML features, each with a reviewer-facing label; a risk-models scorer on that schema and its explainer |
+| `Policy`, `Decision`, `Alert` | Rules and score combined (model `Off`, `Shadow`, `Active`, optional abstain band); `Allow`/`Hold`/`Block` decisions (`Stable.V2`: rule explanations, score, the model's top feature contributions, abstention); the alert lifecycle as a pure state machine with SAR-candidate flag and four eyes on reopen |
+| `Evaluator`, `Monitor`, `Replay` | Synchronous core; Async pipeline with bounded intake, idempotent per event id, LRU profile cache; history replay with baseline diffs, reasons per change and an accuracy-coverage table |
 | `Store`, `Store_memory`, `Store_pg` | `Store.S` per ADR 0009; PostgreSQL schema `transaction_monitoring`, one transaction per event |
 | `Synthetic` | Seeded generator of labelled activity: four personas, nine injected typologies, a third of episodes under rule thresholds, benign look-alikes |
 
@@ -41,6 +41,14 @@ carry stable keys, amounts and countries, never names or account numbers.
   precision target, and exports risk-models' format 1 with a parity fixture (1e-9).
 - Decisions are stamped with the event's `received_at`, not a clock, so replays
   reproduce them; alert ids derive from event ids.
+- Explanations: every hold and block (and every score from the hold threshold or the
+  abstain band up) carries risk-models' exact path-dependent attributions, top five under
+  reviewer-facing labels, which also give the model explanation its reasons. They are
+  model contributions, not causes, and never reach the customer. Computing one costs
+  about 65 us, so allowed payments skip it.
+- Abstention: `Policy.abstain` sets a band in log-odds around the hold threshold; an
+  abstaining score is held with "model uncertain" or left to the rules. `replay` prints
+  the model's accuracy, precision and recall per coverage to choose the band from.
 - `Monitor` serializes events (profiles need order), answers `Overloaded` past
   `max_pending` instead of buffering, awaits `on_decision` (a slow consumer slows
   intake), and evicts cached profiles on a failed or duplicate commit.
@@ -48,7 +56,9 @@ carry stable keys, amounts and countries, never names or account numbers.
   and both snapshots in the same transaction; snapshots only replace older ones (by event
   count); alert updates are optimistic on the alert version. One conformance transcript
   for both stores; a restart test checks decisions through the store equal an
-  uninterrupted replay.
+  uninterrupted replay. Decision and alert bodies carry a `body_version` (migration
+  0002): V2 rows also store the explanation as JSON in `attribution`; V1 rows are
+  upgraded on read.
 
 ## Numbers
 
@@ -63,7 +73,13 @@ test window of 16 days:
 
 Model ROC-AUC 0.9999, average precision 0.960 (made-up patterns; not a real-world
 estimate). Latency, release build on an M-series laptop: views 1.5 us, views and rules
-2.3 us, views, rules and model 5.9 us; full step with profile updates p99 17 us.
+2.3 us, views, rules and model 5.9 us; an explanation 68 us; full step with profile
+updates p99 37 us (the tail is the decisions that get an explanation).
+
+Abstaining on the whole synthetic history, band of 0.5 in log-odds around the hold
+threshold (4 415 abstentions), against the active policy without it: routed to holds,
+2 131 more alerts and recall 0.997 to 0.998; left to the rules, 1 932 fewer alerts,
+recall 0.995 and alert precision 0.063 to 0.067.
 
 ## Dependencies
 
