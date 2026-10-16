@@ -23,7 +23,7 @@ the server refuses any exchange URL under `hyperliquid.xyz` and builds approvals
 | `POST /agent/new`, `POST /agent/approved`, `POST /agent/revoke` | Fresh secp256k1 key per offer, in memory until approved, then sealed into the `agents` table (revoke deletes the row and its key file); `approveAgent` for the named agent `hl-copy valid_until <ms>` (179 days) with its EIP-712 typed data; the signed action must match the pending offer (only `signatureChainId` may change) and recover to the session's wallet before it is posted |
 | `POST /builder-fee` | The wallet's `approveBuilderFee` for the configured builder |
 | `POST /follows`, `GET`/`PATCH`/`DELETE /follows/:id`, `POST /follows/:id/pause`, `/resume`, `/stop` | Follow records in the `follows` table plus `Follower_config` files the engine watches; needs an approved agent |
-| `GET /leaders`, `GET /leaders/:address` | `hl-leaderboard serve` over HTTP, reshaped into `Api_types`, cached 10 s |
+| `GET /leaders`, `GET /leaders/:address` | `hl-leaderboard serve` over HTTP, reshaped into `Api_types`, cached 10 s; each leader carries the [leader-scoring](leader-scoring.md) summary, and the list follows the composite score when every leader has one; the detail carries the leader-scoring report |
 | `GET /me`, `GET /ws?token=` | Account value from `clearinghouseState`, per-follow pnl and positions from the engine's `/status` (decoded leniently); the websocket pushes `Api_types.Ws_push` frames: `me`, `follow` changes and the account's fills (`Hl_client.User_feed`) |
 | `GET /healthz`, `GET /metrics` | Health and Prometheus metrics (requests by route pattern, method and status) |
 
@@ -87,7 +87,8 @@ hl-leaderboard and hl-copy-web into one dune workspace and runs it.
 
 `fixed-decimal`, `exchange-core`, `order-book`, `exchange-core-engine`, `hl-protocol`,
 `parquet`, `pg-async`, `market-data`, `price-anchor`, `venue-net`, `hl-client`, `binance-protocol`,
-`mm-core`, `binance-client`, `hl-sim`, `hl-copy-core`, `hl-leaderboard`,
+`mm-core`, `binance-client`, `hl-sim`, `hl-copy-core`, `leader-scoring`,
+`leader-scoring-hl`, `hl-leaderboard`,
 `hl-copy-api-types` (the `hl-copy-web` repository, that package only).
 
 See [design/copytrading.md](../design/copytrading.md) for the platform design.
