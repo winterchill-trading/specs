@@ -193,8 +193,38 @@ recorded calls (so journals carry them and replays reproduce their audit log):
 
 Rejections reuse existing reasons (`Invalid_price`, `Unsupported "trading halted"`) and the
 details go to a separate log (`drain_guard_events`), so adapters that match every engine
-event or reason are unchanged. None of the crypto simulators sets a collar or halt rule
-yet.
+event or reason are unchanged.
+
+### In the crypto simulators
+
+hl-sim, binance-sim and bybit-sim expose both guards as the same flags, off by default:
+`-collar-bps N` or `-collar-ticks N`, `-collar-reference last|mid|mark` (default: the mark
+when the run is anchored, else the last trade), `-collar-action reject|reprice`,
+`-halt-levels PCT:DURATION,...` (for example `7:15m,13:15m,20:reopen`; `reopen` waits for
+the admin call) and `-halt-scope market|symbol`. The halt rule watches every symbol's
+mark and reopens timed halts automatically. The settings are applied after an input
+journal is attached, so replays reproduce the guard events; each simulator's tests replay
+a guarded run (and an anchored one with a collar on the mark) to the same events and
+counters.
+
+Each server owns the single drain of the guard log (`drain_guard_events` forgets what it
+returns): it drains after every mutation, logs each event and keeps the last 50 for its
+status endpoint. A collar rejection is the engine's `Invalid_price`, like a price off the
+tick grid; the adapters tell them apart by the `collar_rejected` counter rising during the
+call, so tick errors keep their venue text.
+
+| | Collar rejection | Halt rejection | Status | Reopen |
+| --- | --- | --- | --- | --- |
+| hl-sim | `Order price cannot be more than P% away from the reference price asset=N`, `orderUpdates` status `oracleRejected` (Hyperliquid's oracle error, with the collar's width instead of its 80%) | `Trading is halted. asset=N` (simulator text) | `guard` entry of `GET /status`, only when a guard is set | `POST /sim/reopen?coin=` |
+| binance-sim | buy `-4016 Limit price can't be higher than <bound>.`, sell `-4024 Limit price can't be lower than <bound>.` (PERCENT_PRICE); `exchangeInfo` multipliers follow a bps collar | `-2010 Trading is halted.` (simulator choice) | `GET /sim/guard` | `POST /sim/reopen?symbol=` |
+| bybit-sim | `110003 Order price exceeds the allowable range: max buy price <bound>.` (`min sell price` for a sell); create, batch and amend | `10001 params error: symbol is halted` (simulator choice) | `GET /sim/guard` | `POST /sim/reopen?symbol=` |
+
+None of the venues publishes a halt code for its perpetuals; the halt texts are the
+simulators' own and are listed as such in each README. With the market simulation on, a
+collar re-prices many noise-trader market orders (their protection price is clamped), and
+orders placed before the first trade pass as `collar_unreferenced`. Each simulator has a
+`scripts/collar-e2e.sh` that runs the `market-maker` binary against a 50 bps collar and
+checks the venue error of an order placed far through the book.
 
 ## Realism scorecard
 
