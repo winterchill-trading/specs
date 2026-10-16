@@ -25,6 +25,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Engine and simulators | `exchange-core-engine` | Matching, clearinghouse, margin, funding, liquidation, noise traders (in [exchange-core](repos/exchange-core.md)) | done |
 | Engine and simulators | [hl-sim](repos/hl-sim.md), [binance-sim](repos/binance-sim.md), [bybit-sim](repos/bybit-sim.md) | HTTP and websocket servers speaking each venue's API over the engine | done |
 | Engine and simulators | [price-anchor](repos/price-anchor.md) | Anchors a simulated market to a live or recorded reference: mark, shadow levels, trade-replay fills | library done, simulator flags planned |
+| Engine and simulators | [sim-scorecard](repos/sim-scorecard.md) | Scores a simulator run against recorded data: stylised facts, distances and pass bands | done |
 | TradFi | [equities-core](repos/equities-core.md) | US equities, options and futures semantics: sessions, ticks, lots, symbology, auctions, order types, halts, fees | done |
 | TradFi | [nyse-sim](repos/nyse-sim.md), [cboe-sim](repos/cboe-sim.md), [cme-sim](repos/cme-sim.md) | NYSE Pillar and XDP, Cboe BOE and PITCH, CME iLink 3 and MDP 3.0 over the engine, binary over TCP | done |
 | Clients | [venue-net](repos/venue-net.md) | Async HTTP and reconnecting websocket transport | done |
@@ -112,6 +113,7 @@ graph LR
     binance_sim["binance-sim"]
     bybit_sim["bybit-sim"]
     price_anchor["price-anchor"]
+    sim_scorecard["sim-scorecard"]
   end
   subgraph tradfi["TradFi"]
     equities_core["equities-core"]
@@ -227,6 +229,8 @@ graph LR
   bybit_sim --> binance_client
   price_anchor --> engine_pkg
   price_anchor --> market_data
+  sim_scorecard --> engine_pkg
+  sim_scorecard --> market_data
   market_data --> exchange_core
   market_data --> parquet
   backtest_stats --> parquet
