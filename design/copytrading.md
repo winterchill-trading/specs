@@ -241,6 +241,21 @@ the components, the metrics, the capacity curve and the alerts. The Hyperliquid
 `Score` above stays in the ranking file unchanged. Checked on a local stack of hl-sim (3
 leaders, 40 noise traders), hl-leaderboard, hl-copy-api and the web app's leader page.
 
+Status (2026-10-16): honesty checks on the ranking. leader-scoring adds `Persistence`
+(does rank in one window predict the next: rank correlation with a bootstrap interval,
+quintile transitions, decay, and the top picks against random picks), `Leader_stats`
+(PSR, DSR with the leaders as trials, minimum track record; PBO and SPA across the
+universe, from backtest-stats) and `Integrity` (self and wash trades, counterparties among
+watched accounts, co-trading clusters, front-running of a trade flow, creation bursts,
+off-book fills; flagged leaders leave the composite ranking by policy). hl-leaderboard's
+`rank` runs them over the collected leaders, hl-copy-api carries them in `/leaders` and
+`/leaders/<address>`, and the web app shows a ranking check above the table (the order is
+called noise unless it persists) and the flags and statistics on the leader page. On the
+287 mainnet all-time curves no ranking tried persists (rank correlation 0.05 [-0.03,
+0.12], top 10 at the 48th percentile of random picks); on a 34-leader mainnet collection
+the only flags are three accounts first seen within 40 minutes; on hl-sim no account is
+excluded.
+
 ## Backtest
 
 The leader score rates a leader's own trading. A follower does not get that trading: it
@@ -427,6 +442,13 @@ Status (2026-10-16): in hl-copy-engine; journals moved to entries version 2
 (`<date>.v2.journal`) with version 1 still read. On hl-sim (60 s, the engine's e2e
 script), one IOC per order filled 27.6% of the parents' notional on the thin book, a 6 s
 TWAP 99.99% and the adaptive algorithm 99.93%, every journal replaying identically.
+
+Status (2026-10-16): users choose the algorithm. hl-copy-api takes `algo` on follow create
+and patch (execution-algos' short form, validated by execution-algos, stored, written to
+the follow file) and returns it with the engine's cost report from `/status`; the web
+form offers Immediate, TWAP, Adaptive and Passive. A default follow sends and receives the
+same JSON as before. hl-copy-api's e2e script moves a follow to TWAP and back through the
+engine on hl-sim.
 
 ## State and persistence
 
