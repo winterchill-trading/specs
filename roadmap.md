@@ -405,6 +405,16 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
   app's leader page shows it. Open: retrain the forecast on months of collected fill
   histories (on the mainnet replay it does not beat past Sharpe); add the copy backtest's
   follower results as features; cheaper alert scans for long histories.
+- [execution-algos](repos/execution-algos.md) (done, 2026-10-16): TWAP, VWAP, POV,
+  passive and adaptive child-order schedulers, impact estimates, cost reports; the engine
+  works each planned order with the follow's algorithm (`Immediate` by default) and
+  journals the cost reports. Open: a VWAP profile from recorded trades in the engine (it
+  uses a uniform one), lag samples for algorithm children, an `-algo` choice in the API
+  and the web app.
+- [copy-backtest](repos/copy-backtest.md) (done, 2026-10-16): recorded markets and leader
+  fills through the mirror and the algorithms, Parquet results checked with DuckDB,
+  sweeps. Open: a run on mainnet recordings that overlap a leader's activity (the one
+  recorded window is 90 s), market impact of the follower's own orders.
 - Open: verify on testnet that another address's user streams are readable and what
   the 10-unique-users websocket limit counts.
 
