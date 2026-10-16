@@ -282,6 +282,16 @@ over 21 days for the one leader with no skips). Four of 19 leaders would have ma
 follower money over their windows, which for the busiest accounts are hours long because
 of the 10,000-fill cap. Not yet exposed through `hl-leaderboard serve` or the API.
 
+Status (2026-10-16): [copy-backtest](../repos/copy-backtest.md) adds the market. It
+replays market-recorder event logs and a leader's `userFills` through `Mirror` and the
+execution algorithms, fills the follower's child orders on paper venues against the
+replayed book (queue position, 50 ms latency, 200 ms copy delay, maker and taker fees,
+hourly funding, the 30 s resync as a rebalance) and writes the curve, tracking error and
+per-parent cost reports to Parquet, checked with DuckDB. On a 17-minute hl-sim recording
+(three simulated leaders, a 10,000 USD follower) `adaptive` stays within 4 bps of the
+scaled leader on average; `passive` pays a third of the fees but lags by 3 to 13% of
+equity.
+
 ## Mirroring model
 
 The engine copies positions, not orders. A leader's resting orders, cancels and
@@ -349,6 +359,39 @@ lot of its capped target after every leader change, and the leader-fill-to-order
 to 3 ms locally. The retry backoff and the "N cycles behind" alert are not implemented;
 the follower retries on the next leader update or resync.
 
+## Execution algorithms
+
+The mirror decides what the follower should hold; how a planned order reaches the
+venue is the follow's execution algorithm, from
+[execution-algos](../repos/execution-algos.md), stored in the follow file's `algo` field
+(`Hl_copy_core.Exec_algo`; `Immediate` by default, the behaviour before algorithms).
+
+- **Parents.** Each place the mirror plans is a parent order worked by a pure
+  `Execution_algos.Scheduler`; the mirror counts it in flight until the scheduler is done,
+  across resyncs too, so it is never planned twice. Children carry the parent's client
+  order id with the child number in bits 40 and up of its sequence half; child 0 is the
+  parent's own id, so `Immediate` sends exactly the mirror's IOC.
+- **Algorithms.** `Immediate` (one IOC at the slippage bound), `Twap` and `Vwap` (slices
+  over a duration; VWAP by a volume profile), `Pov` (a share of the market volume),
+  `Passive` (a post-only child pegged to the best price on its side, an iceberg below a
+  full display, an IOC sweep at the timeout) and `Adaptive`, the copy algorithm: passive
+  while the order is small against the depth near the mid and the follower is not far
+  behind the leader (remaining notional within a bound of its equity), taking otherwise,
+  when the mid moves away, or at the timeout.
+- **Inputs.** The engine feeds parents `Market` ticks (time, top 20 levels, cumulative
+  traded size) from the coin's public `l2Book` and `trades` feed every 500 ms; fills of
+  resting children come from the follower's own `userFills`. Ticks are journaled, so a
+  follow still replays exactly.
+- **Costs.** Each finished parent yields a cost report: arrival slippage against the mid
+  at its first tick, implementation shortfall (execution, the move missed by what did
+  not fill, fees) and maker share, journaled in the outputs and exposed in `/status` and
+  the metrics.
+
+Status (2026-10-16): in hl-copy-engine; journals moved to entries version 2
+(`<date>.v2.journal`) with version 1 still read. On hl-sim (60 s, the engine's e2e
+script), one IOC per order filled 27.6% of the parents' notional on the thin book, a 6 s
+TWAP 99.99% and the adaptive algorithm 99.93%, every journal replaying identically.
+
 ## State and persistence
 
 - **Journal per follower.** Every input (leader fill, leader and follower snapshots,
@@ -393,7 +436,9 @@ the follower retries on the next leader update or resync.
 | --- | --- | --- |
 | [hl-copy-core](../repos/hl-copy-core.md) | Library, binary | Pure logic: `Scale`, `Caps`, `Rounding`, `Mirror`, `Score`, `Pnl`, stable types for journals and configs; the `hl-copy-backtest` package replays recorded leaders through `Mirror` |
 | [hl-leaderboard](../repos/hl-leaderboard.md) | Binary | `collect`, `rank`, `serve`: candidates, history, scores, `/leaders` JSON |
-| [hl-copy-engine](../repos/hl-copy-engine.md) | Binary | Supervises followers: feeds, mirroring, IOC execution with the agent key, journals, `/metrics`, `/status` |
+| [hl-copy-engine](../repos/hl-copy-engine.md) | Binary | Supervises followers: feeds, mirroring, execution with the follow's algorithm and the agent key, journals, `/metrics`, `/status` |
+| [execution-algos](../repos/execution-algos.md) | Library | Child-order schedulers (TWAP, VWAP, POV, passive, adaptive), impact estimates, cost reports, paper venue |
+| [copy-backtest](../repos/copy-backtest.md) | Library, binary | Recorded markets and leader fills through the mirror and the algorithms; Parquet results |
 | [hl-copy-api](../repos/hl-copy-api.md) | Binary | Login, agent keys and approvals, follows, leader proxy, `/me`, `/ws` |
 | [hl-copy-web](../repos/hl-copy-web.md) | Web app | Bonsai frontend compiled with js_of_ocaml; owns the shared `Api_types` |
 
