@@ -10,6 +10,13 @@ belong here.
 
 ## 2026-10-16
 
+- `market-data`: `Bars`, `Directional_change`, `Cusum_filter`, `Labels`, `Toxicity` and
+  `Toxicity_feed`; the `features` subcommand writes two new Parquet tables per instrument
+  and day, `parquet/bars/` and `parquet/toxicity/`, outside `day-close`. `mm-core`:
+  `Toxicity_gate`, `Reference_guard`, `Params.toxicity_gate` and `Params.reference_guard`
+  (absent by default), three non-sticky `Risk.Reason` constructors and `Strategy.Event`;
+  `mm-core-replay` adds `Toxicity_input` over market-data's VPIN. No new dependency edge.
+  See [market-data](repos/market-data.md) and [mm-core](repos/mm-core.md).
 - `leader-scoring`: new repository with two packages, `leader-scoring` (venue-neutral track
   records, metrics, composite and learned scores, copy capacity, alerts; new edge to
   `market-data`) and `leader-scoring-hl` (read-only Hyperliquid source and the
