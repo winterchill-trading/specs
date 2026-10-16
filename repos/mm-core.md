@@ -23,11 +23,13 @@ any venue implementing it.
 | `Inventory` | Position, average entry, realized and unrealized PnL, fees |
 | `Quote`, `Quoter` | Desired orders; `quote : Params.t -> Market_state.t -> Inventory.t -> Quote.t list`; `quote_with_reasons` (typed `Unquoted.t` per empty side); `For_testing.explain` |
 | `Action`, `Reconciler` | `Keep`/`Cancel`/`Place`; minimal plan from resting orders, deterministic client ids |
-| `Risk` | Kill switch, one second `Action_rate` window, flatten plan |
+| `Risk` | Kill switch, one second `Action_rate` window, flatten plan; non-sticky pull reasons `Reference_divergence`, `Reference_missing`, `Toxic_flow` |
+| `Toxicity_gate` | Pure decision from a toxicity signal (a percentile in `[0, 1]`) and the signed flow imbalance: `Normal`, `Widen` (wider half-spread, reservation shift towards the flow, smaller size, linear between the thresholds) or `Pull`; stale signals count as none |
+| `Reference_guard` | Plausibility of the venue mid against an independent reference mid: `Diverged` (pull) after `grace_ms` outside `band_bps`, at once after a reference jump over `max_jump_bps`; `Reference_missing` (pull) or `Unchecked` without a fresh reference; typed events |
 | `Latency_histogram` | Count, p50, p99 at two significant digits, exact max |
-| `Strategy` | State machine: `on_book`, `on_fill`, `on_open_orders`, `on_account`, `tick ~now` |
+| `Strategy` | State machine: `on_book`, `on_fill`, `on_open_orders`, `on_account`, `on_reference`, `on_toxicity`, `tick ~now`, `tick_with_events`, `events_between` |
 | `Venue` | `module type S`, the Async venue client contract |
-| `Live` | `Make (V : Venue.S)`: feeds, polls, sequenced plan execution, shutdown, `Report` with `tick_to_order` latency and `gc` counts (minor and major collections, heap words), `stop_signal`; optional `?time_source` |
+| `Live` | `Make (V : Venue.S)`: feeds, polls, sequenced plan execution, shutdown, `Report` with `tick_to_order` latency and `gc` counts (minor and major collections, heap words), `stop_signal`; optional `?time_source`; `on_reference`, `on_toxicity` and `on_strategy_event` for the plausibility checks |
 
 New parameters, defaulting when absent from a sexp: `max_actions_per_sec` (100; more
 cancels and places in the last second trip the kill switch), `soft_max_position` and
@@ -51,6 +53,17 @@ an action-rate halt only. Position and drawdown halts stay permanent. `Live.on_r
 ~f` runs `f` on every venue reconnect after the loop's own grace period starts, and
 `?on_venue` on `connect_and_start` and `connect_and_run` attaches observers to the venue
 before the loop starts.
+
+Plausibility checks (both optional parameters, absent from a sexp by default):
+`reference_guard` pulls quotes while the venue mid stays outside a band around a reference
+mid fed with `on_reference` (data that is fresh but wrong, next to the age check on data
+that stopped); `toxicity_gate` widens, skews and shrinks quotes, then pulls them, as a
+toxicity signal fed with `on_toxicity` rises. Both run after the risk checks and only
+pull. mm-core does not depend on market-data: `mm-core-replay`'s `Toxicity_input` turns
+market-data's VPIN buckets into the signal. `Quoter` takes an optional `?shift_bps`
+reservation shift for the gate's skew. An idle tick allocates nothing with both
+configured (79 ns against 67 ns without, dev profile); a requote is 3061 words (3050
+before the strategy record grew).
 
 ## Tests and benchmarks
 
@@ -97,3 +110,8 @@ See [design/market-making.md](../design/market-making.md).
 - The position is not flattened on exit; `stop` only cancels resting orders.
 - One symbol per `Live.Make` run.
 - Venue calls have no timeout in mm-core; a venue that never answers blocks the loop and `stop`.
+- No producer is wired in `market-maker` yet: the guard needs a reference feed (another
+  venue's mid or a price-anchor mark) and the gate a `Toxicity_feed` per symbol.
+  `market-maker`'s params-file field list does not include the two new fields.
+- The toxicity percentile relaxes under one-sided flow that lasts; a sustained toxic
+  regime needs a threshold on VPIN itself.
