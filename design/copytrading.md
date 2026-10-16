@@ -292,6 +292,20 @@ per-parent cost reports to Parquet, checked with DuckDB. On a 17-minute hl-sim r
 scaled leader on average; `passive` pays a third of the fees but lags by 3 to 13% of
 equity.
 
+Status (2026-10-16): copy-backtest scores runs with
+[backtest-stats](../repos/backtest-stats.md): a report per run (probabilistic Sharpe
+ratio, deflated Sharpe ratio with the sweep's configurations as trials) and one for the
+configuration a sweep picks (probability of backtest overfitting across the parameter
+grid, reality check and SPA against the leader), in `stats.parquet` and `summary.md`;
+`-gate POLICY.sexp` fails the run when the policy rejects it. On the 17-minute recording
+the trend and mean-reversion leaders' picks pass with DSR 0.99 and PBO at most 0.04; the
+random leader's pick has PBO 0.71 and SPA p 0.06. `copy-backtest attribute` compares a
+live engine journal with the backtest of the same leader and window and splits the
+return gap into fees, slippage against arrival, timing (leader fill to arrival), partial
+fills, funding and a residual; on a 180 s hl-sim run recorded while the engine copied,
+live trailed the backtest by 1.18 bps, fees agreed within 0.12 USD and the residual was
+0.09 bps.
+
 ## Mirroring model
 
 The engine copies positions, not orders. A leader's resting orders, cancels and
@@ -358,6 +372,28 @@ reject pauses the follow. On hl-sim with strict signatures the follower ends wit
 lot of its capped target after every leader change, and the leader-fill-to-order lag is 1
 to 3 ms locally. The retry backoff and the "N cycles behind" alert are not implemented;
 the follower retries on the next leader update or resync.
+
+### No-trade band
+
+Mirroring every leader change above the minimum order makes small followers pay fees on
+leader noise. A follow may carry a band (`Hl_copy_core.No_trade_band`, off by default):
+the mirror rebalances a symbol only when the gap between the follower's position (plus
+in-flight orders) and its target is outside a no-trade region with closed-form band
+edges under proportional and quadratic costs. The half-width is `c E / (gamma s^2)` in
+USD notional, from the one-way cost `c` (the taker fee plus an expected slippage: fixed,
+or estimated by the engine from the book with execution-algos' `Impact`), the follower's
+equity `E`, a risk aversion `gamma` and the symbol's volatility `s` over the time a gap
+stays open. Outside the band the follower trades to the near edge, or part of the way
+past it under quadratic costs; a leader close is always copied in full. A rebalance held
+back is a `Within_band` note in the plan, journaled, counted in the metrics and listed in
+`/status`.
+
+Status (2026-10-16): in hl-copy-core (`Follower_config.Stable.V3`, `Plan.Stable.V2`),
+hl-copy-engine (journal entries version 3) and copy-backtest (`-band`, `-bands`). An
+empty band plans exactly what no band plans (quickcheck). On hl-sim with a 1,000,000 USD
+follower the default band (half-width 5.3% of equity) cut the orders from 9 to 7 and the
+fees from 100.77 to 79.75 USD over 60 s; in the 17-minute backtests it held back 14 to 28
+rebalances per run and cut 2 to 7% of the fees for about 500 bps more mean gap.
 
 ## Execution algorithms
 
