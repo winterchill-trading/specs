@@ -36,7 +36,9 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Copy trading | [hl-copy-core](repos/hl-copy-core.md) | Pure mirroring, scaling, caps and leader scoring; `hl-copy-backtest` replays recorded leaders | done |
 | Copy trading | [hl-leaderboard](repos/hl-leaderboard.md) | Leader collection, scoring and `/leaders` JSON | done |
 | Copy trading | [leader-scoring](repos/leader-scoring.md) | Track records, metrics, composite and learned scores, copy capacity and alerts; read-only Hyperliquid source | done |
-| Copy trading | [hl-copy-engine](repos/hl-copy-engine.md) | Mirrors leaders into follower accounts with agent keys | done |
+| Copy trading | [hl-copy-engine](repos/hl-copy-engine.md) | Mirrors leaders into follower accounts with agent keys, executing with the follow's algorithm | done |
+| Copy trading | [execution-algos](repos/execution-algos.md) | Child-order schedulers (TWAP, VWAP, POV, passive, adaptive copy), impact estimates, cost reports, paper venue | done |
+| Copy trading | [copy-backtest](repos/copy-backtest.md) | Recorded markets and leader fills through the mirror and the algorithms; Parquet results checked with DuckDB | done |
 | Copy trading | [hl-copy-api](repos/hl-copy-api.md), [hl-copy-web](repos/hl-copy-web.md) | Wallet login, agent approval and follows; Bonsai frontend | in progress |
 | Data platform | [parquet](repos/parquet.md) | Pure OCaml Parquet writer | done |
 | Data platform | [market-data](repos/market-data.md) | Normalized types, event logs, Parquet sink, day close, DuckDB views, replay | done |
@@ -141,6 +143,8 @@ graph LR
     leaderboard["hl-leaderboard"]
     leader_scoring["leader-scoring"]
     copy_engine["hl-copy-engine"]
+    exec_algos["execution-algos"]
+    copy_bt["copy-backtest"]
     copy_api["hl-copy-api"]
     copy_web["hl-copy-web"]
   end
@@ -354,6 +358,14 @@ graph LR
   copy_engine --> hl_client
   copy_engine --> copy_core
   copy_engine --> market_data
+  copy_engine --> exec_algos
+  exec_algos --> market_data
+  exec_algos --> exchange_core
+  copy_bt --> copy_core
+  copy_bt --> exec_algos
+  copy_bt --> market_data
+  copy_bt --> parquet
+  copy_bt --> hl_protocol
   copy_api --> copy_core
   copy_api --> hl_client
   copy_api --> copy_web
