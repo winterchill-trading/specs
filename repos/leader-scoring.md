@@ -4,7 +4,9 @@ Scores traders for the [copy-trading platform](../design/copytrading.md): rebuil
 record (round-trip trades and an equity curve) from a trader's fills, funding and account
 snapshots, computes 34 documented metrics, ranks a universe with a transparent weighted
 percentile score and a learned 30-day forecast, estimates a follower's copy cost and
-capacity from order-book depth, and raises behaviour alerts. The core is venue neutral;
+capacity from order-book depth, raises behaviour alerts, tests whether a ranking persists
+(against random picks), computes selection-bias statistics, and flags manipulated or
+uncopyable leaders. The core is venue neutral;
 the Hyperliquid source is read only.
 
 | | |
@@ -12,9 +14,9 @@ the Hyperliquid source is read only.
 | Repository | `winterchill-trading/leader-scoring` |
 | opam packages | `leader-scoring` (venue neutral), `leader-scoring-hl` (Hyperliquid source and CLI) |
 | Libraries | `leader-scoring` (module `Leader_scoring`), `leader-scoring-hl` (module `Leader_scoring_hl`) |
-| Binary | `leader-scoring` (`record`, `score`, `portfolios`, `dataset`, `metrics`) |
+| Binary | `leader-scoring` (`record`, `score`, `portfolios`, `dataset`, `metrics`, `persistence`) |
 | Python | `python/` (`train.py`, run with `uv`): walk-forward evaluation, fit, export |
-| Status | done (2026-10-16): library, Hyperliquid source, model, bench; used by hl-leaderboard |
+| Status | done (2026-10-16): library, Hyperliquid source, model, bench, persistence, selection statistics, integrity; used by hl-leaderboard |
 
 ## Key modules
 
@@ -28,7 +30,10 @@ the Hyperliquid source is read only.
 | `Copyability` | Follower order cost from walking book depth (binary search over running totals), capacity by bisection on log size |
 | `Alerts` | Drawdown breach, leverage spike, style drift, frequency change, liquidation; `scan` replays them along a record |
 | `Synthetic`, `Dataset`, `Model` | Synthetic leaders with a drifting edge, training rows with the forward label, the exported gradient-boosted model (embedded as `Model.bundled`) |
-| `Report` | Everything a leader page shows, and its JSON |
+| `Persistence` | Rank correlation of window `k` against `k + 1` with a bootstrap interval, quintile transitions, decay over horizons, top-K against random picks; `persistent` when the interval is above zero and the top K beat 95% of random draws |
+| `Leader_stats` | backtest-stats `Report` per leader (PSR, DSR with the leaders as trials, minimum track record) and PBO, SPA and the reality check over a common window |
+| `Integrity` | Typed flags with evidence: self and wash trades, counterparties among watched accounts, co-trading clusters (chance from circular time shifts), front-running of a trade flow, creation bursts, off-book fills; `Policy` decides exclusion |
+| `Report` | Everything a leader page shows, and its JSON; `analyse` adds the universe checks, `rank` leaves excluded leaders unranked |
 | `Leader_scoring_hl.Hl_source`, `Raw`, `Hl_decode`, `Hl_market` | `/info` requests only (`userFillsByTime`, `userFunding`, `clearinghouseState`, `portfolio`, `l2Book`, `metaAndAssetCtxs`), recordings, decoders |
 
 ## Formats
@@ -77,12 +82,13 @@ market-data, hl-protocol, venue-net, hl-client, then build, test and the odoc bu
 
 ## Dependencies
 
-- Depends on: [market-data](market-data.md) (core package);
+- Depends on: [market-data](market-data.md) and [backtest-stats](backtest-stats.md) (core package);
   [hl-client](hl-client.md) and [hl-protocol](hl-protocol.md) (the `-hl` package).
 - Used by: [hl-leaderboard](hl-leaderboard.md) (`Scoring`), and through it
   [hl-copy-api](hl-copy-api.md) and [hl-copy-web](hl-copy-web.md). Repositories that build
-  hl-leaderboard in CI pin `leader-scoring` and `leader-scoring-hl` before it
-  ([hl-copy-api](hl-copy-api.md), the backtest job of [hl-copy-core](hl-copy-core.md)).
+  hl-leaderboard in CI pin `backtest-stats`, `leader-scoring` and `leader-scoring-hl`
+  before it ([hl-copy-api](hl-copy-api.md), the backtest job of
+  [hl-copy-core](hl-copy-core.md), which still needs the `backtest-stats` pin).
 - External: `core`, `async`, `yojson`, `core_bench` (tests); Python `numpy`,
   `scikit-learn` 1.9.1 and `scipy` for training only.
 
@@ -94,3 +100,8 @@ market-data, hl-protocol, venue-net, hl-client, then build, test and the odoc bu
 - Annualized figures from minute bars (simulator runs) are only comparable among records
   with the same bar.
 - The alert scan is the slow part of a report on long histories.
+- Persistence on the 287 mainnet all-time curves (13-week windows of weekly bars): rank
+  correlation 0.05 [-0.03, 0.12], top 10 at the 48th percentile of random picks: no
+  ranking tried persists. The sample is itself selected by past pnl.
+- Front-running needs a trade flow nobody collects yet; Hyperliquid publishes no account
+  creation time (the portfolio curve's first point stands in).
