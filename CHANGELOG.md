@@ -10,6 +10,16 @@ belong here.
 
 ## 2026-10-16
 
+- `hl-copy-core`: `No_trade_band`, an optional per-follow no-trade band;
+  `Follower_config.Stable.V3` (`band`, left out of files when unset), `Plan.Stable.V2`
+  (`Within_band` note), `Mirror.Config.Stable.V2` and `Mirror.Stable.V2`.
+  `hl-copy-engine`: journal entries version 3 (`<date>.v3.journal`; versions 1 and 2
+  still read), band metrics and `/status`. `copy-backtest`: `Stats` (backtest-stats
+  reports, `-gate`), `Attribution` and the `attribute` subcommand reading engine
+  journals; new edges to `backtest-stats` and `hl-copy-engine`; `stats.parquet`,
+  `reports.json` and `summary.md` in `-out`. See [hl-copy-core](repos/hl-copy-core.md),
+  [hl-copy-engine](repos/hl-copy-engine.md), [copy-backtest](repos/copy-backtest.md) and
+  [design/copytrading.md](design/copytrading.md#no-trade-band).
 - `exchange-core`: `Price_collar`, `Halt_rule` and `Guard_event` in `exchange-core-engine`;
   `Exchange.set_collar`, `set_halt_rule`, `set_session_reference`, `reopen`,
   `drain_guard_events`; four `Input` constructors appended to the journal encoding. No new
