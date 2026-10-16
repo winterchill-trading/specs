@@ -21,7 +21,7 @@ without the web stack.
 
 | Request | Body | Reply |
 | --- | --- | --- |
-| `GET /leaders` | | `Leaders_response` (`Leader` rows with `Score_breakdown` and `Window_pnl`) |
+| `GET /leaders` | | `Leaders_response` (`Leader` rows with `Score_breakdown`, `Window_pnl` and an optional `Scoring.Summary`) |
 | `GET /leaders/<address>` | | `Leader_detail` (equity curve, fills, positions) |
 | `POST /auth/challenge` | `Auth.Challenge_request` | `Auth.Challenge` |
 | `POST /auth/verify` | `Auth.Verify_request` (`address`, `nonce`, `signature`) | `Auth.Session` |
@@ -47,7 +47,7 @@ unknown fields and optional fields accept `null`. `Approve_agent.typed_data` and
 | Route | Content |
 | --- | --- |
 | `#/leaders` | Ranked table with every score component, sort by any column, filter by text, minimum score, maximum drawdown, minimum trades |
-| `#/leader/<address>` | Headline figures, window pnl, SVG equity curve, positions, recent fills |
+| `#/leader/<address>` | Headline figures, window pnl, SVG equity curve, positions, recent fills; with a [leader-scoring](leader-scoring.md) report also the composite score and its components, the 30-day forecast, 34 metrics, the capacity curve (SVG, log size axis) and alerts |
 | `#/follow/<address>` | Scale mode, caps and allowlist with validation; when the agent is missing or expired, the `approveAgent` (and optional `approveBuilderFee`) typed data shown in full before the wallet signs |
 | `#/dashboard` | Account, agent status, one card per follow with pnl, positions, pause, resume, stop |
 | `#/login` | `eth_requestAccounts`, then `personal_sign` of the challenge |
