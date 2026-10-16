@@ -58,7 +58,7 @@ with an untracked `dune-workspace`, so dune resolves siblings by public name.
 | Banking libraries | [risk-models](repos/risk-models.md) | Machine-learned scores behind `risk-rules`' `Model.S`; trained offline, scored in OCaml | done |
 | Banking libraries | [transaction-monitoring](repos/transaction-monitoring.md) | Real-time AML monitoring: rolling customer and counterparty profiles, eleven typology rules, a GBDT score, Allow/Hold/Block decisions, alerts with a case lifecycle; memory and PostgreSQL stores | done |
 | Banking libraries | [kyc-core](repos/kyc-core.md) | Customer due diligence: verification tiers, risk rating, screening, monitoring, retention, audit trail; standalone | done |
-| Banking libraries | [sanctions-screening](repos/sanctions-screening.md) | Name screening against OFAC, EU and UK sanctions lists: parsers, normalisation across scripts, explainable fuzzy matching, index, rescreening, cases; PostgreSQL store package | done |
+| Banking libraries | [sanctions-screening](repos/sanctions-screening.md) | Name screening against OFAC, EU and UK (UK Sanctions List and archived OFSI) sanctions lists: parsers, normalisation across scripts, explainable fuzzy matching, index, rescreening, cases; PostgreSQL store package | done |
 | Banking libraries | [payments-core](repos/payments-core.md) | Payment rails and transfer state machines (SEPA, on-chain, Lightning, intraledger), SCA, standing orders, swaps, reconciliation | done |
 | Banking libraries | [card-core](repos/card-core.md) | Card lifecycle, authorization decision, clearing and settlement, disputes, statements | done |
 | Banking libraries | [banking-provider](repos/banking-provider.md) | `Provider` interface over the domain libraries and a deterministic fake provider for the neobank demo | done |
@@ -297,6 +297,7 @@ graph LR
   transaction_monitoring --> money
   transaction_monitoring --> ledger
   transaction_monitoring --> pg_async
+  transaction_monitoring -.-> sanctions_screening
   banking_provider --> money
   banking_provider --> ledger
   banking_provider --> kyc_core
