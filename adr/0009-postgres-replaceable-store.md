@@ -43,6 +43,13 @@ The options considered for the application store were:
    module builds a query string.
 4. **One schema per service.** Each service owns a PostgreSQL schema (or a database) and its
    migrations. A service never reads another service's tables.
+   Amended 2026-10-16: "owns" includes the migrations bookkeeping. A library with a
+   PostgreSQL store creates its schema itself (name configurable, a default named after
+   the library), runs its migrations with the schema as `search_path` and keeps its own
+   `schema_migrations` table inside it. Nothing goes into `public` or the connection's
+   default search path: the host application and other libraries keep their own
+   migrations tables there, often at the same version numbers (sanctions-screening and
+   transaction-monitoring both started at version 1 in one shared table and clashed).
 5. **No cross-service joins.** A service that needs another's data calls its API or
    consumes its events.
 6. **Idempotency keys on every write that money or a provider depends on.** A retried request
