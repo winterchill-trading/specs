@@ -8,7 +8,7 @@ Binance USD-M Futures simulator: REST under `/fapi`, market streams on `/ws` and
 | Repository | `winterchill-trading/binance-sim` |
 | opam packages | `binance-sim` (library), `binance-sim-anchor` (anchor library and binary) |
 | Libraries | `binance-sim` (module `Binance_sim`), `binance-sim-anchor` (module `Binance_sim_anchor`) |
-| Binary | `binance-sim` (`-port` 3300, `-seed`, `-vol-bps`, `-symbols`, `-noise-traders`, `-initial-balance`, `-log-level`; `-anchor VENUE:SYMBOL=SIM` (repeatable), `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from T -anchor-to T`, `-anchor-speed X`) |
+| Binary | `binance-sim` (`-port` 3300, `-seed`, `-vol-bps`, `-symbols`, `-noise-traders`, `-initial-balance`, `-log-level`; `-anchor VENUE:SYMBOL=SIM` (repeatable), `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from T -anchor-to T`, `-anchor-speed X`; guards, off by default: `-collar-bps N` / `-collar-ticks N`, `-collar-reference last|mid|mark`, `-collar-action reject|reprice`, `-halt-levels PCT:DURATION,...`, `-halt-scope market|symbol`) |
 | Status | done |
 
 ## Key modules
@@ -19,8 +19,12 @@ Binance USD-M Futures simulator: REST under `/fapi`, market streams on `/ws` and
   state behind `ORDER_TRADE_UPDATE`.
 - `Params`: query-string and form parameters to typed requests, with Binance's
   parameter errors.
+- `Guard`: the price collar and halt rule flags, set through the engine's recorded calls;
+  the `GET /sim/guard` status; tells a collar rejection from a tick error by the engine's
+  `collar_rejected` counter.
 - `Server`: cohttp-async server, depth sequencing (`U`/`u`/`pu`), listen keys, market
-  simulation timer; clock step hooks, extra `GET` routes and websocket `pushback`.
+  simulation timer; clock step hooks, extra `GET` routes and websocket `pushback`;
+  drains the guard log after every mutation, `GET /sim/guard`, `POST /sim/reopen`.
 - `Binance_sim_anchor.Spec`, `Reference`, `Anchored`: the `-anchor` flags, live
   (`binance-client` `Live_feed`), raw (`Raw_normalizer`) and norm sources, one
   `Price_anchor.Anchor.t` per flag stepped by the server clock, `GET /sim/anchor`.
@@ -50,6 +54,16 @@ previous one. The `X-MBX-APIKEY` header
 is the account; signed endpoints need the header and a `timestamp`; `signature` and
 `recvWindow` are accepted and ignored. Fees are taker 5 bps, maker 2 bps; funding every
 8 hours at 0.01%.
+
+Price collar and halts are off unless their flags are given (collar reference: last
+trade, or the mark when anchored). A buy beyond the collar gets
+`-4016 Limit price can't be higher than <bound>.`, a sell
+`-4024 Limit price can't be lower than <bound>.` (Binance's PERCENT_PRICE errors); an
+off-tick price stays `-4014`. A halt rejection gets `-2010 Trading is halted.` (simulator
+choice; Binance publishes no USD-M halt code). With a bps collar, `exchangeInfo`'s
+`PERCENT_PRICE` multipliers show the band. `GET /sim/guard` (camelCase counters
+`collarRejected`, ...) and `POST /sim/reopen` (`?symbol=`) are simulator endpoints.
+`scripts/collar-e2e.sh` runs `market-maker` against a 50 bps collar.
 
 ## Known gaps
 
