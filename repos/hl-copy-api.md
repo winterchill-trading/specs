@@ -22,8 +22,8 @@ the server refuses any exchange URL under `hyperliquid.xyz` and builds approvals
 | `POST /auth/challenge`, `POST /auth/verify` | Sign-In with Ethereum style message with a single-use five-minute nonce (in memory); EIP-191 recovery; stateless session token `<address>.<issued_ms>.<expires_ms>.<HMAC-SHA256>` |
 | `POST /agent/new`, `POST /agent/approved`, `POST /agent/revoke` | Fresh secp256k1 key per offer, in memory until approved, then sealed into the `agents` table (revoke deletes the row and its key file); `approveAgent` for the named agent `hl-copy valid_until <ms>` (179 days) with its EIP-712 typed data; the signed action must match the pending offer (only `signatureChainId` may change) and recover to the session's wallet before it is posted |
 | `POST /builder-fee` | The wallet's `approveBuilderFee` for the configured builder |
-| `POST /follows`, `GET`/`PATCH`/`DELETE /follows/:id`, `POST /follows/:id/pause`, `/resume`, `/stop` | Follow records in the `follows` table plus `Follower_config` files the engine watches; needs an approved agent |
-| `GET /leaders`, `GET /leaders/:address` | `hl-leaderboard serve` over HTTP, reshaped into `Api_types`, cached 10 s; each leader carries the [leader-scoring](leader-scoring.md) summary, and the list follows the composite score when every leader has one; the detail carries the leader-scoring report |
+| `POST /follows`, `GET`/`PATCH`/`DELETE /follows/:id`, `POST /follows/:id/pause`, `/resume`, `/stop` | Follow records in the `follows` table plus `Follower_config` files the engine watches; needs an approved agent. `algo` (execution-algos' short form, validated by execution-algos, column `algo` from migration 0002) goes into the config; follows return `algo` and the engine's cost report as `execution`, both left out when absent |
+| `GET /leaders`, `GET /leaders/:address` | `hl-leaderboard serve` over HTTP, reshaped into `Api_types`, cached 10 s; each leader carries the [leader-scoring](leader-scoring.md) summary, and the list follows the composite score when every leader has one; the detail carries the leader-scoring report, with persistence, selection statistics and integrity flags; the list carries the universe checks as `universe` |
 | `GET /me`, `GET /ws?token=` | Account value from `clearinghouseState`, per-follow pnl and positions from the engine's `/status` (decoded leniently); the websocket pushes `Api_types.Ws_push` frames: `me`, `follow` changes and the account's fills (`Hl_client.User_feed`) |
 | `GET /healthz`, `GET /metrics` | Health and Prometheus metrics (requests by route pattern, method and status) |
 
@@ -76,7 +76,7 @@ hl-leaderboard and hl-copy-web into one dune workspace and runs it.
 
 ## Dependencies
 
-- Depends on: `hl-copy-core`, `hl-client`, `hl-protocol`, `hl-copy-api-types` (from the
+- Depends on: `hl-copy-core`, `execution-algos`, `hl-client`, `hl-protocol`, `hl-copy-api-types` (from the
   `hl-copy-web` repository), `market-data`, `pg-async`; `cryptokit`, `cohttp-async`,
   `async_websocket`.
 - Test-only: `hl-sim`, `hl-leaderboard`, `exchange-core-engine`, `venue-net`.
@@ -86,7 +86,7 @@ hl-leaderboard and hl-copy-web into one dune workspace and runs it.
 ## CI pin order
 
 `fixed-decimal`, `exchange-core`, `order-book`, `exchange-core-engine`, `hl-protocol`,
-`parquet`, `pg-async`, `market-data`, `price-anchor`, `venue-net`, `hl-client`, `binance-protocol`,
+`parquet`, `pg-async`, `market-data`, `backtest-stats`, `price-anchor`, `execution-algos`, `venue-net`, `hl-client`, `binance-protocol`,
 `mm-core`, `binance-client`, `hl-sim`, `hl-copy-core`, `leader-scoring`,
 `leader-scoring-hl`, `hl-leaderboard`,
 `hl-copy-api-types` (the `hl-copy-web` repository, that package only).
