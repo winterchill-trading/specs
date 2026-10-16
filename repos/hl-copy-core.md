@@ -44,15 +44,15 @@ point the wrong way or overshoot are cancelled. A duplicated leader update plans
 new, a replayed journal gives the same plans and client order ids
 (`Cloid.create ~follower ~seq`), and after every order fills a rebalance plans nothing;
 the three are quickcheck properties in `test/test_mirror.ml`. Only symbols the leader
-has held are traded.
+has held are traded. The daily loss cap flattens the follower until `start_day`; the
+other caps only limit growth.
 
 With a band in the config the capped target goes through `No_trade_band.decide` against
 the position plus in-flight orders: a no-trade region with closed-form band edges under
 proportional costs (trade to the near edge) and a quadratic-cost variant (trade part of
 the way past it). Quickcheck: an empty band (zero cost, no quadratic term) plans exactly
 what no band plans on random leader paths, the half-width is monotone in cost, replays
-and duplicated updates behave as without a band. Off by default. The daily loss cap flattens the follower until `start_day`; the
-other caps only limit growth.
+and duplicated updates behave as without a band. Off by default.
 
 `bench/main.exe` (one leader update, M-series laptop): 186 ns and 89 words with one
 symbol, 1.3 us with 20, 7.3 us with 100 when the plan is empty; placing an order adds
