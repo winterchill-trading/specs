@@ -22,17 +22,19 @@ files the API writes and the engine reads.
 | `Scale` | `Mode.t = Equity_ratio \| Multiplier of float \| Fixed_notional of Usd.t`; `target_size ~leader_size ~leader_equity ~follower_equity ~mark ~mode` |
 | `Caps` | `max_leverage`, `max_notional_per_symbol`, `max_daily_loss`, `allowlist`, `min_order_notional`; `clamp`, `order` and `apply` return the capped target, the lot-rounded order and a `Reason.t` per clamp |
 | `Rounding` | `Spec.t` (lot, tick, significant figures), `Spec.hyperliquid_perp ~sz_decimals`, `Spec.of_asset_meta`; sizes toward zero to the lot, `delta` drops orders under one lot, `ioc_limit` rounds toward the reference price |
-| `Plan` | `{ actions; notes }`: `Place` of an IOC `Order.t` (cloid, symbol, side, size, limit, reduce-only) or `Cancel`, and notes (`Capped`, `No_mark`, `No_spec`, `No_leader_equity`) |
-| `Mirror` | Per-follower state; `on_leader_position_change`, `on_follower_fill`, `on_order_closed`, `on_resync ~leader_state ~follower_state ~marks`, `rebalance`, `start_day`; `Event.t` and `apply` for journals |
+| `Plan` | `{ actions; notes }`: `Place` of an IOC `Order.t` (cloid, symbol, side, size, limit, reduce-only) or `Cancel`, and notes (`Capped`, `No_mark`, `No_spec`, `No_leader_equity`, and in `Stable.V2` `Within_band` with the gap, the band's half-width and the cost saved) |
+| `No_trade_band` | A follow's no-trade band: `cost_bps` (fee plus a fixed slippage, or an `Impact` estimate set per symbol with `Mirror.on_slippage_estimate`), closed-form `half_width = c E / (gamma s^2)`, `step_fraction` (1 for proportional costs, `gamma s^2 / (gamma s^2 + 2 eta)` for quadratic), `decide` (trade to the target, the band edge or part of the way, or `Skip`; a leader close always trades) |
+| `Mirror` | Per-follower state; `on_leader_position_change`, `on_follower_fill`, `on_order_closed`, `on_resync ~leader_state ~follower_state ~marks`, `rebalance`, `start_day`, `on_slippage_estimate`; `Event.t` and `apply` for journals; `Config.Stable.V2` and `Stable.V2` carry the optional band |
 | `Score` | Leader score from fills and an equity curve: pnl, return, maximum drawdown, win rate and average hold over round trips, trade count, consistency across windows |
 | `Pnl` | Follower pnl per leader with average-entry books; `on_fill ~leader`, `summary ~marks` |
-| `Follower_config` | One follow (follower, leader, mode, caps, slippage, paused, execution algo) as a sexp file, validated; `mirror_config ~specs` builds `Mirror.Config.t`; `Stable.V2` adds `algo` (left out of the file when `Immediate`, so older files read unchanged), `Stable.V1` kept for old journals |
+| `Follower_config` | One follow (follower, leader, mode, caps, slippage, paused, execution algo, no-trade band) as a sexp file, validated; `mirror_config ~specs` builds `Mirror.Config.t`; `Stable.V2` adds `algo` (left out of the file when `Immediate`, so older files read unchanged), `Stable.V3` the optional `band` (left out when unset), `Stable.V1` and `V2` kept for old journals |
 | `Exec_algo` | The execution algorithm of a follow: the constructors, sexp and bin_prot shape of [execution-algos](execution-algos.md)' `Algo`, kept here so this library does not depend on it |
 | `Key_store` | Agent keys at rest: `<state_dir>/agents/<account>.key` (mode 0600, sexp of agent address, name, created, valid until, ciphertext, nonce, tag), sealed under `HL_COPY_MASTER_KEY` with ChaCha20 and HMAC-SHA256 (encrypt-then-MAC; cryptokit 1.16 has no AEAD, TODO); `create ~state_dir`, `put`, `find`, `get ~account` (decrypted key as hex), `list`, `revoke` |
 | `Fill`, `Usd`, `Cloid`, `Address` | Shared fill record and binable wrappers of the `hl-protocol` and `exchange-core` types |
 
-Persisted types have a `Stable.V1` (a `Stable.V2` for `Follower_config`) deriving `sexp`
-and `bin_io`, for journals and config files. The formulas are in the repository README.
+Persisted types have a `Stable.V1` (`Stable.V2` for `Plan`, `Mirror` and its config,
+`Stable.V3` for `Follower_config`) deriving `sexp` and `bin_io`, for journals and config
+files. The formulas are in the repository README.
 
 ## Mirroring
 
@@ -42,7 +44,14 @@ point the wrong way or overshoot are cancelled. A duplicated leader update plans
 new, a replayed journal gives the same plans and client order ids
 (`Cloid.create ~follower ~seq`), and after every order fills a rebalance plans nothing;
 the three are quickcheck properties in `test/test_mirror.ml`. Only symbols the leader
-has held are traded. The daily loss cap flattens the follower until `start_day`; the
+has held are traded.
+
+With a band in the config the capped target goes through `No_trade_band.decide` against
+the position plus in-flight orders: a no-trade region with closed-form band edges under
+proportional costs (trade to the near edge) and a quadratic-cost variant (trade part of
+the way past it). Quickcheck: an empty band (zero cost, no quadratic term) plans exactly
+what no band plans on random leader paths, the half-width is monotone in cost, replays
+and duplicated updates behave as without a band. Off by default. The daily loss cap flattens the follower until `start_day`; the
 other caps only limit growth.
 
 `bench/main.exe` (one leader update, M-series laptop): 186 ns and 89 words with one
