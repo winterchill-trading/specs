@@ -8,7 +8,7 @@ public API over `exchange-core-engine`, with the engine's market simulation.
 | Repository | `winterchill-trading/hl-sim` |
 | opam package | `hl-sim` |
 | Library | `hl-sim` (module `Hl_sim`) |
-| Binary | `hl-sim` (`-port` 3000, `-seed`, `-vol-bps`, `-coins`, `-noise-traders`, `-initial-balance`, `-response-delay-ms`, `-journal`, `-input-journal`, `-log-level`; price anchor: `-anchor VENUE:SYMBOL=COIN` (repeatable), `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from`, `-anchor-to`, `-anchor-speed`, `-anchor-base-url`, `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-status-interval-s`; copy trading: `-leaders N`, `-leaders-seed`, `-leader-balance`, `-leader-edge-s` 60, `-strict-signatures`, `-mainnet-signatures`; `-taker-fee-bps` 4.5, `-maker-fee-bps` 1.5, `-l2-interval-ms` 500) |
+| Binary | `hl-sim` (`-port` 3000, `-seed`, `-vol-bps`, `-coins`, `-noise-traders`, `-initial-balance`, `-response-delay-ms`, `-journal`, `-input-journal`, `-log-level`; price anchor: `-anchor VENUE:SYMBOL=COIN` (repeatable), `-anchor-raw DIR` / `-anchor-norm DIR` with `-anchor-from`, `-anchor-to`, `-anchor-speed`, `-anchor-base-url`, `-anchor-levels`, `-anchor-mark-interval-ms`, `-anchor-max-staleness-ms`, `-anchor-noise`, `-anchor-price-factor`, `-anchor-size-factor`, `-anchor-status-interval-s`; copy trading: `-leaders N`, `-leaders-seed`, `-leader-balance`, `-leader-edge-s` 60, `-strict-signatures`, `-mainnet-signatures`; `-taker-fee-bps` 4.5, `-maker-fee-bps` 1.5, `-l2-interval-ms` 500; guards, off by default: `-collar-bps N` / `-collar-ticks N`, `-collar-reference last|mid|mark`, `-collar-action reject|reprice`, `-halt-levels PCT:DURATION,...`, `-halt-scope market|symbol`) |
 | Status | done |
 
 ## Key modules
@@ -49,7 +49,10 @@ public API over `exchange-core-engine`, with the engine's market simulation.
   reference price seen ahead of the market and end positive after fees; random ones lose.
 - `Foresight`: the leaders' edge. Draws the market simulation's reference walk
   `-leader-edge-s` ahead and pins the market to its current point (not on anchored coins).
-- `Server`: cohttp-async server for `POST /info`, `POST /exchange`, `GET /status` and the `/ws`
+- `Guard`: the price collar and halt rule flags, set on the engine through recorded calls
+  (`set_collar` on every coin, `set_halt_rule`); the `guard` status JSON; tells a collar
+  rejection from a tick error by the engine's `collar_rejected` counter.
+- `Server`: cohttp-async server for `POST /info`, `POST /exchange`, `GET /status`, `POST /sim/reopen` and the `/ws`
   websocket on the same port; owns the engine and its timers. `-response-delay-ms`
   delays every `/exchange` response while the order and its websocket events take effect
   at once, for double-placement tests. Each connection may queue at most 10,000 messages
@@ -83,6 +86,16 @@ connection, leaders) is described in the hl-sim README; the parity with Hyperliq
 tracked in [research/hl-sim-parity.md](../research/hl-sim-parity.md). The JSON journal
 records approvals and extra actions too, and the engine input journal replays runs with
 leaders and builder fees bit for bit.
+
+Price collar and halts (exchange-core `Price_collar`, `Halt_rule`) are off unless their
+flags are given. The collar's reference defaults to the last trade, or the mark when a
+coin is anchored. A collar rejection answers Hyperliquid's oracle error
+(`Order price cannot be more than P% away from the reference price asset=N`, `orderUpdates`
+status `oracleRejected`); a halt rejection answers `Trading is halted. asset=N` (simulator
+text, Hyperliquid does not halt). `GET /status` gains a `guard` entry (settings, halted
+coins, counters, last 50 guard events) only when a guard is set; `POST /sim/reopen`
+(`?coin=`) lifts halts. The server drains the guard log after every mutation and logs each
+event. `scripts/collar-e2e.sh` runs `market-maker` against a 50 bps collar.
 
 ## Known gaps
 
