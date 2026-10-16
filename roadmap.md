@@ -399,6 +399,12 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
 - `hl-copy-backtest` (done, in hl-copy-core): ranks a leaderboard collection by replaying
   each leader's fills through `Mirror`, reports per leader.
 - `hl-sim`: `portfolio` info request (done), so the collector gets equity curves.
+- [leader-scoring](repos/leader-scoring.md) (done, 2026-10-16): track records, 34 metrics,
+  weighted percentile composite, learned 30-day forecast, copy capacity from book depth and
+  alerts; hl-leaderboard writes a report per leader, hl-copy-api passes it on and the web
+  app's leader page shows it. Open: retrain the forecast on months of collected fill
+  histories (on the mainnet replay it does not beat past Sharpe); add the copy backtest's
+  follower results as features; cheaper alert scans for long histories.
 - Open: verify on testnet that another address's user streams are readable and what
   the 10-unique-users websocket limit counts.
 
