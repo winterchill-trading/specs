@@ -171,6 +171,51 @@ The engine's order ids are reused as public ids where the venue has them (nyse-s
 auction-only orders take ids from 1,000,000,000 up). State is in memory only; a restart
 starts a new day.
 
+## Price collar and halts
+
+The engine carries two venue-neutral guards, both off until a front end sets them through
+recorded calls (so journals carry them and replays reproduce their audit log):
+
+- A **price collar** per symbol (`Exchange.set_collar`, `Price_collar`): an aggressive order
+  may not trade more than a band (bps or ticks) from a reference price, the last trade, the
+  book mid, or the mark. The mark is what an anchor sets, so an anchored simulator collars
+  against the external market, the guard that stops a stale or broken reference from
+  trading far off market. Marketable limit orders beyond the band are rejected or
+  re-priced to it; market orders have their protection price clamped. The check is on the
+  aggressor's side only; resting orders left outside the band can still fill, at a better
+  price for the aggressor, as on venues that run collars.
+- A **halt rule** (`Exchange.set_halt_rule`, `Halt_rule`), a circuit breaker on moves from a
+  session reference: each level (default 7% and 13% for 15 minutes, 20% until reopened)
+  triggers once per session and halts one symbol or the whole market. Orders that would
+  trade are rejected during a halt; passive orders rest so the book can rebuild. With
+  `Reopen.On_request` the halt waits for the front end to run its reopening auction and
+  call `Exchange.reopen`. The TradFi simulators keep their own LULD bands and auctions.
+
+Rejections reuse existing reasons (`Invalid_price`, `Unsupported "trading halted"`) and the
+details go to a separate log (`drain_guard_events`), so adapters that match every engine
+event or reason are unchanged. None of the crypto simulators sets a collar or halt rule
+yet.
+
+## Realism scorecard
+
+How simulator realism is measured: `sim-scorecard`
+([repos/sim-scorecard.md](../repos/sim-scorecard.md)) computes the same stylised facts on a
+simulator run and on recorded data over a window, and reports per fact both values, a
+distance and a pass band. The simulator side is best observed through the same channel as
+the venue: record the simulator with `market-recorder` and score its norm directory; its
+input journal adds exact order and cancel counts. Facts: return kurtosis, autocorrelation
+of returns and of absolute returns, volatility clustering, spread and depth (time-weighted
+on a 1 s grid), trade size, inter-trade time, variance ratios (signature plot), aggressor
+imbalance autocorrelation, and order-to-trade and cancel ratios from book level changes.
+
+The first run (hl-sim for 100 s, free and anchored to a recorded 90 s of Binance BTCUSDT,
+against that recording) shows what anchoring fixes and what it does not: depth moves to
+within KS 0.21 of the reference and return autocorrelation into its band, while the spread
+stays at the tick hl-sim inherits from Hyperliquid's significant-figure rule, anchored
+returns jump at the mark's steps (kurtosis 13), and trades still arrive on the 100 ms
+simulation tick with sizes three times the reference's. Free: 2 of 11 scored facts pass;
+anchored: 3 of 11. The numbers are in the sim-scorecard README.
+
 ## Planned: price-anchor
 
 The simulators' prices come from a random walk, so strategies tested on them see no real
