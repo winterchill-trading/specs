@@ -10,6 +10,17 @@ belong here.
 
 ## 2026-10-16
 
+- `sanctions-screening` 0.1.1 and `transaction-monitoring` 0.1.2: both `-pg` stores own
+  their PostgreSQL schema including `schema_migrations` (configurable schema; 0.1.x
+  databases adopted on connect; [ADR 0009](adr/0009-postgres-replaceable-store.md)
+  amended). `sanctions-screening`: `Uk_xml` (UK Sanctions List XML), `Hit.to_kyc` keyed by
+  list and entry id, fixture lists embedded and installed under `share/`, streamed OFAC
+  XML. `transaction-monitoring`: model embedded and installed under `share/`,
+  `Rules.Config.overrides`, `Monitor.revoke`, migration `0003_revocations` (`revocations`,
+  `events.seq`, `events.counterparty`), `Store.S` gains `find_event`, histories and
+  `revoke`; test-only edge to `sanctions-screening-pg`. See
+  [sanctions-screening](repos/sanctions-screening.md) and
+  [transaction-monitoring](repos/transaction-monitoring.md).
 - `hl-copy-core`: `No_trade_band`, an optional per-follow no-trade band;
   `Follower_config.Stable.V3` (`band`, left out of files when unset), `Plan.Stable.V2`
   (`Within_band` note), `Mirror.Config.Stable.V2` and `Mirror.Stable.V2`.
