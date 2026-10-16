@@ -11,7 +11,7 @@ mode.
 | Repository | `winterchill-trading/risk-models` |
 | opam package | `risk-models` |
 | Library | `risk_models` (module `Risk_models`) |
-| Binary | `risk-models` (`schema`, `encode`, `check`, `score`, `bench`) |
+| Binary | `risk-models` (`schema`, `encode`, `check`, `score`, `explain`, `bench`) |
 | Python | `python/` (`generate.py`, `train.py`, `evaluate.py`, `export.py`, run with `uv`) |
 | Status | done: OCaml scorer, models and parity tests in place; CI green. Trained on synthetic data only |
 
@@ -27,6 +27,10 @@ mode.
 | `Lightgbm_dump` | Reads LightGBM `Booster.dump_model()` JSON into a `Forest` |
 | `Scorer` | Loads `model.json` and refuses a schema digest mismatch; margin, probability, calibrated score, and `explain` returning a `Risk_rules.Model.Score.t` with the top three reasons |
 | `Risk_model` | The `Risk_rules.Model.S` adapter, the two rules, shadow mode and policy specs |
+| `Tree_shap` | Exact additive per-feature attributions for a `Forest`: path-dependent (node covers, per-leaf tables, quadrature for deep leaves) and interventional (background sample); both `[@zero_alloc]` |
+| `Explanation` | Base, margin, score, top k contributions with labels and the sum of the rest; `Stable.V1` bin_io and a JSON form (format 1) |
+| `Explainer` | Attributions and explanations for a `Scorer` or for any bare `Forest` with feature names |
+| `Abstain` | Predict or abstain by distance from a threshold; accuracy-coverage curves; the cut-off for a target coverage |
 | `Monitor` | Live score histogram, PSI against the calibration window, Stable, Review or Retrain, Prometheus text |
 | `Bench` | Scoring latency and allocation |
 
@@ -62,6 +66,26 @@ feature names, digest), the `kind` (`gbdt` as parallel arrays, `lightgbm`, or `l
 the isotonic calibration knots, the score histogram of the calibration window for `Monitor`,
 and the review and block thresholds with the budget and precision they were chosen for.
 Tree semantics follow scikit-learn: `x <= threshold` goes left, NaN follows `missing_left`.
+`gbdt` trees may carry `count` (training rows per node), which path-dependent
+attributions need; loaders without it ignore it.
+
+## Explanations and abstention
+
+- Attributions are exact Shapley values of the margin (exact tree-path additive
+  attributions, TreeSHAP-style): base plus contributions equals the margin on every
+  fixture row. Path-dependent ones follow the training covers; interventional ones a
+  background sample (the two differ when features are correlated).
+- Parity with the shap library's `TreeExplainer` on the same models
+  (`fixtures/*.shap.csv`, written by `export.py`): path-dependent within 3.6e-15,
+  interventional within 4.6e-7 (shap adds in single precision there). A second test
+  enumerates every feature subset of random small forests.
+- Latency (release, M-series, under load): about 32 us for path-dependent attributions of
+  the 150-tree model, 0 words; 34 us with the top-five `Explanation`; interventional with
+  100 background rows about 0.95 ms. Scores stay at 2 to 3 us; explanations are for
+  decisions a person reviews.
+- `Abstain` turns a thresholded score into Predict or Abstain (selective classification);
+  `Curve` gives accuracy, precision and recall per coverage, `for_coverage` the cut-off.
+  transaction-monitoring routes abstentions to a hold or to its rules.
 
 ## Results on the synthetic set
 
@@ -103,9 +127,12 @@ committed models.
 
 - Depends on: [risk-rules](risk-rules.md). Its CI also pins `fixed-decimal`, `money`,
   `ledger` and `payments-core` through risk-rules' own graph.
-- Used by: none yet; the neobank demo is planned to load a model into `risk-rules` through `Risk_model`.
+- Used by: [transaction-monitoring](transaction-monitoring.md) (scorer, encoding, explainer,
+  abstain). The neobank demo is planned to load a model into `risk-rules` through
+  `Risk_model`.
 - External: `core`, `core_unix`, `yojson`, `ppx_jane`, `stdlib_upstream_compatible`; Python
-  `numpy`, `scikit-learn` 1.9.1 and `lightgbm` 4.7.0 for training only.
+  `numpy`, `scikit-learn` 1.9.1, `lightgbm` 4.7.0 and `shap` 0.53 for training and the
+  attribution fixtures only.
 
 ## Known gaps
 
@@ -115,5 +142,7 @@ committed models.
 - The generator re-implements the risk-rules feature definitions in Python instead of exporting
   rows through `Features.of_context`.
 - No XGBoost import.
-- Reason codes are path credits, not TreeSHAP.
+- Reason codes (`Scorer.explain`, the risk-rules rules) are still path credits; exact
+  attributions are a separate `Explainer` call at about ten times the cost of a score.
+- Path-dependent attributions need trees of at most 63 leaves and node counts in the export.
 - The nightly training workflow has not run yet.
