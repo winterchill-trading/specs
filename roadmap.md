@@ -450,8 +450,11 @@ In progress; design in [design/copytrading.md](design/copytrading.md), decisions
 - [transaction-monitoring](repos/transaction-monitoring.md) (done, 2026-10-16): rolling
   profiles, eleven AML typologies on risk-rules, a GBDT trained on synthetic data and
   scored through risk-models, Allow/Hold/Block with alerts, memory and PostgreSQL stores,
-  replay with baseline diffs. Open: real labelled data, graph features, calling
-  `on_event` from the demo API's payment and booking paths.
+  replay with baseline diffs. Holds and alerts carry the model's exact feature
+  contributions from [risk-models](repos/risk-models.md) (`Tree_shap`, `Explanation`),
+  and a policy may let the model abstain near its threshold (done, 2026-10-16). Open:
+  real labelled data, graph features, calling `on_event` from the demo API's payment and
+  booking paths, adopting `Explainer.of_forest` in leader-scoring.
 - [sanctions-screening](repos/sanctions-screening.md) (done, 2026-10-16): OFAC, EU and UK
   list parsers, screening and rescreening, cases, memory and PostgreSQL stores. Open: UK
   Sanctions List and UN parsers, and calling it from onboarding, payee creation and the
